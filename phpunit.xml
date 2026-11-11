@@ -8,6 +8,10 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <!-- Integración con SQL Server real: se omite salvo ADM_PRUEBAS_SQLSRV=1. -->
+        <testsuite name="Sqlsrv">
+            <directory>tests/Sqlsrv</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

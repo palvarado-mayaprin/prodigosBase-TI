@@ -1,5 +1,20 @@
 # Historial de cambios
 
+## 2026-11-12 — Etapa 3: esquema SQL Server
+
+- **Cambio:**
+    - nueve migraciones `adm_*` (usuarios, grupos, membresías, funcionalidades, permisos, asignaciones, auditoría, sesiones y actividad): `bigint IDENTITY`, FK sin cascada, PK compuestas en las asignaciones, únicos, `datetime2(3)` en UTC, `enum` con CHECK y contraseñas como hash de Laravel;
+    - SQL propio de SQL Server condicionado al driver: email único filtrado, índice filtrado de sesiones activas, `ISJSON` en la auditoría, `SYSUTCDATETIME()` por defecto y CHECK de segundos;
+    - `database/sql/roles.sql` idempotente y parametrizado: `adm_aplicacion` sin DDL ni borrado de datos (salvo asignaciones), auditoría solo `INSERT` y `SELECT` con `DENY UPDATE, DELETE`; `adm_despliegue` para migraciones;
+    - `GuardaDdl` exige además que la migración use la conexión `sqlsrv`;
+    - `docs/ARQUITECTURA_SQL_SERVER.md` y secciones 4 y 5 del manual (base, logins, roles, migraciones y comprobaciones).
+- **Sin cambios:** no se creó ninguna base ni se ejecutaron migraciones en SQL Server; `.env`, PRODIGOS V2 e IIS intactos.
+- **Verificación:**
+    - PHPUnit 34 aprobadas y 1 omitida (integración `sqlsrv`, sin base habilitada);
+    - el DDL de SQL Server se revisó sin conexión, en modo `pretend` de Laravel;
+    - Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** ejecutar `roles.sql` y la integración `sqlsrv` contra una base real cuando se autorice; Etapa 4 (autenticación, catálogo y auditoría).
+
 ## 2026-11-11 — Etapa 2: limpieza del starter y control de entornos
 
 - **Limpieza del starter kit:**

@@ -20,9 +20,17 @@ class GuardaDdl
 
     public function __construct(private readonly DestinoSql $destino) {}
 
-    /** Motivo por el que no se permite DDL; null si se permite. */
-    public function motivoBloqueo(): ?string
+    /**
+     * Motivo por el que no se permite DDL; null si se permite.
+     *
+     * @param  string|null  $conexion  Conexión de la migración (`--database`); null es la predeterminada.
+     */
+    public function motivoBloqueo(?string $conexion = null): ?string
     {
+        $conexion ??= (string) config('database.default');
+        if ($conexion !== 'sqlsrv' && ! $this->simuladaEnPruebas($conexion)) {
+            return "Las migraciones solo se ejecutan sobre la conexión sqlsrv (se pidió «{$conexion}»).";
+        }
         if (($motivo = $this->destino->motivoDestinoReal()) !== null) {
             return $motivo;
         }
@@ -34,10 +42,18 @@ class GuardaDdl
         return null;
     }
 
-    public function verificar(): void
+    public function verificar(?string $conexion = null): void
     {
-        if (($motivo = $this->motivoBloqueo()) !== null) {
+        if (($motivo = $this->motivoBloqueo($conexion)) !== null) {
             throw new RuntimeException('Migración no autorizada: '.$motivo);
         }
+    }
+
+    /** PHPUnit migra sobre SQLite en memoria (phpunit.xml); nunca fuera de las pruebas. */
+    private function simuladaEnPruebas(string $conexion): bool
+    {
+        return (app()->runningUnitTests() || defined('PHPUNIT_COMPOSER_INSTALL'))
+            && config("database.connections.$conexion.driver") === 'sqlite'
+            && config("database.connections.$conexion.database") === ':memory:';
     }
 }

@@ -4,13 +4,13 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 
 ## Estado
 
-**Etapa 2 completada:** proyecto base limpio (solo inicio y cierre de sesión), SQL Server como motor por defecto y control centralizado de entornos y escrituras (`DestinoSql`, `ControlarAcceso`, `adm:entorno`). Todavía no incluye módulos administrativos ni esquema de base de datos.
+**Etapa 3 completada:** proyecto base limpio, control centralizado de entornos y esquema SQL Server propio (nueve tablas `adm_*` en migraciones y roles mínimos). Todavía no incluye módulos administrativos ni pantallas propias.
 
 | Etapa | Contenido                                                                                             | Estado     |
 | ----- | ----------------------------------------------------------------------------------------------------- | ---------- |
 | 1     | Proyecto base y configuración                                                                         | Completada |
 | 2     | Dependencias definitivas, limpieza del starter kit, control de entornos (`DestinoSql`, `adm:entorno`) | Completada |
-| 3     | Esquema SQL Server (migraciones `adm_*`, roles SQL, control de DDL)                                   | Pendiente  |
+| 3     | Esquema SQL Server (migraciones `adm_*`, roles SQL, control de DDL)                                   | Completada |
 | 4     | Autenticación, catálogo de permisos y auditoría                                                       | Pendiente  |
 | 5     | Módulos administrativos                                                                               | Pendiente  |
 | 6     | Sistema visual `adm-` con paleta configurable                                                         | Pendiente  |
@@ -36,4 +36,5 @@ composer test
 ## Documentación y reglas
 
 - [AGENTS.md](AGENTS.md) y [CLAUDE.md](CLAUDE.md): reglas permanentes y arquitectónicas.
+- [docs/ARQUITECTURA_SQL_SERVER.md](docs/ARQUITECTURA_SQL_SERVER.md): modelo de datos, permisos SQL y pruebas de integración.
 - [docs/HISTORIAL_CAMBIOS.md](docs/HISTORIAL_CAMBIOS.md): historial.

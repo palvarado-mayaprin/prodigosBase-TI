@@ -101,11 +101,86 @@ Las migraciones tienen una autorización propia (`App\Entorno\GuardaDdl`), indep
 
 ## 4. Preparar SQL Server
 
-_Pendiente (Etapa 3):_ creación de la base vacía, logins de aplicación y de despliegue, roles mínimos y prueba de conexión.
+El modelo completo está en [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md). Estos pasos los ejecuta quien administre el servidor (o el propio desarrollador en su instancia local), con una cuenta con permisos para crear bases y logins. Los valores entre `<>` son ejemplos y las contraseñas nunca se versionan.
+
+### 4.1 Base vacía
+
+```sql
+CREATE DATABASE prodigos_base_dev;
+GO
+-- Requisito: nivel de compatibilidad 130 o superior (SQL Server 2016+).
+SELECT name, compatibility_level, collation_name FROM sys.databases WHERE name = N'prodigos_base_dev';
+SELECT @@SERVERNAME AS servidor;   -- valor para ADM_DESARROLLO_SERVIDOR
+```
+
+Se recomienda una intercalación que no distinga mayúsculas (`*_CI_AS`), coherente con la comparación de usuarios y nombres.
+
+### 4.2 Logins y usuarios
+
+Dos cuentas separadas: la de la aplicación (va en `.env`) y la de despliegue (solo en la consola, para migraciones).
+
+```sql
+CREATE LOGIN <adm_base_app> WITH PASSWORD = N'<contraseña segura>', CHECK_POLICY = ON;
+CREATE LOGIN <adm_base_ddl> WITH PASSWORD = N'<contraseña segura>', CHECK_POLICY = ON;
+GO
+USE prodigos_base_dev;
+CREATE USER <adm_base_app> FOR LOGIN <adm_base_app>;
+CREATE USER <adm_base_ddl> FOR LOGIN <adm_base_ddl>;
+```
+
+Con autenticación de Windows, sustituir por `CREATE LOGIN [DOMINIO\cuenta] FROM WINDOWS`.
+
+### 4.3 Roles mínimos (primera ejecución)
+
+```powershell
+sqlcmd -S <servidor> -d prodigos_base_dev -E -i database\sql\roles.sql `
+       -v UsuarioAplicacion="<adm_base_app>" UsuarioDespliegue="<adm_base_ddl>"
+```
+
+Crea `adm_aplicacion` y `adm_despliegue` y añade los usuarios. Como aún no hay tablas, avisa de que omite sus permisos: es lo esperado.
+
+### 4.4 Configurar y verificar
+
+En `.env`: `DB_HOST`, `DB_PORT`, `DB_DATABASE=prodigos_base_dev`, `DB_USERNAME` y `DB_PASSWORD` de la cuenta de la aplicación, `ADM_ENTORNO=desarrollo`, `ADM_DESARROLLO_SERVIDOR` (valor de `@@SERVERNAME`) y `ADM_DESARROLLO_BD=prodigos_base_dev`.
+
+```bash
+php artisan config:clear
+php artisan adm:entorno
+```
+
+Esperado: «Destino coherente con el entorno seleccionado.», escritura `HABILITADA` y migraciones `permitidas`.
 
 ## 5. Esquema y datos iniciales
 
-_Pendiente (Etapas 3 y 4):_ migraciones, sincronización del catálogo de permisos y creación del primer administrador. En esta etapa **no** se ejecutan migraciones.
+### 5.1 Migraciones
+
+Se ejecutan con la cuenta de despliegue, pasada como variable de proceso solo en esa consola (prevalece sobre `.env`). No usar `config:cache` antes: la configuración en caché ignora estas variables.
+
+```powershell
+php artisan config:clear
+$env:DB_USERNAME = '<adm_base_ddl>'
+$env:DB_PASSWORD = '<contraseña>'
+php artisan migrate --pretend   # revisar el DDL sin ejecutarlo
+php artisan migrate
+Remove-Item Env:DB_USERNAME, Env:DB_PASSWORD
+```
+
+`GuardaDdl` detiene la migración si el destino real no coincide. En producción exige además `$env:ADM_DESPLIEGUE_DDL = '<base de producción>'` en la misma consola (y retirarla al terminar).
+
+### 5.2 Roles (segunda ejecución)
+
+Repetir el paso 4.3: ahora concede los permisos de la aplicación sobre las nueve tablas `adm_*` y deniega `UPDATE` y `DELETE` en `adm_auditoria`.
+
+### 5.3 Comprobación
+
+```sql
+SELECT name FROM sys.tables WHERE name LIKE N'adm[_]%' ORDER BY name;   -- 9 tablas
+SELECT migration FROM dbo.migrations ORDER BY id;                        -- 9 migraciones
+```
+
+### 5.4 Catálogo de permisos y primer administrador
+
+_Pendiente (Etapa 4):_ `adm:sincronizar-permisos` y `adm:crear-administrador`.
 
 ## 6. Ejecución local
 
@@ -128,7 +203,7 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 2: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores y PHPUnit 24/24 (entornos, diagnóstico, DDL y acceso inicial).
+Resultado esperado en la Etapa 3: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores y PHPUnit con 34 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 

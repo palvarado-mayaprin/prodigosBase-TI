@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         // DDL separado del interruptor de escritura: ver App\Entorno\GuardaDdl.
-        Event::listen(MigrationsStarted::class, fn () => app(GuardaDdl::class)->verificar());
+        Event::listen(MigrationsStarted::class, fn () => app(GuardaDdl::class)->verificar(app('migrator')->getConnection()));
     }
 
     /**
