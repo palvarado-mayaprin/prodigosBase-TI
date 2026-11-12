@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Admin\GruposController;
 use App\Http\Controllers\Admin\MembresiasController;
 use App\Http\Controllers\Admin\PermisosController;
+use App\Http\Controllers\Admin\SeguimientoController;
 use App\Http\Controllers\Admin\SesionesController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CambioContrasenaController;
 use App\Http\Controllers\MiPerfilController;
+use App\Http\Controllers\SeguimientoUsoController;
 use App\Http\Middleware\AutorizarAdministrador;
 use App\Http\Middleware\AutorizarPermiso;
 use Illuminate\Support\Facades\Route;
@@ -110,4 +113,34 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('usuario')
         ->middleware(AutorizarPermiso::para('administracion.sesiones.activas:ELIMINAR'))
         ->name('admin.sesiones.revocar-usuario');
+
+    // Auditoría de Modificaciones (administracion.auditoria.modificaciones):
+    // solo lectura, también con la escritura bloqueada.
+    Route::get('admin/auditoria', [AuditoriaController::class, 'index'])
+        ->middleware(AutorizarPermiso::para('administracion.auditoria.modificaciones:VER'))
+        ->name('admin.auditoria');
+    Route::get('admin/auditoria/exportar/{formato}', [AuditoriaController::class, 'exportar'])
+        ->whereIn('formato', ['csv', 'xlsx'])
+        ->middleware(AutorizarPermiso::para('administracion.auditoria.modificaciones:VER'))
+        ->name('admin.auditoria.exportar');
+
+    // Seguimiento de Uso (administracion.seguimiento.uso): reportes de solo lectura.
+    Route::get('admin/seguimiento', [SeguimientoController::class, 'index'])
+        ->middleware(AutorizarPermiso::para('administracion.seguimiento.uso:VER'))
+        ->name('admin.seguimiento');
+    Route::get('admin/seguimiento/exportar/{reporte}/{formato}', [SeguimientoController::class, 'exportar'])
+        ->whereIn('reporte', ['historial', 'usuarios', 'modulos', 'diario'])
+        ->whereIn('formato', ['csv', 'xlsx'])
+        ->middleware(AutorizarPermiso::para('administracion.seguimiento.uso:VER'))
+        ->name('admin.seguimiento.exportar');
+
+    // Registro de uso desde el navegador (cualquier cuenta autenticada): la
+    // sesión y el usuario salen del servidor; la ruta visitada se valida
+    // contra el catálogo y los permisos.
+    Route::post('seguimiento/visitas', [SeguimientoUsoController::class, 'visita'])
+        ->middleware('throttle:120,1,seguimiento')
+        ->name('seguimiento.visita');
+    Route::post('seguimiento/actividad', [SeguimientoUsoController::class, 'actividad'])
+        ->middleware('throttle:120,1,seguimiento')
+        ->name('seguimiento.actividad');
 });

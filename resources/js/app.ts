@@ -3,6 +3,7 @@ import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { initializeSeguimientoUso } from '@/lib/seguimientoUso';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -35,3 +36,6 @@ initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
+
+// Registro de uso (Seguimiento de Uso): tiempo activo por pantalla.
+initializeSeguimientoUso();

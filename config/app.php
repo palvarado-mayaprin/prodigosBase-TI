@@ -67,6 +67,10 @@ return [
 
     'timezone' => 'UTC',
 
+    // Zona horaria de presentación (pantallas, filtros por fecha y
+    // exportaciones). Las fechas se guardan siempre en UTC.
+    'zona_horaria' => env('ADM_ZONA_HORARIA', 'UTC'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

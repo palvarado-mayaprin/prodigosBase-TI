@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Usuario;
+use App\Support\Fechas;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -50,6 +51,8 @@ class HandleInertiaRequests extends Middleware
                     'email' => $usuario->email,
                 ] : null,
             ],
+            // Zona horaria de presentación de las fechas UTC (App\Support\Fechas).
+            'zonaHoraria' => Fechas::zona(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

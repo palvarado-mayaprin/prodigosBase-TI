@@ -293,6 +293,119 @@
     font-size: 12px;
 }
 
+.adm-table .is-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.adm-table td.is-wrap {
+    max-width: 18rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.adm-table-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 12px;
+    color: var(--adm-texto-suave);
+    font: 12px var(--adm-fuente);
+}
+
+.adm-table-pagination :is(button, a) {
+    display: inline-flex;
+    min-width: 32px;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 9px;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-sm);
+    background: var(--adm-superficie);
+    color: var(--adm-color-primario);
+    cursor: pointer;
+    font: inherit;
+    text-decoration: none;
+}
+
+.adm-table-pagination :is(button, a):hover:not(:disabled) {
+    background: var(--adm-seleccion);
+    border-color: var(--adm-color-acento);
+}
+
+.adm-table-pagination :is(button, a):focus-visible {
+    outline: 2px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+.adm-table-pagination :is(button, a):disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+/* ==========================================================
+   INDICADORES, GRÁFICOS Y EXPORTACIONES (Seguimiento, Auditoría)
+   ========================================================== */
+
+.adm-stat-card {
+    border-top: 3px solid var(--adm-color-acento);
+}
+
+.adm-stat-label {
+    color: var(--adm-texto-suave);
+    font-size: 12px;
+}
+
+.adm-stat-value {
+    color: var(--adm-color-marca);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Columnas del gráfico diario y barras de proporción en tablas. */
+.adm-chart {
+    border-bottom: 1px solid var(--adm-borde);
+}
+
+.adm-chart-bar,
+.adm-meter {
+    display: block;
+    background: var(--adm-color-primario);
+}
+
+.adm-chart-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+}
+
+.adm-chart li:hover .adm-chart-bar {
+    background: var(--adm-color-marca);
+}
+
+.adm-meter {
+    height: 8px;
+    margin-bottom: 4px;
+    border-radius: 2px;
+}
+
+.adm-details-summary {
+    color: var(--adm-color-primario);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.adm-export-item {
+    padding: 12px;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+}
+
 /* ==========================================================
    AVISOS E INSIGNIAS
    ========================================================== */

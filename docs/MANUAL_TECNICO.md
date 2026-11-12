@@ -124,12 +124,36 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 - **Estados:** activa, vencida por inactividad (sin actividad durante `SESSION_LIFETIME`), cerrada y revocada. El listado muestra las abiertas y las de los últimos 7 días (máximo 500).
 - **Pantalla** `admin/Sesiones.vue`: filtros locales (usuario, estado, texto), tabla con estado, última actividad, inicio, IP, equipo y referencia corta; revocación individual o de todas las sesiones de una cuenta, con confirmación. Fechas en la hora del navegador (`lib/fechas.ts`).
 
-### 6.7 Base compartida
+### 6.7 Auditoría de Modificaciones
+
+- **Rutas** (`administracion.auditoria.modificaciones`, `soloAdministrador`, solo GET): `admin/auditoria` y `admin/auditoria/exportar/{csv|xlsx}`. Funcionan con la escritura bloqueada.
+- **Servicio** `App\Services\Admin\ConsultaAuditoria` (solo lectura de `adm_auditoria`, nunca modifica registros):
+    - filtros validados en el servidor: fechas (días de la zona configurada convertidos a un rango UTC), usuario, entidad, acción, texto (en usuario, entidad, registro y cambios; los comodines de `LIKE` se escapan), orden (`fecha`, `usuario`, `entidad`, `accion`) y dirección. Un filtro no válido vuelve a la vista sin filtros con el error;
+    - paginación de 25 en el servidor; la exportación recorre un cursor, sin cargar el historial en memoria;
+    - cambios legibles: un par `[anterior, nuevo]` es un campo modificado; cualquier otro valor es un dato descriptivo. Al leer se vuelve a enmascarar con `Auditor::enmascarar` (claves sensibles a cualquier profundidad) y se ocultan los valores con forma de hash bcrypt o argon.
+- **Pantalla** `admin/Auditoria.vue`: filtros, tabla ordenable, paginación, detalle en diálogo y exportaciones con los filtros aplicados.
+
+### 6.8 Seguimiento de Uso
+
+- **Registro** (`App\Services\Admin\SeguimientoUso`, sin auditoría: es un registro técnico):
+    - `resources/js/lib/seguimientoUso.ts` envía la ruta de cada pantalla (`POST seguimiento/visitas`) y los segundos activos (`POST seguimiento/actividad`, cada minuto, al navegar y al ocultar la pestaña). Cuenta solo con la pestaña visible, hasta 5 minutos después de la última interacción y en una sola pestaña;
+    - el servidor toma la sesión de `RegistroSesiones::actual()` (la fila de `adm_sesiones`; no crea sesiones ni identificadores) y el usuario de la autenticación; `ValidarSesion` ya rechazó una sesión revocada;
+    - solo se registran rutas GET con nombre que el catálogo asocia a una funcionalidad activa (`ruta`) y que la cuenta puede ver (`Autorizacion::permite(...:VER)`); el resto responde 204 sin registrar. Se guarda el código de la funcionalidad y la ruta sin parámetros de consulta;
+    - los segundos se validan (1 a 600 por envío), solo se suman a visitas de la propia sesión y el total de la sesión nunca supera el tiempo real desde su inicio más 5 segundos;
+    - **solo lectura:** son escrituras, así que `ControlarAcceso` las rechaza (403) y el navegador las descarta. Mientras la escritura esté bloqueada no se registra uso; tampoco el de las sesiones iniciadas en ese modo, que no tienen fila en `adm_sesiones`. No hay excepción al control centralizado.
+- **Reportes** (`administracion.seguimiento.uso`, `soloAdministrador`, solo GET): `admin/seguimiento` y `admin/seguimiento/exportar/{historial|usuarios|modulos|diario}/{csv|xlsx}`.
+    - indicadores, por usuario y por módulo con agregados SQL; por día de la zona configurada con un cursor que solo retiene los totales por día; historial paginado (25) en el servidor;
+    - filtros validados: fechas, usuario exacto y módulo del catálogo.
+- **Pantalla** `admin/Seguimiento.vue`: indicadores, gráfico diario con selector de medida, módulos y usuarios con barras de proporción, historial paginado y exportaciones.
+
+### 6.9 Base compartida
 
 - **Idioma:** `lang/es` (validación y autenticación) y `es` como idioma por defecto.
 - **Sistema visual:** `resources/css/tema/tokens.css` (único archivo con colores, `--adm-*`) y `componentes.css` (medidas de PRODIGOS V2 con prefijo `adm-`). Incluye contenido, formularios, botones, tablas, avisos, insignias, diálogos y, desde la Etapa 5.2, el selector de modalidad, las listas de selección, las opciones de grupo, los indicadores de cambios y el árbol de permisos; la Etapa 6 completa el resto.
 - **Alertas:** `resources/js/lib/alertas.ts` (SweetAlert2 con carga diferida); los colores de los iconos se leen de los tokens.
 - **Selección:** `resources/js/lib/seleccion.ts` calcula agregados, retirados y cambios pendientes de membresías y permisos.
+- **Fechas:** se guardan en UTC y se presentan y filtran en `app.zona_horaria` (`ADM_ZONA_HORARIA`, UTC por defecto; una zona no válida usa UTC) con `App\Support\Fechas`. La zona se comparte con la interfaz (`zonaHoraria`) y `lib/fechas.ts` la aplica.
+- **Exportaciones:** `App\Support\ExportarTabla` genera CSV (UTF-8 con BOM, punto y coma) y XLSX (ZipArchive) sin dependencias, fila a fila desde iterables, y neutraliza las celdas que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno anteponiendo un apóstrofo.
 
 ## 7. Comandos
 

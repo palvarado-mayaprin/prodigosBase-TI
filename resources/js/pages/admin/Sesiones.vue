@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { Filter, KeyRound, LogOut, RotateCcw, UserX } from '@lucide/vue';
 import { computed, reactive, ref } from 'vue';
 import {
@@ -9,7 +9,7 @@ import {
     mostrarError,
     mostrarExito,
 } from '@/lib/alertas';
-import { fechaHora } from '@/lib/fechas';
+import { fechaHora as formatoFecha } from '@/lib/fechas';
 import { dashboard } from '@/routes';
 import { sesiones as rutaSesiones } from '@/routes/admin';
 import { revocar, revocarUsuario } from '@/routes/admin/sesiones';
@@ -64,6 +64,11 @@ const ESTADOS: Record<Estado, { texto: string; insignia: string }> = {
 };
 
 const corta = (sesion: Sesion) => sesion.referencia.slice(0, 8);
+
+// Fechas UTC en la zona horaria configurada (prop compartida).
+const page = usePage();
+const zona = computed(() => page.props.zonaHoraria);
+const fechaHora = (iso: string | null) => formatoFecha(iso, zona.value);
 
 // ---------- Filtros (locales) ----------
 const vacios = () => ({ usuario: '', estado: 'abiertas', buscar: '' });
@@ -208,7 +213,8 @@ async function revocarTodas(sesion: Sesion) {
                     sesión no se revoca desde aquí: use «Cerrar sesión». Una
                     sesión vence tras {{ minutosVigencia }} minutos sin
                     actividad. Se muestran las sesiones abiertas y las de los
-                    últimos {{ diasHistorial }} días, en la hora de este equipo.
+                    últimos {{ diasHistorial }} días, en la zona horaria
+                    {{ zona }}.
                 </p>
             </div>
 

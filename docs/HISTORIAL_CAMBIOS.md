@@ -1,5 +1,17 @@
 # Historial de cambios
 
+## 2026-11-12 — Etapa 5.4: Auditoría de Modificaciones y Seguimiento de Uso
+
+- **Cambio:**
+    - Auditoría de Modificaciones (`admin/auditoria`, `ConsultaAuditoria`): consulta de solo lectura con filtros (fechas, usuario, entidad, acción, texto), orden, paginación en el servidor, detalle legible de valores anteriores y nuevos, secretos y hashes ocultos aun anidados, y exportación CSV/XLSX por cursor;
+    - Seguimiento de Uso: registro de visitas a funcionalidades del catálogo que la cuenta puede ver y de su tiempo activo (`seguimientoUso.ts`, `SeguimientoUsoController`, `SeguimientoUso`), ligado a la fila de `adm_sesiones` de la sesión, con los segundos limitados al tiempo real; reportes (`admin/seguimiento`) con indicadores, por usuario, módulo y día, historial paginado y cuatro exportaciones CSV/XLSX;
+    - `App\Support\ExportarTabla` (CSV y XLSX sin dependencias, con fórmulas neutralizadas) y `App\Support\Fechas` (UTC guardado, presentación y filtros en `ADM_ZONA_HORARIA`, compartida con la interfaz como `zonaHoraria`; Sesiones Activas también la usa);
+    - `componentes.css`: indicadores, paginación, gráfico de barras, barras de proporción y exportaciones con tokens; `lib/fechas.ts` con `duracion` y `fechaDia`.
+- **Sin cambios:** PRODIGOS V2, `.env`, esquema (sin migraciones), SQL Server, IIS y dependencias. `.env.example` documenta `ADM_ZONA_HORARIA`.
+- **Solo lectura:** consultas y exportaciones disponibles; el registro de uso se rechaza (sin excepción al control centralizado) y no se cuenta actividad.
+- **Verificación:** PHPUnit 144 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 10/10, Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** Dashboard y navegación dinámica (Etapa 5.5); revisión visual en navegador y validación en SQL Server real.
+
 ## 2026-11-12 — Etapa 5.3: Sesiones Activas
 
 - **Cambio:**

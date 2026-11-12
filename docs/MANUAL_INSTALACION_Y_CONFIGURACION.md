@@ -41,15 +41,16 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-| Variable                                            | Valor de ejemplo       | Uso                                         |
-| --------------------------------------------------- | ---------------------- | ------------------------------------------- |
-| `DB_CONNECTION`                                     | `sqlsrv`               | Motor obligatorio                           |
-| `DB_HOST`, `DB_PORT`                                | `127.0.0.1`, `1433`    | Servidor SQL Server propio                  |
-| `DB_DATABASE`                                       | `prodigos_base_dev`    | Base vacía de desarrollo propia             |
-| `DB_USERNAME`, `DB_PASSWORD`                        | vacíos                 | Credenciales personales; nunca se versionan |
-| `DB_URL`                                            | vacío                  | Debe permanecer vacío                       |
-| `DB_ENCRYPT`, `DB_TRUST_SERVER_CERTIFICATE`         | comentadas             | Según el controlador ODBC y el certificado  |
-| `SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION` | `file`, `file`, `sync` | No requieren tablas en SQL Server           |
+| Variable                                            | Valor de ejemplo                   | Uso                                                                              |
+| --------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------- |
+| `DB_CONNECTION`                                     | `sqlsrv`                           | Motor obligatorio                                                                |
+| `DB_HOST`, `DB_PORT`                                | `127.0.0.1`, `1433`                | Servidor SQL Server propio                                                       |
+| `DB_DATABASE`                                       | `prodigos_base_dev`                | Base vacía de desarrollo propia                                                  |
+| `DB_USERNAME`, `DB_PASSWORD`                        | vacíos                             | Credenciales personales; nunca se versionan                                      |
+| `DB_URL`                                            | vacío                              | Debe permanecer vacío                                                            |
+| `DB_ENCRYPT`, `DB_TRUST_SERVER_CERTIFICATE`         | comentadas                         | Según el controlador ODBC y el certificado                                       |
+| `SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION` | `file`, `file`, `sync`             | No requieren tablas en SQL Server                                                |
+| `ADM_ZONA_HORARIA`                                  | `UTC` o p. ej. `America/Guatemala` | Zona en que se muestran y filtran las fechas (se guardan en UTC). No válida: UTC |
 
 ### 3.1 Control centralizado de entornos
 
@@ -222,7 +223,7 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 5.3: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 9/9 y PHPUnit con 126 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 5.4: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 10/10 y PHPUnit con 144 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
@@ -234,18 +235,22 @@ _Pendiente (Etapa 6):_ completar el sistema visual (navegación, encabezado, ini
 
 Con el primer administrador (sección 5.4):
 
-| Módulo                     | Ruta                           | Comprobación                                                                                                                                                                                                                                                                                           |
-| -------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Administración de Usuarios | `/admin/usuarios`              | Crear una cuenta de prueba; editarla; restablecerle la contraseña (queda «Cambio de contraseña pendiente»); deshabilitarla y comprobar que no puede iniciar sesión; habilitarla. El botón de deshabilitar la propia cuenta está desactivado. Cada operación aparece en `adm_auditoria` sin contraseñas |
-| Mi Perfil                  | `/mi-perfil` (menú de usuario) | Cambiar correo y teléfono; cambiar la contraseña con la actual. Nombre y usuario son de solo lectura                                                                                                                                                                                                   |
-| Administración de Grupos   | `/admin/grupos`                | Crear un grupo de prueba; editar su nombre y descripción; consultar su detalle; desactivarlo y activarlo. Desactivar el único grupo administrador propio se rechaza                                                                                                                                    |
-| Usuarios y grupos          | `/admin/membresias`            | En Usuarios → Grupos, asignar y retirar el grupo de prueba a una cuenta (confirmación con el detalle). Retirarse a sí mismo el grupo administrador se rechaza. En Grupos → Usuarios, consultar los integrantes                                                                                         |
-| Administración de Permisos | `/admin/permisos`              | Asignar a un grupo no administrador `Usuarios y grupos · Consultar membresías` y comprobar que sus integrantes abren `/admin/membresias` en modo consulta; retirarlo. Las funcionalidades «Solo administrador» no se pueden marcar                                                                     |
-| Sesiones Activas           | `/admin/sesiones`              | Iniciar sesión con una cuenta de prueba en otro navegador; verla como «Activa»; revocarla y comprobar que su siguiente acción vuelve al inicio de sesión. La propia sesión aparece como «Esta sesión» y no se puede revocar. Cerrar sesión normalmente la deja como «Cerrada»                          |
+| Módulo                      | Ruta                           | Comprobación                                                                                                                                                                                                                                                                                           |
+| --------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Administración de Usuarios  | `/admin/usuarios`              | Crear una cuenta de prueba; editarla; restablecerle la contraseña (queda «Cambio de contraseña pendiente»); deshabilitarla y comprobar que no puede iniciar sesión; habilitarla. El botón de deshabilitar la propia cuenta está desactivado. Cada operación aparece en `adm_auditoria` sin contraseñas |
+| Mi Perfil                   | `/mi-perfil` (menú de usuario) | Cambiar correo y teléfono; cambiar la contraseña con la actual. Nombre y usuario son de solo lectura                                                                                                                                                                                                   |
+| Administración de Grupos    | `/admin/grupos`                | Crear un grupo de prueba; editar su nombre y descripción; consultar su detalle; desactivarlo y activarlo. Desactivar el único grupo administrador propio se rechaza                                                                                                                                    |
+| Usuarios y grupos           | `/admin/membresias`            | En Usuarios → Grupos, asignar y retirar el grupo de prueba a una cuenta (confirmación con el detalle). Retirarse a sí mismo el grupo administrador se rechaza. En Grupos → Usuarios, consultar los integrantes                                                                                         |
+| Administración de Permisos  | `/admin/permisos`              | Asignar a un grupo no administrador `Usuarios y grupos · Consultar membresías` y comprobar que sus integrantes abren `/admin/membresias` en modo consulta; retirarlo. Las funcionalidades «Solo administrador» no se pueden marcar                                                                     |
+| Sesiones Activas            | `/admin/sesiones`              | Iniciar sesión con una cuenta de prueba en otro navegador; verla como «Activa»; revocarla y comprobar que su siguiente acción vuelve al inicio de sesión. La propia sesión aparece como «Esta sesión» y no se puede revocar. Cerrar sesión normalmente la deja como «Cerrada»                          |
+| Auditoría de Modificaciones | `/admin/auditoria`             | Filtrar por usuario, acción y fechas; abrir el detalle de una edición (valores anterior y nuevo; contraseñas como `********`); ordenar por columna; exportar CSV y Excel con los filtros aplicados                                                                                                     |
+| Seguimiento de Uso          | `/admin/seguimiento`           | Navegar unos minutos por los módulos con otra cuenta; comprobar visitas y tiempo activo por usuario, módulo y día; exportar los cuatro reportes. Las fechas usan `ADM_ZONA_HORARIA`                                                                                                                    |
 
-Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`, `/admin/grupos`, `/admin/permisos` y `/admin/sesiones`. Todas las operaciones aparecen en `adm_auditoria`. _Pendiente:_ Auditoría, Seguimiento de Uso, Dashboard y navegación (Etapa 5).
+Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`, `/admin/grupos`, `/admin/permisos`, `/admin/sesiones`, `/admin/auditoria` y `/admin/seguimiento`. Todas las operaciones aparecen en `adm_auditoria`. _Pendiente:_ Dashboard y navegación (Etapa 5.5).
 
 **Sesiones y solo lectura.** El registro de sesiones escribe en `adm_sesiones` al iniciar y cerrar sesión y al actualizar la última actividad. Con la producción en solo lectura (`ADM_PRODUCCION_ESCRITURA=false`) esas escrituras no se hacen: se puede iniciar sesión, pero esas sesiones no aparecen en Sesiones Activas ni se pueden revocar hasta que la escritura se habilite. `SESSION_DRIVER` sigue siendo `file`.
+
+**Seguimiento de Uso y solo lectura.** El registro de visitas y tiempo activo también escribe (`adm_actividad`): con la producción en solo lectura el navegador recibe 403 y no se registra uso; ese tiempo no se recupera. Al habilitar la escritura, cada sesión se registra en su siguiente petición y desde entonces cuenta su actividad desde la pantalla siguiente. Auditoría y Seguimiento se consultan y exportan con normalidad en ese modo.
 
 ## 10. Publicación en IIS
 
