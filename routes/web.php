@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\GruposController;
 use App\Http\Controllers\Admin\MembresiasController;
 use App\Http\Controllers\Admin\PermisosController;
+use App\Http\Controllers\Admin\SesionesController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CambioContrasenaController;
 use App\Http\Controllers\MiPerfilController;
@@ -95,4 +96,18 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('grupo')
         ->middleware(AutorizarPermiso::para('administracion.accesos.permisos:EDITAR'))
         ->name('admin.permisos.guardar');
+
+    // Sesiones Activas (administracion.sesiones.activas). La referencia es un
+    // HMAC del registro; nunca el identificador de sesión.
+    Route::get('admin/sesiones', [SesionesController::class, 'index'])
+        ->middleware(AutorizarPermiso::para('administracion.sesiones.activas:VER'))
+        ->name('admin.sesiones');
+    Route::put('admin/sesiones/{referencia}/revocar', [SesionesController::class, 'revocar'])
+        ->where('referencia', '[0-9a-f]{32}')
+        ->middleware(AutorizarPermiso::para('administracion.sesiones.activas:ELIMINAR'))
+        ->name('admin.sesiones.revocar');
+    Route::put('admin/sesiones/usuarios/{usuario}/revocar', [SesionesController::class, 'revocarUsuario'])
+        ->whereNumber('usuario')
+        ->middleware(AutorizarPermiso::para('administracion.sesiones.activas:ELIMINAR'))
+        ->name('admin.sesiones.revocar-usuario');
 });

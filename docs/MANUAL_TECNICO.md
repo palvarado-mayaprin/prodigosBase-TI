@@ -7,12 +7,13 @@ Arquitectura de la aplicación. La instalación está en [MANUAL_INSTALACION_Y_C
 ```
 ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
   → sesión, CSRF, auth (Fortify / Usuario)
+  → ValidarSesion (registro en adm_sesiones; rechaza sesiones revocadas)
   → ExigirCambioContrasena
   → AutorizarPermiso::para('codigo:ACCION') | AutorizarAdministrador
   → controlador → servicio → DestinoSql::exigirEscritura() → transacción → Auditor
 ```
 
-`ControlarAcceso` va al inicio del grupo `web`; `ExigirCambioContrasena` al final. Los dos se aplican a todas las rutas web sin declararlos en cada una.
+`ControlarAcceso` va al inicio del grupo `web`; `ValidarSesion` y `ExigirCambioContrasena` al final. Se aplican a todas las rutas web sin declararlos en cada una.
 
 ## 2. Entorno y escritura
 
@@ -25,7 +26,7 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
     - rechaza cuentas inexistentes o inactivas y «recordarme»;
     - compara siempre con un hash (uno ficticio si la cuenta no existe) para no revelar por el tiempo de respuesta si existe;
     - 5 intentos por minuto por usuario e IP; CSRF y regeneración de la sesión los aplican Laravel y Fortify;
-    - no escribe en la base: funciona con la producción en solo lectura.
+    - solo escribe el registro de la sesión (`adm_sesiones`) y únicamente si `DestinoSql` lo permite; con la producción en solo lectura el inicio de sesión funciona igual, sin registro (sección 6.6).
 - **Política de contraseñas** (`Password::defaults()` en `AppServiceProvider`): 12 a 72 caracteres (bcrypt usa los primeros 72 bytes), letras, mayúsculas y minúsculas, números y símbolos, en todos los entornos.
 - **Cambio obligatorio:** con `debe_cambiar_password = 1`, `ExigirCambioContrasena` solo permite `contrasena.editar`, `contrasena.actualizar` y `logout`; redirige el resto o responde 403 en JSON. `App\Services\Admin\CambiarContrasena` comprueba la contraseña actual, exige una distinta, actualiza el hash, libera la marca y audita en la misma transacción; después se regenera la sesión.
 
@@ -106,7 +107,24 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 - **Pantalla** `admin/Permisos.vue`: árbol área → módulo → funcionalidad con búsqueda, contadores, indicadores de cambios pendientes, panel expandible y confirmación con el detalle de los cambios.
 - La denegación por defecto no cambia: `Autorizacion` solo concede lo asignado a grupos activos.
 
-### 6.6 Base compartida
+### 6.6 Sesiones Activas
+
+- **Registro técnico** (`App\Services\Admin\RegistroSesiones`, sin auditoría: no es una modificación administrativa):
+    - la sesión de Laravel sigue en archivos (`SESSION_DRIVER=file`); `adm_sesiones` guarda una fila por inicio de sesión con usuario, IP, agente y fechas UTC;
+    - la base nunca recibe el identificador de sesión ni la cookie: es la sesión, en el servidor, la que guarda el id de su fila (`adm_sesion_id`). El vínculo sobrevive a la regeneración de la sesión (inicio de sesión, cambio de contraseña) y no se duplica en peticiones sucesivas;
+    - el evento `Login` crea la fila y `Logout` la cierra (`cierre_utc`); `ValidarSesion` relee la fila en cada petición autenticada, actualiza la última actividad como mucho una vez por minuto y rechaza la sesión si se revocó, se cerró, no existe o es de otra cuenta (redirección al inicio de sesión o 401 en JSON);
+    - **solo lectura:** sin escritura permitida por `DestinoSql` no se crea ni actualiza ninguna fila. La sesión funciona, pero no aparece en el listado ni se puede revocar; se registra en la primera petición en que la escritura vuelva a estar permitida. No hay excepción al control centralizado;
+    - Seguimiento de Uso (`adm_actividad.sesion_id`) usará este mismo id (`RegistroSesiones::actual()`), sin otro identificador.
+- **Rutas** (`administracion.sesiones.activas`, `soloAdministrador`): `GET admin/sesiones` (VER), `PUT admin/sesiones/{referencia}/revocar` y `PUT admin/sesiones/usuarios/{usuario}/revocar` (ELIMINAR).
+- **Servicio** `App\Services\Admin\AdministrarSesiones`:
+    - la interfaz solo recibe una referencia HMAC del registro (clave de la aplicación, 32 caracteres), que se resuelve únicamente contra sesiones abiertas;
+    - revocar marca `revocada_utc` y `revocada_por_id`; las filas nunca se eliminan;
+    - nunca se revoca la sesión desde la que se actúa; «revocar todas» de la propia cuenta conserva la actual;
+    - cada revocación se audita en la misma transacción (`REVOCAR`, entidad `adm_sesiones`) con la cuenta afectada, sin IP ni agente.
+- **Estados:** activa, vencida por inactividad (sin actividad durante `SESSION_LIFETIME`), cerrada y revocada. El listado muestra las abiertas y las de los últimos 7 días (máximo 500).
+- **Pantalla** `admin/Sesiones.vue`: filtros locales (usuario, estado, texto), tabla con estado, última actividad, inicio, IP, equipo y referencia corta; revocación individual o de todas las sesiones de una cuenta, con confirmación. Fechas en la hora del navegador (`lib/fechas.ts`).
+
+### 6.7 Base compartida
 
 - **Idioma:** `lang/es` (validación y autenticación) y `es` como idioma por defecto.
 - **Sistema visual:** `resources/css/tema/tokens.css` (único archivo con colores, `--adm-*`) y `componentes.css` (medidas de PRODIGOS V2 con prefijo `adm-`). Incluye contenido, formularios, botones, tablas, avisos, insignias, diálogos y, desde la Etapa 5.2, el selector de modalidad, las listas de selección, las opciones de grupo, los indicadores de cambios y el árbol de permisos; la Etapa 6 completa el resto.

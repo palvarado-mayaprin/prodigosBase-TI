@@ -4,7 +4,7 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 
 ## Estado
 
-**Etapa 5.2 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Usuarios, Mi Perfil, Grupos, Usuarios y grupos y Permisos, con el subconjunto correspondiente del sistema visual. Faltan Sesiones Activas, Auditoría, Seguimiento de Uso, Dashboard y navegación.
+**Etapa 5.3 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Usuarios, Mi Perfil, Grupos, Usuarios y grupos, Permisos y Sesiones Activas, con el subconjunto correspondiente del sistema visual. Faltan Auditoría, Seguimiento de Uso, Dashboard y navegación.
 
 | Etapa | Contenido                                                                                             | Estado     |
 | ----- | ----------------------------------------------------------------------------------------------------- | ---------- |

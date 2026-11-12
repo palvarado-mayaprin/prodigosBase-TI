@@ -138,7 +138,7 @@ class AutorizacionTest extends TestCase
         $this->agregarAGrupo($usuario, $this->crearGrupo('Administradores', administrador: true));
         $request = Request::create('/');
         $request->setUserResolver(fn () => $usuario);
-        $this->assertSame(['admin.usuarios', 'admin.grupos', 'admin.membresias', 'admin.permisos'], app(Autorizacion::class)->rutasPermitidas($request));
+        $this->assertSame(['admin.usuarios', 'admin.grupos', 'admin.membresias', 'admin.permisos', 'admin.sesiones'], app(Autorizacion::class)->rutasPermitidas($request));
     }
 
     public function test_proteccion_del_ultimo_administrador_activo(): void

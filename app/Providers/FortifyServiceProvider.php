@@ -16,9 +16,10 @@ use Laravel\Fortify\Fortify;
  * Fortify solo atiende el inicio y el cierre de sesión: config/fortify.php no
  * habilita registro, recuperación, verificación, 2FA ni passkeys.
  *
- * El inicio de sesión no escribe en SQL Server: funciona igual con la
- * producción en solo lectura. CSRF, regeneración de la sesión y límite de
- * intentos los aplican Laravel y Fortify.
+ * El inicio de sesión solo escribe su registro en adm_sesiones, y únicamente
+ * si DestinoSql permite escribir (RegistroSesiones): con la producción en
+ * solo lectura funciona igual, sin registro. CSRF, regeneración de la sesión
+ * y límite de intentos los aplican Laravel y Fortify.
  */
 class FortifyServiceProvider extends ServiceProvider
 {

@@ -222,7 +222,7 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 5.2: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 7/7 y PHPUnit con 116 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 5.3: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 9/9 y PHPUnit con 126 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
@@ -241,8 +241,11 @@ Con el primer administrador (sección 5.4):
 | Administración de Grupos   | `/admin/grupos`                | Crear un grupo de prueba; editar su nombre y descripción; consultar su detalle; desactivarlo y activarlo. Desactivar el único grupo administrador propio se rechaza                                                                                                                                    |
 | Usuarios y grupos          | `/admin/membresias`            | En Usuarios → Grupos, asignar y retirar el grupo de prueba a una cuenta (confirmación con el detalle). Retirarse a sí mismo el grupo administrador se rechaza. En Grupos → Usuarios, consultar los integrantes                                                                                         |
 | Administración de Permisos | `/admin/permisos`              | Asignar a un grupo no administrador `Usuarios y grupos · Consultar membresías` y comprobar que sus integrantes abren `/admin/membresias` en modo consulta; retirarlo. Las funcionalidades «Solo administrador» no se pueden marcar                                                                     |
+| Sesiones Activas           | `/admin/sesiones`              | Iniciar sesión con una cuenta de prueba en otro navegador; verla como «Activa»; revocarla y comprobar que su siguiente acción vuelve al inicio de sesión. La propia sesión aparece como «Esta sesión» y no se puede revocar. Cerrar sesión normalmente la deja como «Cerrada»                          |
 
-Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`, `/admin/grupos` y `/admin/permisos`. Todas las operaciones aparecen en `adm_auditoria`. _Pendiente:_ Sesiones Activas, Auditoría, Seguimiento de Uso, Dashboard y navegación (Etapa 5).
+Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`, `/admin/grupos`, `/admin/permisos` y `/admin/sesiones`. Todas las operaciones aparecen en `adm_auditoria`. _Pendiente:_ Auditoría, Seguimiento de Uso, Dashboard y navegación (Etapa 5).
+
+**Sesiones y solo lectura.** El registro de sesiones escribe en `adm_sesiones` al iniciar y cerrar sesión y al actualizar la última actividad. Con la producción en solo lectura (`ADM_PRODUCCION_ESCRITURA=false`) esas escrituras no se hacen: se puede iniciar sesión, pero esas sesiones no aparecen en Sesiones Activas ni se pueden revocar hasta que la escritura se habilite. `SESSION_DRIVER` sigue siendo `file`.
 
 ## 10. Publicación en IIS
 

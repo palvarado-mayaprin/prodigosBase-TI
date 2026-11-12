@@ -3,7 +3,11 @@
 namespace App\Providers;
 
 use App\Entorno\GuardaDdl;
+use App\Models\Usuario;
+use App\Services\Admin\RegistroSesiones;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +34,18 @@ class AppServiceProvider extends ServiceProvider
 
         // DDL separado del interruptor de escritura: ver App\Entorno\GuardaDdl.
         Event::listen(MigrationsStarted::class, fn () => app(GuardaDdl::class)->verificar(app('migrator')->getConnection()));
+
+        // Registro de sesiones (adm_sesiones): inicio y cierre normales.
+        Event::listen(Login::class, function (Login $evento): void {
+            if ($evento->guard === 'web' && $evento->user instanceof Usuario) {
+                app(RegistroSesiones::class)->registrar(request(), $evento->user);
+            }
+        });
+        Event::listen(Logout::class, function (Logout $evento): void {
+            if ($evento->guard === 'web') {
+                app(RegistroSesiones::class)->cerrar(request());
+            }
+        });
     }
 
     /**

@@ -1,5 +1,17 @@
 # Historial de cambios
 
+## 2026-11-12 — Etapa 5.3: Sesiones Activas
+
+- **Cambio:**
+    - registro de sesiones en `adm_sesiones` (`App\Services\Admin\RegistroSesiones`): una fila por inicio de sesión (eventos `Login` y `Logout`), con usuario, IP, agente y fechas UTC; la sesión de Laravel (en archivos) guarda el id de su fila y la base nunca recibe el identificador de sesión ni la cookie;
+    - `ValidarSesion` (grupo `web`) relee la fila en cada petición, actualiza la última actividad como mucho una vez por minuto y rechaza en la siguiente petición una sesión revocada, cerrada o ajena;
+    - Sesiones Activas (`admin/sesiones`, `AdministrarSesiones`): listado con estado (activa, vencida, cerrada, revocada), revocación individual y de todas las sesiones de una cuenta, nunca la propia sesión, referencias HMAC en lugar de identificadores y auditoría `REVOCAR` en la misma transacción;
+    - con la producción en solo lectura el inicio de sesión funciona sin registro (sin excepción al control de `DestinoSql`);
+    - `tests/TestCase::be()` trata cada cambio de cuenta con `actingAs()` como una sesión nueva; `lib/fechas.ts` con sus pruebas JS.
+- **Sin cambios:** PRODIGOS V2, `.env`, `SESSION_DRIVER=file`, esquema (sin migraciones nuevas), SQL Server e IIS.
+- **Verificación:** PHPUnit 126 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 9/9, Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** Auditoría, Seguimiento de Uso, Dashboard y navegación; revisión visual en navegador y validación en SQL Server real.
+
 ## 2026-11-12 — Etapa 5.2: Grupos, membresías y permisos
 
 - **Cambio:**
