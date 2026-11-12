@@ -43,14 +43,13 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+        // Política única de contraseñas, en todos los entornos (sin
+        // uncompromised(), que exigiría salida a internet).
+        Password::defaults(fn (): Password => Password::min(12)
+            ->max(72) // bcrypt solo usa los primeros 72 bytes.
+            ->letters()
+            ->mixedCase()
+            ->numbers()
+            ->symbols());
     }
 }

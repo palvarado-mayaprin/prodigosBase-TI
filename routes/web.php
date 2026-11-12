@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CambioContrasenaController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
@@ -21,4 +22,11 @@ Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
 
 Route::middleware('auth')->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+
+    // Cambio de la contraseña propia; obligatorio con debe_cambiar_password = 1
+    // (ExigirCambioContrasena). Escribe solo si DestinoSql lo permite.
+    Route::get('cambiar-contrasena', [CambioContrasenaController::class, 'edit'])->name('contrasena.editar');
+    Route::put('cambiar-contrasena', [CambioContrasenaController::class, 'update'])
+        ->middleware('throttle:6,1')
+        ->name('contrasena.actualizar');
 });

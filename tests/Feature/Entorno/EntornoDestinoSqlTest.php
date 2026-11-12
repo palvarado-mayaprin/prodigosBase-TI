@@ -54,6 +54,7 @@ class EntornoDestinoSqlTest extends TestCase
             'driver' => 'sqlsrv', 'host' => '127.0.0.1', 'port' => '1', 'database' => $base,
             'username' => 'sin_uso', 'password' => 'sin_uso', 'url' => null, 'prefix' => '',
         ]);
+        config()->set('database.default', 'sqlsrv');
         config()->set('entorno.entorno', $entorno);
         config()->set('entorno.escritura_produccion', $escritura);
         // La consola reutiliza la misma petición: se descarta el destino memorizado.

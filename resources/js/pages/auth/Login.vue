@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/login';
 
-// Pantalla provisional: la Etapa 4 cambia el campo a usuario y la Etapa 6
-// aplica el diseño definitivo del inicio de sesión.
+// Diseño provisional: la Etapa 6 aplica el diseño definitivo del inicio de sesión.
 defineOptions({
     layout: {
         title: 'Iniciar sesión',
@@ -40,16 +39,16 @@ defineProps<{
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">Correo electrónico</Label>
+                <Label for="usuario">Usuario</Label>
                 <Input
-                    id="email"
-                    type="email"
-                    name="email"
+                    id="usuario"
+                    type="text"
+                    name="usuario"
                     required
                     v-focus
-                    autocomplete="email"
+                    autocomplete="username"
                 />
-                <InputError :message="errors.email" />
+                <InputError :message="errors.usuario" />
             </div>
 
             <div class="grid gap-2">

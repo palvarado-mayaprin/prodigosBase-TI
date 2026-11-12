@@ -27,9 +27,15 @@ class GuardaDdl
      */
     public function motivoBloqueo(?string $conexion = null): ?string
     {
-        $conexion ??= (string) config('database.default');
-        if ($conexion !== 'sqlsrv' && ! $this->simuladaEnPruebas($conexion)) {
-            return "Las migraciones solo se ejecutan sobre la conexión sqlsrv (se pidió «{$conexion}»).";
+        // La migración debe usar la conexión que valida DestinoSql (la
+        // predeterminada); así `--database` no puede desviarla a otro destino.
+        $predeterminada = (string) config('database.default');
+        $conexion ??= $predeterminada;
+        if ($conexion !== $predeterminada) {
+            return "Las migraciones solo se ejecutan sobre la conexión predeterminada «{$predeterminada}» (se pidió «{$conexion}»).";
+        }
+        if (config("database.connections.$conexion.driver") !== 'sqlsrv' && ! $this->simuladaEnPruebas($conexion)) {
+            return 'Las migraciones solo se ejecutan sobre SQL Server (driver sqlsrv).';
         }
         if (($motivo = $this->destino->motivoDestinoReal()) !== null) {
             return $motivo;

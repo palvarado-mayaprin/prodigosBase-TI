@@ -1,11 +1,11 @@
-// Forma provisional del usuario autenticado; la Etapa 4 la ajusta al modelo
-// propio de adm_usuarios.
+// Datos del usuario autenticado que comparte HandleInertiaRequests
+// (nunca el modelo completo de adm_usuarios).
 export type User = {
     id: number;
+    usuario: string;
     name: string;
-    email: string;
+    email: string | null;
     avatar?: string;
-    [key: string]: unknown;
 };
 
 export type Auth = {

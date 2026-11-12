@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Única autoridad sobre el destino SQL Server de la conexión `sqlsrv` y sobre
+ * Única autoridad sobre el destino SQL Server de la conexión predeterminada
+ * (DB_CONNECTION, la que usan la aplicación y sus servicios) y sobre
  * la escritura (config/entorno.php).
  *
  * - Lectura: ADM_ENTORNO válido, destino del entorno completo y distinto del
@@ -66,13 +67,13 @@ class DestinoSql
 
     public function catalogoConfigurado(): ?string
     {
-        return $this->texto(config('database.connections.sqlsrv.database'));
+        return $this->texto($this->configuracionConexion()['database'] ?? null);
     }
 
     /** Motivo por el que la configuración no es un destino autorizado; null si lo es. */
     public function motivoConfiguracion(): ?string
     {
-        $config = config('database.connections.sqlsrv');
+        $config = $this->configuracionConexion();
         $entorno = $this->entorno();
         if ($entorno === null) {
             return 'ADM_ENTORNO debe ser "desarrollo" o "produccion".';
@@ -92,7 +93,7 @@ class DestinoSql
             return null;
         }
         if (($config['driver'] ?? null) !== 'sqlsrv') {
-            return 'La conexión sqlsrv debe usar el driver sqlsrv.';
+            return 'La conexión predeterminada (DB_CONNECTION) debe usar el driver sqlsrv.';
         }
         if (! $this->igual($this->catalogoConfigurado(), $this->catalogoEsperado())) {
             return sprintf('DB_DATABASE (%s) no corresponde al entorno %s (%s).',
@@ -184,7 +185,7 @@ class DestinoSql
     {
         abort_unless($this->escrituraPermitida(), 403, $this->mensajeBloqueo());
 
-        return DB::connection('sqlsrv');
+        return DB::connection();
     }
 
     /**
@@ -210,7 +211,7 @@ class DestinoSql
         if ($this->simulado()) {
             return ['base' => $this->catalogoEsperado(), 'servidor' => $this->servidorEsperado(), 'driver' => null];
         }
-        $db = DB::connection('sqlsrv');
+        $db = DB::connection();
         $driver = $db->getDriverName();
         if ($driver === 'sqlite' && $this->pruebas()) {
             // Destino simulado en PHPUnit: DB_NAME() se registra con
@@ -233,7 +234,7 @@ class DestinoSql
     {
         // Memoria en los atributos de la petición actual: se descarta con ella.
         $atributos = app('request')->attributes;
-        $clave = md5(serialize([config('entorno'), config('database.connections.sqlsrv')]));
+        $clave = md5(serialize([config('entorno'), config('database.default'), $this->configuracionConexion()]));
         $memoria = $atributos->get(self::MEMORIA);
         if (is_array($memoria) && ($memoria['clave'] ?? null) === $clave) {
             return ['destino' => $memoria['destino'], 'error' => $memoria['error']];
@@ -249,6 +250,18 @@ class DestinoSql
         $atributos->set(self::MEMORIA, ['clave' => $clave, 'destino' => $destino, 'error' => $error]);
 
         return ['destino' => $destino, 'error' => $error];
+    }
+
+    /**
+     * Configuración de la conexión predeterminada.
+     *
+     * @return array<string, mixed>
+     */
+    public function configuracionConexion(): array
+    {
+        $config = config('database.connections.'.config('database.default'));
+
+        return is_array($config) ? $config : [];
     }
 
     private function destinosIguales(): bool

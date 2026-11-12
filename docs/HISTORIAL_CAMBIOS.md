@@ -1,5 +1,21 @@
 # Historial de cambios
 
+## 2026-11-12 — Etapa 4: autenticación, autorización, catálogo y auditoría
+
+- **Cambio:**
+    - `App\Models\Usuario` sobre `adm_usuarios` sustituye al `User` provisional; Fortify autentica por `usuario` con hash, rechaza cuentas inactivas y «recordarme» y compara siempre contra un hash para no revelar si la cuenta existe;
+    - política única de contraseñas (12 a 72 caracteres, mayúsculas, minúsculas, números y símbolos) en todos los entornos;
+    - `ExigirCambioContrasena` y la pantalla `auth/CambiarContrasena` (`App\Services\Admin\CambiarContrasena`, auditada);
+    - `CatalogoPermisos` solo con funcionalidades administrativas, `Autorizacion` por grupos activos y `es_administrador` (sin grupo `-1`), `AutorizarPermiso`, `AutorizarAdministrador` y la protección del último administrador;
+    - `App\Auditoria\Auditor`: transacción obligatoria y secretos enmascarados;
+    - comandos `adm:sincronizar-permisos` (idempotente, no destructivo y auditado) y `adm:crear-administrador`;
+    - `DestinoSql` y `GuardaDdl` validan la conexión predeterminada (`DB_CONNECTION`, que debe usar el driver `sqlsrv`), la misma que usan servicios y migraciones; la única excepción sigue siendo PHPUnit con SQLite en memoria;
+    - el frontend recibe solo `id`, `usuario`, `name` y `email` del usuario;
+    - `composer types:check` ejecuta PHPStan sin OPcache: en Windows la caché compartida entre procesos mezclaba el `.phar` de otro proyecto.
+- **Sin cambios:** PRODIGOS V2, `.env`, SQL Server e IIS; sin pantallas administrativas (Etapa 5).
+- **Verificación:** PHPUnit 69 aprobadas y 1 omitida (integración `sqlsrv`); Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** Etapa 5 (módulos administrativos y navegación); validar en SQL Server real cuando se autorice una base.
+
 ## 2026-11-12 — Etapa 3: esquema SQL Server
 
 - **Cambio:**

@@ -26,6 +26,7 @@ class DiagnosticoYDdlTest extends TestCase
             'driver' => 'sqlsrv', 'host' => '127.0.0.1', 'port' => '1', 'database' => $base,
             'username' => 'usuario_secreto', 'password' => 'clave_secreta', 'url' => null, 'prefix' => '',
         ]);
+        config()->set('database.default', 'sqlsrv');
         config()->set('entorno.entorno', $entorno);
         config()->set('entorno.escritura_produccion', $escritura);
         $this->app['request']->attributes->remove('adm_destino_sql');

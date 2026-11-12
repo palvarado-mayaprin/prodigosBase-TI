@@ -150,19 +150,21 @@ El script es idempotente: crea los roles, concede los permisos de las tablas que
 
 `App\Entorno\GuardaDdl` se ejecuta al empezar cualquier migración (evento `MigrationsStarted`) y la detiene si:
 
-- la conexión no es `sqlsrv` (impide desviar la migración con `--database`);
+- la migración no usa la conexión predeterminada (`DB_CONNECTION`), que es la que valida `DestinoSql` (impide desviarla con `--database`), o esa conexión no usa el driver `sqlsrv`;
 - el destino real (`DB_NAME()`, `@@SERVERNAME`) no coincide con `ADM_ENTORNO`;
 - en producción falta la variable de proceso `ADM_DESPLIEGUE_DDL` con el nombre exacto de la base de producción.
 
-`ADM_PRODUCCION_ESCRITURA` nunca habilita DDL. En producción Laravel prohíbe además `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y `db:wipe`.
+`ADM_PRODUCCION_ESCRITURA` nunca habilita DDL.
+
+**Pruebas sobre SQLite.** `DestinoSql` y `GuardaDdl` validan la conexión predeterminada, la misma que usan la aplicación, sus servicios y las migraciones. La única excepción a «solo driver `sqlsrv`» es PHPUnit con SQLite en memoria (`phpunit.xml`: `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`), donde el destino se simula. Exige a la vez PHPUnit cargado y una base `:memory:`, así que no puede darse en una instalación real (que se instala sin dependencias de desarrollo y nunca usa `:memory:`). Fuera de esa simulación, cualquier conexión que no sea `sqlsrv` se rechaza. Las restricciones propias de SQL Server se prueban en el grupo `sqlsrv`. En producción Laravel prohíbe además `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y `db:wipe`.
 
 ## 6. Pruebas
 
-| Grupo                  | Dónde                                                  | Qué cubre                                                                                                                                               |
-| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Esquema en SQLite      | `tests/Feature/Esquema`                                | Nueve tablas, hash, valores por defecto, unicidad, PK compuestas, FK sin cascada, CHECK de acciones, auditoría y reversión completa. Se ejecuta siempre |
-| Guarda de DDL          | `tests/Feature/Entorno/MigracionesProductivasTest.php` | `migrate` en producción sin `ADM_DESPLIEGUE_DDL` no crea tablas aunque la escritura esté habilitada; con la variable sí; solo la conexión `sqlsrv`      |
-| Integración SQL Server | `tests/Sqlsrv` (grupo `sqlsrv`)                        | Índice filtrado de email, `ISJSON`, `SYSUTCDATETIME()`, CHECK de segundos y tipos reales. Se omite salvo habilitación expresa                           |
+| Grupo                  | Dónde                                                  | Qué cubre                                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Esquema en SQLite      | `tests/Feature/Esquema`                                | Nueve tablas, hash, valores por defecto, unicidad, PK compuestas, FK sin cascada, CHECK de acciones, auditoría y reversión completa. Se ejecuta siempre                      |
+| Guarda de DDL          | `tests/Feature/Entorno/MigracionesProductivasTest.php` | `migrate` en producción sin `ADM_DESPLIEGUE_DDL` no crea tablas aunque la escritura esté habilitada; con la variable sí; solo la conexión predeterminada con driver `sqlsrv` |
+| Integración SQL Server | `tests/Sqlsrv` (grupo `sqlsrv`)                        | Índice filtrado de email, `ISJSON`, `SYSUTCDATETIME()`, CHECK de segundos y tipos reales. Se omite salvo habilitación expresa                                                |
 
 Para la integración se necesita una base **vacía y dedicada** cuyo nombre termine en `_pruebas`. La prueba crea el esquema con las migraciones y lo elimina al terminar:
 

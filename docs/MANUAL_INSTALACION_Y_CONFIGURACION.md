@@ -180,7 +180,25 @@ SELECT migration FROM dbo.migrations ORDER BY id;                        -- 9 mi
 
 ### 5.4 Catálogo de permisos y primer administrador
 
-_Pendiente (Etapa 4):_ `adm:sincronizar-permisos` y `adm:crear-administrador`.
+Con la cuenta de la aplicación (los permisos de `adm_aplicacion` bastan) y la escritura permitida por `adm:entorno`:
+
+```bash
+php artisan adm:sincronizar-permisos
+php artisan adm:crear-administrador --usuario=<usuario> --nombre="<Nombre>" --apellidos="<Apellidos>"
+```
+
+- `adm:sincronizar-permisos` carga el catálogo de funcionalidades administrativas. Es idempotente: repetirlo no cambia nada si el catálogo no cambió. Nunca borra ni asigna permisos a grupos; lo que sale del catálogo queda inactivo.
+- `adm:crear-administrador` pide la contraseña temporal oculta y dos veces (mínimo 12 caracteres, con mayúsculas, minúsculas, números y símbolos); nunca se pasa como opción. Crea el grupo `Administradores` (`es_administrador = 1`) si no existe, la cuenta y su membresía en una sola transacción auditada. No crea duplicados.
+- Al iniciar sesión, la cuenta debe cambiar la contraseña antes de usar la aplicación.
+
+Comprobación:
+
+```sql
+SELECT codigo, activo FROM adm_funcionalidades ORDER BY codigo;
+SELECT u.usuario, u.debe_cambiar_password, g.nombre, g.es_administrador
+FROM adm_usuarios u JOIN adm_usuarios_grupos ug ON ug.usuario_id = u.id JOIN adm_grupos g ON g.id = ug.grupo_id;
+SELECT entidad, accion, fecha_utc FROM adm_auditoria ORDER BY id;
+```
 
 ## 6. Ejecución local
 
@@ -190,7 +208,7 @@ composer run dev
 
 Inicia el servidor de Laravel y Vite. Solo se admiten conexiones desde el propio equipo (`127.0.0.1` o `::1`).
 
-Mientras no se configuren los destinos `ADM_*` (sección 3.1), toda la aplicación responde 403 «Base de datos no permitida.»: es el comportamiento seguro por defecto. Hasta la Etapa 4 no existen usuarios, por lo que todavía no es posible iniciar sesión.
+Mientras no se configuren los destinos `ADM_*` (sección 3.1), toda la aplicación responde 403 «Base de datos no permitida.»: es el comportamiento seguro por defecto. El inicio de sesión usa el nombre de usuario y la contraseña de `adm_usuarios`; requiere haber creado el primer administrador (sección 5.4). Iniciar sesión no escribe en la base, así que también funciona con la producción en solo lectura.
 
 ## 7. Compilación y verificaciones
 
@@ -203,7 +221,7 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 3: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores y PHPUnit con 34 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 4: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores y PHPUnit con 69 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
@@ -219,12 +237,14 @@ _Pendiente._ Requisitos previstos: URL Rewrite 2.1, FastCGI con PHP 8.4 NTS, sit
 
 ## 11. Problemas frecuentes
 
-| Síntoma                                                          | Causa                                                                                   | Solución                                                                                                               |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Larastan termina con «reached configured PHP memory limit: 128M» | Límite de memoria de PHP                                                                | El script `composer types:check` ya usa `--memory-limit=512M`; si se ejecuta `phpstan` directamente, añadir esa opción |
-| La primera compilación tarda cerca de un minuto                  | Wayfinder genera las rutas tipadas al iniciar el build                                  | Normal; las siguientes compilaciones son más rápidas                                                                   |
-| Cambios en `.env` sin efecto                                     | Configuración en caché                                                                  | `php artisan config:clear`                                                                                             |
-| Todo responde 403 «Base de datos no permitida.»                  | `ADM_ENTORNO`, `ADM_*_SERVIDOR`, `ADM_*_BD` o `DB_DATABASE` incoherentes                | `php artisan adm:entorno` muestra el motivo                                                                            |
-| 403 «Origen no autorizado.»                                      | En local, acceso desde otro equipo; en producción, IP fuera de `ADM_REDES_CORPORATIVAS` | Acceder desde el propio equipo o ajustar las redes                                                                     |
-| 403 «La base productiva solo permite consultas.» al guardar      | `ADM_PRODUCCION_ESCRITURA=false`                                                        | Comportamiento esperado; habilitar solo con autorización                                                               |
-| `adm:entorno`: «Error de conexión»                               | Servidor, credenciales o certificado ODBC                                               | Revisar `DB_*`, `DB_ENCRYPT` y `DB_TRUST_SERVER_CERTIFICATE`                                                           |
+| Síntoma                                                                                   | Causa                                                                                                                              | Solución                                                                                                               |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Larastan termina con «reached configured PHP memory limit: 128M»                          | Límite de memoria de PHP                                                                                                           | El script `composer types:check` ya usa `--memory-limit=512M`; si se ejecuta `phpstan` directamente, añadir esa opción |
+| La primera compilación tarda cerca de un minuto                                           | Wayfinder genera las rutas tipadas al iniciar el build                                                                             | Normal; las siguientes compilaciones son más rápidas                                                                   |
+| Cambios en `.env` sin efecto                                                              | Configuración en caché                                                                                                             | `php artisan config:clear`                                                                                             |
+| Todo responde 403 «Base de datos no permitida.»                                           | `ADM_ENTORNO`, `ADM_*_SERVIDOR`, `ADM_*_BD` o `DB_DATABASE` incoherentes                                                           | `php artisan adm:entorno` muestra el motivo                                                                            |
+| 403 «Origen no autorizado.»                                                               | En local, acceso desde otro equipo; en producción, IP fuera de `ADM_REDES_CORPORATIVAS`                                            | Acceder desde el propio equipo o ajustar las redes                                                                     |
+| 403 «La base productiva solo permite consultas.» al guardar                               | `ADM_PRODUCCION_ESCRITURA=false`                                                                                                   | Comportamiento esperado; habilitar solo con autorización                                                               |
+| `adm:entorno`: «Error de conexión»                                                        | Servidor, credenciales o certificado ODBC                                                                                          | Revisar `DB_*`, `DB_ENCRYPT` y `DB_TRUST_SERVER_CERTIFICATE`                                                           |
+| Larastan falla con «Cannot redeclare class ComposerAutoloaderInit…» citando otro proyecto | En Windows, OPcache de la CLI comparte código compilado entre procesos PHP simultáneos; PHPStan carga su `.phar` con un alias fijo | `composer types:check` ya desactiva OPcache para PHPStan (`-d opcache.enable_cli=0`); usar ese script                  |
+| Tras iniciar sesión siempre se vuelve a «Cambiar contraseña»                              | La cuenta tiene `debe_cambiar_password = 1`                                                                                        | Cambiar la contraseña o cerrar la sesión                                                                               |
