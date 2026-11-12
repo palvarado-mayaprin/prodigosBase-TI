@@ -1,0 +1,41 @@
+/*
+ * Paleta de la aplicación: el ÚNICO archivo con colores.
+ *
+ * Para personalizar la plantilla se cambian solo estos valores; la
+ * estructura, las medidas y la tipografía viven en componentes.css.
+ * Valores de partida: paleta corporativa de PRODIGOS V2.
+ */
+:root {
+    /* Marca */
+    --adm-color-marca: #1d2840;
+    --adm-color-primario: #4d688c;
+    --adm-color-acento: #6b90bf;
+
+    /* Superficies */
+    --adm-fondo: #f2f2f2;
+    --adm-superficie: #ffffff;
+    --adm-superficie-hover: #f8fafd;
+    --adm-seleccion: #e8eff7;
+    --adm-borde: #d5dfea;
+
+    /* Texto */
+    --adm-texto: #1d2840;
+    --adm-texto-suave: #5c6373;
+    --adm-texto-inverso: #ffffff;
+
+    /* Estados: color principal, fondo, borde y texto de avisos e insignias */
+    --adm-exito: #237a57;
+    --adm-exito-fondo: #ebf7f0;
+    --adm-exito-borde: #a2d5b7;
+    --adm-exito-texto: #176342;
+
+    --adm-advertencia: #9a6700;
+    --adm-advertencia-fondo: #fff7e5;
+    --adm-advertencia-borde: #e5c781;
+    --adm-advertencia-texto: #754c00;
+
+    --adm-peligro: #b42318;
+    --adm-peligro-fondo: #fff0ed;
+    --adm-peligro-borde: #e9a7a0;
+    --adm-peligro-texto: #932018;
+}

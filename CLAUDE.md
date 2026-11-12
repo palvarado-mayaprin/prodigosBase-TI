@@ -21,7 +21,7 @@ Lee primero [AGENTS.md](AGENTS.md); sus reglas permanentes también rigen tu tra
 
 ## Verificación y control de versiones
 
-- Antes de cada commit: `composer test` (Pint, Larastan y PHPUnit), `npm run check`, `npm run types:check` y `npm run build`. Revisar el diff y los datos sensibles y añadir solo rutas explícitas.
+- Antes de cada commit: `composer test` (Pint, Larastan y PHPUnit), `npm run check`, `npm run types:check`, `npm run test:js` y `npm run build`. Revisar el diff y los datos sensibles y añadir solo rutas explícitas.
 - Mensajes de commit en español con el formato `tipo(alcance): descripción`.
 - No hacer push, crear repositorios remotos ni desplegar sin autorización.
 - Una sola sesión de asistente trabaja en la carpeta a la vez.

@@ -216,20 +216,30 @@ Mientras no se configuren los destinos `ADM_*` (sección 3.1), toda la aplicaci�
 npm run build          # compilación de producción (genera public/build)
 npm run types:check    # TypeScript (vue-tsc)
 npm run check          # formato y lint (vite-plus: oxfmt y oxlint)
+npm run test:js        # pruebas de la lógica del frontend (node --test)
 composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 ```
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 4: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores y PHPUnit con 69 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 5.1: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 3/3 y PHPUnit con 91 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
-_Pendiente (Etapa 6)._
+La paleta vive solo en `resources/css/tema/tokens.css` (variables `--adm-*`). Para personalizarla se editan esos valores y se ejecuta `npm run build`; la estructura y las medidas están en `componentes.css` y no se modifican. La prueba `tests/Feature/Visual/PaletaTest.php` impide colores literales fuera de los tokens.
+
+_Pendiente (Etapa 6):_ completar el sistema visual (navegación, encabezado, inicio de sesión, Dashboard) y la guía de personalización.
 
 ## 9. Verificación de módulos
 
-_Pendiente (Etapa 5)._
+Con el primer administrador (sección 5.4):
+
+| Módulo                     | Ruta                           | Comprobación                                                                                                                                                                                                                                                                                           |
+| -------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Administración de Usuarios | `/admin/usuarios`              | Crear una cuenta de prueba; editarla; restablecerle la contraseña (queda «Cambio de contraseña pendiente»); deshabilitarla y comprobar que no puede iniciar sesión; habilitarla. El botón de deshabilitar la propia cuenta está desactivado. Cada operación aparece en `adm_auditoria` sin contraseñas |
+| Mi Perfil                  | `/mi-perfil` (menú de usuario) | Cambiar correo y teléfono; cambiar la contraseña con la actual. Nombre y usuario son de solo lectura                                                                                                                                                                                                   |
+
+Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`. _Pendiente:_ el resto de los módulos (Etapa 5).
 
 ## 10. Publicación en IIS
 

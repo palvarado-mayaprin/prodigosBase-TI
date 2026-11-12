@@ -4,7 +4,7 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 
 ## Estado
 
-**Etapa 4 completada:** control centralizado de entornos, esquema SQL Server propio, autenticación por usuario, autorización por grupos y catálogo de permisos, auditoría transaccional y creación segura del primer administrador. Todavía no incluye las pantallas administrativas.
+**Etapa 5.1 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Administración de Usuarios y Mi Perfil, con el primer subconjunto del sistema visual. Faltan el resto de los módulos administrativos.
 
 | Etapa | Contenido                                                                                             | Estado     |
 | ----- | ----------------------------------------------------------------------------------------------------- | ---------- |
@@ -12,7 +12,7 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 | 2     | Dependencias definitivas, limpieza del starter kit, control de entornos (`DestinoSql`, `adm:entorno`) | Completada |
 | 3     | Esquema SQL Server (migraciones `adm_*`, roles SQL, control de DDL)                                   | Completada |
 | 4     | Autenticación, catálogo de permisos y auditoría                                                       | Completada |
-| 5     | Módulos administrativos                                                                               | Pendiente  |
+| 5     | Módulos administrativos                                                                               | En curso   |
 | 6     | Sistema visual `adm-` con paleta configurable                                                         | Pendiente  |
 | 7–9   | Limpieza, verificación integral y documentación final                                                 | Pendiente  |
 

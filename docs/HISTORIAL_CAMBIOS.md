@@ -1,5 +1,18 @@
 # Historial de cambios
 
+## 2026-11-12 — Etapa 5.1: Administración de Usuarios y Mi Perfil
+
+- **Cambio:**
+    - Administración de Usuarios (`admin/usuarios`): alta con hash y cambio obligatorio, edición, restablecimiento de contraseña (vuelve a obligar a cambiarla), habilitar y deshabilitar; usuario y correo únicos; sin deshabilitar la propia cuenta ni dejar el sistema sin administradores; todo auditado sin contraseñas (`App\Services\Admin\AdministrarUsuarios`);
+    - Mi Perfil (`mi-perfil`): consulta, correo y teléfono editables y cambio de contraseña reutilizando `CambiarContrasena`; acceso desde el menú de usuario;
+    - pantallas trasladadas de PRODIGOS V2 con las mismas medidas, jerarquías y patrones (búsqueda y orden locales, formularios, confirmaciones y mensajes);
+    - primer subconjunto del sistema visual: `resources/css/tema/tokens.css` (único archivo con colores) y `componentes.css` (prefijo `adm-`), y `lib/alertas.ts` con SweetAlert2 (nueva dependencia `sweetalert2`);
+    - mensajes en español (`lang/es`) e idioma `es` por defecto;
+    - `npm run test:js` (`node --test`) para la lógica del frontend.
+- **Sin cambios:** PRODIGOS V2, `.env`, SQL Server e IIS. El menú lateral dinámico llega con la navegación (Etapa 5).
+- **Verificación:** PHPUnit 91 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 3/3, Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** el resto de la Etapa 5; validar en SQL Server real cuando se autorice una base.
+
 ## 2026-11-12 — Etapa 4: autenticación, autorización, catálogo y auditoría
 
 - **Cambio:**

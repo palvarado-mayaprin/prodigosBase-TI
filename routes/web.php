@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CambioContrasenaController;
+use App\Http\Controllers\MiPerfilController;
+use App\Http\Middleware\AutorizarPermiso;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
@@ -29,4 +32,28 @@ Route::middleware('auth')->group(function () {
     Route::put('cambiar-contrasena', [CambioContrasenaController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('contrasena.actualizar');
+
+    // Mi Perfil: cualquier cuenta activa; la identidad sale solo de la sesión.
+    Route::get('mi-perfil', [MiPerfilController::class, 'show'])->name('mi-perfil');
+    Route::put('mi-perfil', [MiPerfilController::class, 'actualizar'])->name('mi-perfil.actualizar');
+    Route::put('mi-perfil/contrasena', [MiPerfilController::class, 'cambiarContrasena'])
+        // Prefijo propio: no comparte el contador con otras rutas limitadas.
+        ->middleware('throttle:6,1,mi-perfil')
+        ->name('mi-perfil.contrasena');
+
+    // Administración de Usuarios (administracion.accesos.usuarios).
+    Route::get('admin/usuarios', [UsuariosController::class, 'index'])
+        ->middleware(AutorizarPermiso::para('administracion.accesos.usuarios:VER'))
+        ->name('admin.usuarios');
+    Route::post('admin/usuarios', [UsuariosController::class, 'crear'])
+        ->middleware(AutorizarPermiso::para('administracion.accesos.usuarios:CREAR'))
+        ->name('admin.usuarios.crear');
+    Route::put('admin/usuarios/{usuario}', [UsuariosController::class, 'actualizar'])
+        ->whereNumber('usuario')
+        ->middleware(AutorizarPermiso::para('administracion.accesos.usuarios:EDITAR'))
+        ->name('admin.usuarios.actualizar');
+    Route::put('admin/usuarios/{usuario}/estado', [UsuariosController::class, 'estado'])
+        ->whereNumber('usuario')
+        ->middleware(AutorizarPermiso::para('administracion.accesos.usuarios:EDITAR'))
+        ->name('admin.usuarios.estado');
 });

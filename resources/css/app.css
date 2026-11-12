@@ -2,6 +2,10 @@
 
 @import 'tw-animate-css';
 
+/* Sistema visual de la plantilla: paleta (único archivo con colores) y componentes. */
+@import './tema/tokens.css';
+@import './tema/componentes.css';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 

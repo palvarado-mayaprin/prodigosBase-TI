@@ -1,0 +1,442 @@
+/*
+ * Sistema visual de la plantilla (prefijo adm-), trasladado del lenguaje
+ * visual de PRODIGOS V2 con las mismas medidas y jerarquías.
+ *
+ * Sin colores literales: todo color sale de tokens.css (las sombras y los
+ * anillos de foco se derivan con color-mix). Estas medidas son estructurales
+ * y no se personalizan.
+ *
+ * Etapa 5.1: familias que usan Usuarios y Mi Perfil. La Etapa 6 completa el
+ * resto (navegación, topbar, login, Dashboard, KPI, paginación…).
+ */
+:root {
+    --adm-fuente: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --adm-radio-sm: 6px;
+    --adm-radio-md: 8px;
+    --adm-radio-lg: 12px;
+    --adm-sombra: 0 2px 8px
+        color-mix(in srgb, var(--adm-color-marca) 4.5%, transparent);
+    --adm-transicion: 180ms ease;
+    --adm-foco: color-mix(in srgb, var(--adm-color-acento) 25%, transparent);
+}
+
+/* ==========================================================
+   CONTENIDO
+   ========================================================== */
+
+.adm-main {
+    min-width: 0;
+    flex: 1;
+    padding: 24px;
+    background: var(--adm-fondo);
+    color: var(--adm-texto);
+    font-family: var(--adm-fuente);
+}
+
+.adm-page-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--adm-color-marca);
+}
+
+.adm-page-subtitle {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--adm-texto-suave);
+}
+
+.adm-page-note,
+.adm-muted {
+    color: var(--adm-texto-suave);
+}
+
+.adm-card {
+    min-width: 0;
+    padding: 20px;
+    background: var(--adm-superficie);
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-lg);
+    box-shadow: var(--adm-sombra);
+}
+
+.adm-card-title {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--adm-color-marca);
+}
+
+.adm-requerido {
+    color: var(--adm-peligro);
+}
+
+/* ==========================================================
+   FORMULARIOS
+   ========================================================== */
+
+.adm-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--adm-color-marca);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.adm-input {
+    display: block;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    background: var(--adm-superficie);
+    color: var(--adm-texto);
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+    font: inherit;
+    transition: border-color var(--adm-transicion);
+}
+
+.adm-input:hover:not(:disabled) {
+    border-color: var(--adm-color-acento);
+}
+
+.adm-input:focus {
+    border-color: var(--adm-color-primario);
+    outline: 3px solid var(--adm-foco);
+    outline-offset: 1px;
+}
+
+.adm-input::placeholder {
+    color: var(--adm-texto-suave);
+    opacity: 0.85;
+}
+
+.adm-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.adm-input[readonly] {
+    background: var(--adm-superficie-hover);
+}
+
+.adm-input[aria-invalid='true'] {
+    border-color: var(--adm-peligro);
+}
+
+.adm-checkbox {
+    accent-color: var(--adm-color-primario);
+}
+
+.adm-field-error {
+    display: block;
+    color: var(--adm-peligro);
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+.adm-requisito-cumplido {
+    color: var(--adm-exito);
+}
+
+/* ==========================================================
+   BOTONES
+   ========================================================== */
+
+.adm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: var(--adm-radio-md);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--adm-transicion);
+}
+
+.adm-btn-primary {
+    background: var(--adm-color-primario);
+    color: var(--adm-texto-inverso);
+}
+
+.adm-btn-primary:hover:not(:disabled) {
+    background: var(--adm-color-marca);
+}
+
+.adm-btn-secondary {
+    background: var(--adm-superficie);
+    border-color: var(--adm-color-primario);
+    color: var(--adm-color-primario);
+}
+
+.adm-btn-secondary:hover:not(:disabled) {
+    background: var(--adm-seleccion);
+}
+
+.adm-btn-neutral {
+    background: transparent;
+    color: var(--adm-texto-suave);
+}
+
+.adm-btn-neutral:hover:not(:disabled) {
+    background: var(--adm-superficie-hover);
+    color: var(--adm-color-marca);
+}
+
+.adm-btn-danger {
+    background: var(--adm-peligro);
+    color: var(--adm-texto-inverso);
+}
+
+.adm-btn-danger:hover:not(:disabled) {
+    background: color-mix(
+        in srgb,
+        var(--adm-peligro) 85%,
+        var(--adm-color-marca)
+    );
+}
+
+.adm-btn:focus-visible {
+    outline: 3px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+.adm-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.adm-icon-btn {
+    color: var(--adm-texto-suave);
+}
+
+.adm-icon-btn:hover:not(:disabled) {
+    color: var(--adm-color-marca);
+}
+
+.adm-icon-btn:focus-visible {
+    outline: 2px solid var(--adm-color-primario);
+    outline-offset: -2px;
+}
+
+/* ==========================================================
+   TABLAS
+   ========================================================== */
+
+.adm-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+    background: var(--adm-superficie);
+}
+
+.adm-table {
+    width: 100%;
+    min-width: max-content;
+    border-collapse: collapse;
+    background: var(--adm-superficie);
+    color: var(--adm-texto);
+    font-family: var(--adm-fuente);
+    font-size: 13px;
+}
+
+.adm-table th,
+.adm-table td {
+    padding: 10px 12px;
+    line-height: 1.4;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.adm-table th {
+    background: var(--adm-seleccion);
+    color: var(--adm-color-marca);
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--adm-borde);
+}
+
+.adm-table td {
+    border-bottom: 1px solid var(--adm-borde);
+}
+
+.adm-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.adm-table tbody tr:hover,
+.adm-table tbody tr:focus-within {
+    background: var(--adm-superficie-hover);
+}
+
+.adm-table tbody tr.is-inactive {
+    color: var(--adm-texto-suave);
+}
+
+.adm-table-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.adm-table-actions .adm-btn {
+    min-height: 32px;
+    padding: 5px 9px;
+    font-size: 12px;
+}
+
+/* ==========================================================
+   AVISOS E INSIGNIAS
+   ========================================================== */
+
+.adm-alert {
+    padding: 12px 16px;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+}
+
+.adm-alert-info {
+    background: var(--adm-seleccion);
+    border-color: var(--adm-color-acento);
+    color: var(--adm-color-marca);
+}
+
+.adm-alert-warning {
+    background: var(--adm-advertencia-fondo);
+    border-color: var(--adm-advertencia-borde);
+    color: var(--adm-advertencia-texto);
+}
+
+.adm-alert-danger {
+    background: var(--adm-peligro-fondo);
+    border-color: var(--adm-peligro-borde);
+    color: var(--adm-peligro-texto);
+}
+
+.adm-alert-success {
+    background: var(--adm-exito-fondo);
+    border-color: var(--adm-exito-borde);
+    color: var(--adm-exito-texto);
+}
+
+.adm-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border: 1px solid var(--adm-color-marca);
+    border-radius: 999px;
+    color: var(--adm-color-marca);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.adm-badge-neutral {
+    background: var(--adm-fondo);
+    border-color: var(--adm-borde);
+    color: var(--adm-texto-suave);
+}
+
+.adm-badge-success {
+    background: var(--adm-exito-fondo);
+    border-color: var(--adm-exito-borde);
+    color: var(--adm-exito-texto);
+}
+
+.adm-badge-warning {
+    background: var(--adm-advertencia-fondo);
+    border-color: var(--adm-advertencia-borde);
+    color: var(--adm-advertencia-texto);
+}
+
+/* ==========================================================
+   DIÁLOGOS (SweetAlert2, resources/js/lib/alertas.ts)
+   ========================================================== */
+
+.swal2-popup.adm-swal-popup {
+    width: min(32rem, calc(100vw - 2rem));
+    padding: 1.5rem;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-lg);
+    background: var(--adm-superficie);
+    color: var(--adm-color-marca);
+    font-family: var(--adm-fuente);
+}
+
+.adm-swal-popup .swal2-title {
+    color: var(--adm-color-marca);
+    font-size: 1.25rem;
+}
+
+.adm-swal-popup .swal2-html-container.adm-swal-description {
+    color: var(--adm-texto-suave);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.adm-swal-popup .swal2-actions {
+    gap: 0.5rem;
+}
+
+.adm-swal-popup
+    :is(.swal2-confirm.adm-swal-confirm, .swal2-cancel.adm-swal-cancel) {
+    min-height: 40px;
+    margin: 0;
+    padding: 8px 14px;
+    border: 1px solid var(--adm-color-primario);
+    border-radius: var(--adm-radio-md);
+    font: 600 0.875rem var(--adm-fuente);
+    cursor: pointer;
+}
+
+.adm-swal-popup .swal2-confirm.adm-swal-confirm {
+    background: var(--adm-color-primario);
+    color: var(--adm-texto-inverso);
+}
+
+.adm-swal-popup .swal2-cancel.adm-swal-cancel {
+    background: var(--adm-superficie);
+    color: var(--adm-color-primario);
+}
+
+.adm-swal-popup
+    :is(
+        .swal2-confirm.adm-swal-confirm,
+        .swal2-cancel.adm-swal-cancel
+    ):focus-visible {
+    outline: 3px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+/* ==========================================================
+   RESPONSIVE Y ACCESIBILIDAD
+   ========================================================== */
+
+@media (max-width: 768px) {
+    .adm-main {
+        padding: 16px;
+    }
+
+    .adm-page-title {
+        font-size: 22px;
+    }
+
+    .adm-card {
+        padding: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .adm-input,
+    .adm-btn {
+        transition-duration: 0.01ms;
+    }
+}
