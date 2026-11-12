@@ -1,5 +1,17 @@
 # Historial de cambios
 
+## 2026-11-12 — Etapa 5.5: Dashboard y navegación dinámica
+
+- **Cambio:**
+    - `App\Navegacion\Navegacion`: menú y Dashboard desde `CatalogoPermisos` filtrado por `Autorizacion::rutasPermitidas()` (sin listas fijas de módulos), compartido como `navegacion`;
+    - `rutasPermitidas()` omite funcionalidades desactivadas en el catálogo o en `adm_funcionalidades`; el catálogo declara un `icono` por funcionalidad y las páginas comunes (`PAGINAS_COMUNES`: Inicio y Mi Perfil);
+    - menú lateral con marca, buscador, grupos por área y módulo, contraíble a iconos y estado activo; barra superior con migas de pan; Dashboard con tarjetas por área y estado vacío (`AppSidebar`, `NavMain`, `AppSidebarHeader`, `Dashboard`, `lib/navegacion.ts`, `lib/iconos.ts`);
+    - Seguimiento de Uso registra Inicio y Mi Perfil para cualquier cuenta (`pagina.dashboard`, `pagina.mi-perfil`) sin crear permisos;
+    - tokens del menú lateral en `tokens.css` y familias `adm-sidebar`, `adm-topbar` y `adm-module-card` en `componentes.css`.
+- **Sin cambios:** PRODIGOS V2, `.env`, esquema (sin migraciones), SQL Server, IIS y dependencias.
+- **Verificación:** PHPUnit 153 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 13/13, Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** Etapa 6 (inicio de sesión y guía de personalización del sistema visual); revisión visual en navegador y validación en SQL Server real.
+
 ## 2026-11-12 — Etapa 5.4: Auditoría de Modificaciones y Seguimiento de Uso
 
 - **Cambio:**

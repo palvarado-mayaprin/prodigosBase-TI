@@ -38,13 +38,13 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
     - un grupo activo con `es_administrador = 1` tiene acceso universal; no hay identificadores de grupo especiales;
     - deniega por defecto; los demás grupos solo obtienen las acciones asignadas en `adm_grupos_permisos` sobre funcionalidades activas;
     - las funcionalidades `soloAdministrador` no se obtienen por asignación;
-    - `rutasPermitidas()` alimentará el menú y el Dashboard (solo presentación);
+    - `rutasPermitidas()` alimenta el menú y el Dashboard (solo presentación): omite funcionalidades desactivadas en el catálogo o en `adm_funcionalidades` y hace dos consultas como máximo;
     - `quedariaSinAdministradores()` protege del último administrador activo; se usa dentro de la transacción del cambio y bloquea las membresías administrativas.
 - **Middleware:** `AutorizarPermiso::para('codigo:ACCION', …)` (basta uno) y `AutorizarAdministrador`. Un fallo de SQL responde 503.
 
 ### 4.1 Registrar una funcionalidad nueva
 
-1. Declararla en `CatalogoPermisos::areas()`.
+1. Declararla en `CatalogoPermisos::areas()` con su `ruta` (GET de entrada) e `icono` (un nombre de `resources/js/lib/iconos.ts`). Aparece sola en el menú y el Dashboard de quien pueda consultarla.
 2. Proteger sus rutas con `AutorizarPermiso::para()` o `AutorizarAdministrador`.
 3. Ejecutar `php artisan adm:sincronizar-permisos` en cada entorno.
 4. Asignar sus acciones a los grupos desde Administración de Permisos (Etapa 5).
@@ -138,6 +138,7 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 - **Registro** (`App\Services\Admin\SeguimientoUso`, sin auditoría: es un registro técnico):
     - `resources/js/lib/seguimientoUso.ts` envía la ruta de cada pantalla (`POST seguimiento/visitas`) y los segundos activos (`POST seguimiento/actividad`, cada minuto, al navegar y al ocultar la pestaña). Cuenta solo con la pestaña visible, hasta 5 minutos después de la última interacción y en una sola pestaña;
     - el servidor toma la sesión de `RegistroSesiones::actual()` (la fila de `adm_sesiones`; no crea sesiones ni identificadores) y el usuario de la autenticación; `ValidarSesion` ya rechazó una sesión revocada;
+    - las páginas comunes (`CatalogoPermisos::PAGINAS_COMUNES`: Inicio y Mi Perfil) se registran para cualquier cuenta autenticada con el código `pagina.<ruta>`, sin permisos;
     - solo se registran rutas GET con nombre que el catálogo asocia a una funcionalidad activa (`ruta`) y que la cuenta puede ver (`Autorizacion::permite(...:VER)`); el resto responde 204 sin registrar. Se guarda el código de la funcionalidad y la ruta sin parámetros de consulta;
     - los segundos se validan (1 a 600 por envío), solo se suman a visitas de la propia sesión y el total de la sesión nunca supera el tiempo real desde su inicio más 5 segundos;
     - **solo lectura:** son escrituras, así que `ControlarAcceso` las rechaza (403) y el navegador las descarta. Mientras la escritura esté bloqueada no se registra uso; tampoco el de las sesiones iniciadas en ese modo, que no tienen fila en `adm_sesiones`. No hay excepción al control centralizado.
@@ -146,7 +147,16 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
     - filtros validados: fechas, usuario exacto y módulo del catálogo.
 - **Pantalla** `admin/Seguimiento.vue`: indicadores, gráfico diario con selector de medida, módulos y usuarios con barras de proporción, historial paginado y exportaciones.
 
-### 6.9 Base compartida
+### 6.9 Navegación y Dashboard
+
+- **Servidor:** `App\Navegacion\Navegacion::para()` recorre `CatalogoPermisos::areas()` y conserva solo las rutas de `Autorizacion::rutasPermitidas()`: áreas → módulos → funcionalidades con nombre, descripción, icono y `href`. No hay listas fijas de módulos ni otra lógica de autorización. `HandleInertiaRequests` la comparte como `navegacion` (se calcula al renderizar, una vez por respuesta). Si la consulta de permisos falla, `verificada` es `false`.
+- **Menú lateral** (`AppSidebar.vue`, `NavMain.vue`): marca, buscador del menú (`lib/navegacion.ts`, sin distinguir mayúsculas ni tildes), «Inicio» para toda cuenta y un grupo por área con sus módulos como secciones. Se contrae a iconos con ayuda emergente; el elemento activo se marca por ruta. Ocultar una opción no protege nada: cada ruta exige su permiso.
+- **Barra superior** (`AppSidebarHeader.vue`, `.adm-topbar`): disparador del menú y migas de pan declaradas por cada página (`Inicio › Página`).
+- **Dashboard** (`pages/Dashboard.vue`): bienvenida y una tarjeta por funcionalidad autorizada, agrupadas por área, con enlace directo. Sin módulos, un aviso y el acceso a Mi Perfil. No muestra indicadores ni datos de negocio.
+- **Iconos:** `lib/iconos.ts` traduce el `icono` del catálogo a un componente de Lucide; un nombre desconocido usa uno genérico.
+- **Páginas comunes:** Inicio y Mi Perfil solo exigen sesión; no son funcionalidades ni generan permisos.
+
+### 6.10 Base compartida
 
 - **Idioma:** `lang/es` (validación y autenticación) y `es` como idioma por defecto.
 - **Sistema visual:** `resources/css/tema/tokens.css` (único archivo con colores, `--adm-*`) y `componentes.css` (medidas de PRODIGOS V2 con prefijo `adm-`). Incluye contenido, formularios, botones, tablas, avisos, insignias, diálogos y, desde la Etapa 5.2, el selector de modalidad, las listas de selección, las opciones de grupo, los indicadores de cambios y el árbol de permisos; la Etapa 6 completa el resto.

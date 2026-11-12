@@ -6,9 +6,9 @@
  * anillos de foco se derivan con color-mix). Estas medidas son estructurales
  * y no se personalizan.
  *
- * Etapas 5.1 y 5.2: familias que usan Usuarios, Mi Perfil, Grupos,
- * Membresías y Permisos. La Etapa 6 completa el resto (navegación, topbar,
- * login, Dashboard, KPI, paginación…).
+ * Etapas 5.1 a 5.5: módulos administrativos, navegación lateral, barra
+ * superior y Dashboard. La Etapa 6 completa el resto (inicio de sesión y
+ * guía de personalización).
  */
 :root {
     --adm-fuente: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
@@ -804,6 +804,309 @@
 }
 
 /* ==========================================================
+   NAVEGACIÓN LATERAL Y BARRA SUPERIOR
+   ========================================================== */
+
+/* Variables del sidebar de la interfaz base, tomadas de los tokens. */
+.adm-sidebar {
+    --sidebar: var(--adm-menu-fondo);
+    --sidebar-foreground: var(--adm-menu-texto);
+    --sidebar-primary: var(--adm-menu-activo);
+    --sidebar-primary-foreground: var(--adm-texto-inverso);
+    --sidebar-accent: var(--adm-menu-activo);
+    --sidebar-accent-foreground: var(--adm-texto-inverso);
+    --sidebar-border: var(--adm-menu-activo);
+    --sidebar-ring: var(--adm-color-acento);
+    background: var(--adm-menu-fondo);
+    color: var(--adm-menu-texto);
+    font-family: var(--adm-fuente);
+}
+
+.adm-sidebar [data-sidebar='sidebar'] {
+    background: var(--adm-menu-fondo);
+    color: var(--adm-menu-texto);
+}
+
+.adm-sidebar [data-sidebar='menu-button']:focus-visible {
+    outline: 2px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+.adm-sidebar .adm-sidebar-header {
+    gap: 10px;
+    padding: 12px 10px 6px;
+}
+
+.group[data-collapsible='icon'] .adm-sidebar .adm-sidebar-header {
+    padding-inline: 4px;
+}
+
+.group[data-collapsible='icon'] .adm-sidebar .adm-brand-link {
+    padding: 4px;
+}
+
+.adm-brand-link {
+    display: flex;
+    min-width: 0;
+    min-height: 52px;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: var(--adm-radio-md);
+    color: var(--adm-texto-inverso);
+    font-family: var(--adm-fuente);
+    text-decoration: none;
+}
+
+.adm-brand-link:hover {
+    background: color-mix(in srgb, var(--adm-texto-inverso) 6%, transparent);
+}
+
+.adm-brand-link:focus-visible {
+    outline: 2px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+.adm-brand-wordmark {
+    overflow: hidden;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.adm-brand-monogram {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.adm-menu-search {
+    position: relative;
+    margin: 0 4px 6px;
+}
+
+.adm-menu-search-icon {
+    position: absolute;
+    top: 11px;
+    left: 11px;
+    width: 16px;
+    height: 16px;
+    color: var(--adm-menu-texto-suave);
+    pointer-events: none;
+}
+
+.adm-menu-search-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px 0 36px;
+    border: 1px solid color-mix(in srgb, var(--adm-menu-texto) 25%, transparent);
+    border-radius: var(--adm-radio-md);
+    background: color-mix(in srgb, var(--adm-texto-inverso) 8%, transparent);
+    color: var(--adm-texto-inverso);
+    font: inherit;
+    font-size: 12px;
+}
+
+.adm-menu-search-input::placeholder {
+    color: var(--adm-menu-texto-suave);
+}
+
+.adm-menu-search-input:focus-visible {
+    outline: 2px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+.adm-menu-empty {
+    padding: 8px;
+    color: var(--adm-menu-texto-suave);
+    font-size: 12px;
+}
+
+.adm-sidebar .adm-sidebar-section {
+    color: var(--adm-menu-texto-suave);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+}
+
+.adm-sidebar .adm-sidebar-module {
+    padding: 6px 8px 2px;
+    color: var(--adm-menu-texto-suave);
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.adm-sidebar .adm-nav-link {
+    color: var(--adm-menu-texto);
+}
+
+.adm-sidebar .adm-nav-link:hover {
+    background: color-mix(in srgb, var(--adm-texto-inverso) 9%, transparent);
+    color: var(--adm-texto-inverso);
+}
+
+.adm-sidebar .adm-nav-link[data-active='true'] {
+    background: var(--adm-menu-activo);
+    color: var(--adm-texto-inverso);
+    font-weight: 600;
+}
+
+.adm-topbar {
+    border-color: var(--adm-color-acento);
+    background: var(--adm-color-primario);
+    color: var(--adm-texto-inverso);
+    font-family: var(--adm-fuente);
+}
+
+.adm-topbar [data-sidebar='trigger'] {
+    color: var(--adm-texto-inverso);
+}
+
+.adm-topbar [data-sidebar='trigger']:hover {
+    background: color-mix(in srgb, var(--adm-texto-inverso) 15%, transparent);
+    color: var(--adm-texto-inverso);
+}
+
+.adm-topbar [data-sidebar='trigger']:focus-visible,
+.adm-topbar [data-slot='breadcrumb-link']:focus-visible {
+    outline: 2px solid var(--adm-texto-inverso);
+    outline-offset: 2px;
+}
+
+.adm-topbar :is([data-slot='breadcrumb-list'], [data-slot='breadcrumb-link']) {
+    color: var(--adm-texto-inverso);
+    font-size: 13px;
+    opacity: 0.82;
+}
+
+.adm-topbar [data-slot='breadcrumb-link']:hover {
+    color: var(--adm-texto-inverso);
+    opacity: 1;
+}
+
+.adm-topbar [data-slot='breadcrumb-page'] {
+    color: var(--adm-texto-inverso);
+    font-weight: 600;
+}
+
+/* ==========================================================
+   DASHBOARD: BIENVENIDA Y TARJETAS DE MÓDULO
+   ========================================================== */
+
+.adm-eyebrow {
+    margin-bottom: 4px;
+    color: var(--adm-texto-suave);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.adm-welcome-title {
+    color: var(--adm-color-marca);
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.adm-area-title {
+    margin-bottom: 12px;
+    color: var(--adm-texto-suave);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* Toda la tarjeta es un único enlace enfocable. */
+.adm-module-card {
+    display: grid;
+    height: 100%;
+    grid-template-columns: 44px 1fr;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 14px;
+    row-gap: 4px;
+    padding: 20px;
+    background: var(--adm-superficie);
+    border: 1px solid var(--adm-borde);
+    border-left: 4px solid var(--adm-color-primario);
+    border-radius: var(--adm-radio-lg);
+    color: var(--adm-texto);
+    text-decoration: none;
+    transition:
+        border-color var(--adm-transicion),
+        box-shadow var(--adm-transicion);
+}
+
+.adm-module-card:hover {
+    border-color: var(--adm-color-acento);
+    border-left-color: var(--adm-color-primario);
+    box-shadow: 0 4px 14px
+        color-mix(in srgb, var(--adm-color-marca) 10%, transparent);
+}
+
+.adm-module-card:focus-visible {
+    outline: 2px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+.adm-module-card-icon {
+    display: flex;
+    width: 44px;
+    height: 44px;
+    grid-row: 1 / span 2;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--adm-seleccion);
+    color: var(--adm-color-primario);
+}
+
+.adm-module-card-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.adm-module-card-title {
+    align-self: end;
+    color: var(--adm-color-marca);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.adm-module-card-desc {
+    color: var(--adm-texto-suave);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.adm-module-card-open {
+    display: inline-flex;
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-self: end;
+    gap: 6px;
+    margin-top: 12px;
+    color: var(--adm-color-primario);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.adm-module-card-open svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================================
    DIÁLOGOS (SweetAlert2, resources/js/lib/alertas.ts)
    ========================================================== */
 
@@ -891,6 +1194,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .adm-sidebar,
+    .adm-sidebar *,
+    .adm-module-card,
     .adm-input,
     .adm-btn {
         transition-duration: 0.01ms;

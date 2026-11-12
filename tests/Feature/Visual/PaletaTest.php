@@ -21,6 +21,10 @@ class PaletaTest extends TestCase
         'resources/js/pages/admin/Auditoria.vue',
         'resources/js/pages/admin/Seguimiento.vue',
         'resources/js/pages/MiPerfil.vue',
+        'resources/js/pages/Dashboard.vue',
+        'resources/js/components/AppSidebar.vue',
+        'resources/js/components/AppSidebarHeader.vue',
+        'resources/js/components/NavMain.vue',
     ];
 
     public function test_no_hay_colores_literales_fuera_de_los_tokens(): void

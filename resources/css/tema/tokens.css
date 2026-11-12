@@ -18,6 +18,12 @@
     --adm-seleccion: #e8eff7;
     --adm-borde: #d5dfea;
 
+    /* Menú lateral */
+    --adm-menu-fondo: #1d2840;
+    --adm-menu-texto: #dde5f0;
+    --adm-menu-texto-suave: #b9c8dc;
+    --adm-menu-activo: #4d688c;
+
     /* Texto */
     --adm-texto: #1d2840;
     --adm-texto-suave: #5c6373;

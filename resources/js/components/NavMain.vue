@@ -6,33 +6,57 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import type { NavItem } from '@/types';
 
+// Un grupo del menú lateral (un área): etiqueta y secciones (sus módulos),
+// con título opcional. Los títulos de sección se ocultan con el menú
+// contraído; los íconos y la ayuda emergente se conservan.
 defineProps<{
-    items: NavItem[];
+    label: string;
+    secciones: { titulo?: string; items: NavItem[] }[];
 }>();
 
-const { isCurrentUrl } = useCurrentUrl();
+const { isCurrentOrParentUrl } = useCurrentUrl();
+const { isMobile, setOpenMobile } = useSidebar();
+
+function cerrarEnMovil() {
+    if (isMobile.value) setOpenMobile(false);
+}
 </script>
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
-        <SidebarMenu>
-            <SidebarMenuItem v-for="item in items" :key="item.title">
-                <SidebarMenuButton
-                    as-child
-                    :is-active="isCurrentUrl(item.href)"
-                    :tooltip="item.title"
+        <SidebarGroupLabel class="adm-sidebar-section">{{
+            label
+        }}</SidebarGroupLabel>
+        <template v-for="(seccion, indice) in secciones" :key="indice">
+            <p
+                v-if="seccion.titulo"
+                class="adm-sidebar-module group-data-[collapsible=icon]:hidden"
+            >
+                {{ seccion.titulo }}
+            </p>
+            <SidebarMenu>
+                <SidebarMenuItem
+                    v-for="item in seccion.items"
+                    :key="String(item.href)"
                 >
-                    <Link :href="item.href">
-                        <component :is="item.icon" />
-                        <span>{{ item.title }}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        </SidebarMenu>
+                    <SidebarMenuButton
+                        as-child
+                        class="adm-nav-link"
+                        :is-active="isCurrentOrParentUrl(item.href)"
+                        :tooltip="item.title"
+                    >
+                        <Link :href="item.href" @click="cerrarEnMovil">
+                            <component :is="item.icon" />
+                            <span>{{ item.title }}</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </template>
     </SidebarGroup>
 </template>

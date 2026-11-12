@@ -223,7 +223,7 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 5.4: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 10/10 y PHPUnit con 144 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 5.5: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 13/13 y PHPUnit con 153 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
@@ -245,8 +245,9 @@ Con el primer administrador (sección 5.4):
 | Sesiones Activas            | `/admin/sesiones`              | Iniciar sesión con una cuenta de prueba en otro navegador; verla como «Activa»; revocarla y comprobar que su siguiente acción vuelve al inicio de sesión. La propia sesión aparece como «Esta sesión» y no se puede revocar. Cerrar sesión normalmente la deja como «Cerrada»                          |
 | Auditoría de Modificaciones | `/admin/auditoria`             | Filtrar por usuario, acción y fechas; abrir el detalle de una edición (valores anterior y nuevo; contraseñas como `********`); ordenar por columna; exportar CSV y Excel con los filtros aplicados                                                                                                     |
 | Seguimiento de Uso          | `/admin/seguimiento`           | Navegar unos minutos por los módulos con otra cuenta; comprobar visitas y tiempo activo por usuario, módulo y día; exportar los cuatro reportes. Las fechas usan `ADM_ZONA_HORARIA`                                                                                                                    |
+| Navegación y Dashboard      | `/dashboard` y menú lateral    | Con el administrador, el menú y el Dashboard muestran los siete módulos del área Administración; contraer el menú deja los iconos; el buscador filtra las opciones. Con una cuenta que solo tenga «Consultar membresías», solo aparece Usuarios y grupos; al desactivar su grupo desaparece            |
 
-Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`, `/admin/grupos`, `/admin/permisos`, `/admin/sesiones`, `/admin/auditoria` y `/admin/seguimiento`. Todas las operaciones aparecen en `adm_auditoria`. _Pendiente:_ Dashboard y navegación (Etapa 5.5).
+Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`, `/admin/grupos`, `/admin/permisos`, `/admin/sesiones`, `/admin/auditoria` y `/admin/seguimiento`. Todas las operaciones aparecen en `adm_auditoria`. Una cuenta sin módulos ve en el Dashboard el aviso «Su usuario no tiene módulos administrativos asignados» y el acceso a Mi Perfil.
 
 **Sesiones y solo lectura.** El registro de sesiones escribe en `adm_sesiones` al iniciar y cerrar sesión y al actualizar la última actividad. Con la producción en solo lectura (`ADM_PRODUCCION_ESCRITURA=false`) esas escrituras no se hacen: se puede iniciar sesión, pero esas sesiones no aparecen en Sesiones Activas ni se pueden revocar hasta que la escritura se habilite. `SESSION_DRIVER` sigue siendo `file`.
 

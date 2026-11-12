@@ -15,16 +15,26 @@ use LogicException;
  *
  * `soloAdministrador`: la funcionalidad no se puede asignar a grupos; solo la
  * obtienen los grupos con es_administrador = 1.
+ *
+ * `icono`: nombre de un icono de Lucide para el menú y el Dashboard
+ * (resources/js/lib/navegacion.ts); sin él se usa uno genérico.
  */
 final class CatalogoPermisos
 {
     /** Acciones estándar de todas las funcionalidades. */
     public const ACCIONES = ['VER', 'CREAR', 'EDITAR', 'ELIMINAR'];
 
+    /**
+     * Pantallas de cualquier cuenta autenticada (ruta => nombre). No son
+     * funcionalidades ni generan permisos: solo exigen sesión. Se usan en la
+     * navegación fija y en Seguimiento de Uso.
+     */
+    public const PAGINAS_COMUNES = ['dashboard' => 'Inicio', 'mi-perfil' => 'Mi perfil'];
+
     private const IDENTIFICADOR = '/^[a-z][a-zA-Z0-9]*$/';
 
     /**
-     * @return array<string, array{nombre: string, modulos: array<string, array{nombre: string, funcionalidades: array<string, array{nombre: string, descripcion: string|null, activo: bool, ruta: string|null, soloAdministrador?: bool, acciones: array<string, string>}>}>}>
+     * @return array<string, array{nombre: string, modulos: array<string, array{nombre: string, funcionalidades: array<string, array{nombre: string, descripcion: string|null, activo: bool, ruta: string|null, soloAdministrador?: bool, icono?: string, acciones: array<string, string>}>}>}>
      */
     public static function areas(): array
     {
@@ -40,6 +50,7 @@ final class CatalogoPermisos
                                 'descripcion' => 'Alta, edición y habilitación de cuentas.',
                                 'activo' => true,
                                 'ruta' => 'admin.usuarios',
+                                'icono' => 'UserCog',
                                 'soloAdministrador' => true,
                                 'acciones' => [
                                     'VER' => 'Consultar cuentas',
@@ -52,6 +63,7 @@ final class CatalogoPermisos
                                 'descripcion' => 'Alta, edición y habilitación de grupos.',
                                 'activo' => true,
                                 'ruta' => 'admin.grupos',
+                                'icono' => 'UsersRound',
                                 'soloAdministrador' => true,
                                 'acciones' => [
                                     'VER' => 'Consultar grupos',
@@ -64,6 +76,7 @@ final class CatalogoPermisos
                                 'descripcion' => 'Consulta de las membresías. Modificarlas queda reservado a los administradores.',
                                 'activo' => true,
                                 'ruta' => 'admin.membresias',
+                                'icono' => 'Users',
                                 'acciones' => [
                                     'VER' => 'Consultar membresías',
                                 ],
@@ -73,6 +86,7 @@ final class CatalogoPermisos
                                 'descripcion' => 'Asignación de permisos a los grupos.',
                                 'activo' => true,
                                 'ruta' => 'admin.permisos',
+                                'icono' => 'ShieldCheck',
                                 'soloAdministrador' => true,
                                 'acciones' => [
                                     'VER' => 'Consultar permisos',
@@ -89,6 +103,7 @@ final class CatalogoPermisos
                                 'descripcion' => 'Consulta y revocación de sesiones abiertas.',
                                 'activo' => true,
                                 'ruta' => 'admin.sesiones',
+                                'icono' => 'KeyRound',
                                 'soloAdministrador' => true,
                                 'acciones' => [
                                     'VER' => 'Consultar sesiones',
@@ -105,6 +120,7 @@ final class CatalogoPermisos
                                 'descripcion' => 'Consulta y exportación de los cambios administrativos.',
                                 'activo' => true,
                                 'ruta' => 'admin.auditoria',
+                                'icono' => 'History',
                                 'soloAdministrador' => true,
                                 'acciones' => [
                                     'VER' => 'Consultar y exportar la auditoría',
@@ -120,6 +136,7 @@ final class CatalogoPermisos
                                 'descripcion' => 'Indicadores y exportación del uso de los módulos.',
                                 'activo' => true,
                                 'ruta' => 'admin.seguimiento',
+                                'icono' => 'ChartColumn',
                                 'soloAdministrador' => true,
                                 'acciones' => [
                                     'VER' => 'Consultar y exportar el seguimiento',
@@ -136,7 +153,7 @@ final class CatalogoPermisos
      * Funcionalidades indexadas por código, con su área y módulo padre.
      * Valida el catálogo: un error de declaración impide arrancar las rutas.
      *
-     * @return array<string, array{area: string, modulo: string, nombre: string, descripcion: string|null, activo: bool, ruta: string|null, soloAdministrador: bool, acciones: array<string, string>}>
+     * @return array<string, array{area: string, modulo: string, nombre: string, descripcion: string|null, activo: bool, ruta: string|null, soloAdministrador: bool, icono: string|null, acciones: array<string, string>}>
      */
     public static function funcionalidades(): array
     {
@@ -153,6 +170,9 @@ final class CatalogoPermisos
                     if ($datos['acciones'] === [] || array_diff(array_keys($datos['acciones']), self::ACCIONES) !== []) {
                         throw new LogicException("La funcionalidad $codigo debe declarar solo acciones estándar.");
                     }
+                    if (isset($datos['icono']) && ! preg_match('/^[A-Z][A-Za-z0-9]*$/', $datos['icono'])) {
+                        throw new LogicException("Icono no válido en $codigo.");
+                    }
                     if (strlen($codigo) > 150 || strlen($area) > 60 || strlen($modulo) > 60) {
                         throw new LogicException("Código demasiado largo en $codigo.");
                     }
@@ -165,6 +185,7 @@ final class CatalogoPermisos
                         'activo' => $datos['activo'],
                         'ruta' => $datos['ruta'],
                         'soloAdministrador' => $datos['soloAdministrador'] ?? false,
+                        'icono' => $datos['icono'] ?? null,
                         'acciones' => $datos['acciones'],
                     ];
                 }

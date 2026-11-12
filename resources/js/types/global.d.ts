@@ -1,4 +1,5 @@
 import type { Directive } from 'vue';
+import type { Navegacion } from '@/lib/navegacion';
 import type { Auth } from '@/types/auth';
 
 // Extend ImportMeta interface for Vite...
@@ -21,6 +22,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             zonaHoraria: string;
+            navegacion: Navegacion;
             [key: string]: unknown;
         };
     }

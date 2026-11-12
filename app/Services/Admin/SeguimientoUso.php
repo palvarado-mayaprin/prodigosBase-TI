@@ -22,7 +22,9 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
  * identificadores: el navegador nunca indica usuario ni sesión.
  *
  * - Solo cuentan las rutas GET con nombre que el catálogo asocia a una
- *   funcionalidad activa y que la cuenta puede ver (VER).
+ *   funcionalidad activa y que la cuenta puede ver (VER), y las páginas
+ *   comunes de cualquier cuenta (CatalogoPermisos::PAGINAS_COMUNES, código
+ *   `pagina.<ruta>`), que no tienen permisos.
  * - Los segundos de una sesión nunca superan el tiempo real transcurrido
  *   desde su inicio (más una tolerancia), aunque lleguen envíos duplicados.
  * - Escribe solo si DestinoSql lo permite: en solo lectura no hay registro.
@@ -31,6 +33,9 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
  */
 class SeguimientoUso
 {
+    /** Prefijo del código de las páginas comunes en adm_actividad.modulo. */
+    public const PREFIJO_COMUN = 'pagina.';
+
     /** Máximo de segundos por envío (el cliente envía cada minuto). */
     public const MAX_SEGUNDOS = 600;
 
@@ -60,6 +65,9 @@ class SeguimientoUso
     public static function modulos(): array
     {
         $modulos = [];
+        foreach (CatalogoPermisos::PAGINAS_COMUNES as $ruta => $nombre) {
+            $modulos[self::PREFIJO_COMUN.$ruta] = $nombre;
+        }
         foreach (CatalogoPermisos::funcionalidades() as $codigo => $funcionalidad) {
             if ($funcionalidad['ruta'] !== null) {
                 $modulos[$codigo] = $funcionalidad['nombre'];
@@ -83,9 +91,14 @@ class SeguimientoUso
         } catch (HttpExceptionInterface) {
             return null;
         }
-        $codigo = $this->codigoDeRuta($nombre);
-        if ($codigo === null || ! $this->autorizacion->permite($request, "$codigo:VER")) {
-            return null;
+        if (is_string($nombre) && isset(CatalogoPermisos::PAGINAS_COMUNES[$nombre])) {
+            // Página de cualquier cuenta autenticada: no exige permisos.
+            $codigo = self::PREFIJO_COMUN.$nombre;
+        } else {
+            $codigo = $this->codigoDeRuta($nombre);
+            if ($codigo === null || ! $this->autorizacion->permite($request, "$codigo:VER")) {
+                return null;
+            }
         }
 
         return (int) $this->destino->exigirEscritura()->table('adm_actividad')->insertGetId([

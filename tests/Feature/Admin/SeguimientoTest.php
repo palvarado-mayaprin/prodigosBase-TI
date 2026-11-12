@@ -78,7 +78,7 @@ class SeguimientoTest extends TestCase
     public function test_no_cuenta_rutas_inexistentes_ajenas_al_catalogo_o_no_autorizadas(): void
     {
         $this->iniciarSesion('ana');
-        foreach (['/admin/usuarios', '/no-existe', '/dashboard', '/mi-perfil', '/admin/usuarios/1'] as $ruta) {
+        foreach (['/admin/usuarios', '/no-existe', '/cambiar-contrasena', '/admin/usuarios/1', '/'] as $ruta) {
             $this->assertNull($this->visitar($ruta), $ruta);
         }
 
@@ -87,6 +87,31 @@ class SeguimientoTest extends TestCase
         $this->asignarPermiso($grupo, 'administracion.accesos.membresias:VER');
         $this->assertNotNull($this->visitar('/admin/membresias'));
         $this->assertSame(1, DB::table('adm_actividad')->count());
+    }
+
+    public function test_dashboard_y_mi_perfil_se_registran_para_cualquier_cuenta_sin_permisos(): void
+    {
+        $sesion = $this->iniciarSesion('ana');
+
+        $inicio = $this->visitar('/dashboard');
+        $perfil = $this->visitar('/mi-perfil');
+
+        $this->assertNotNull($inicio);
+        $this->assertNotNull($perfil);
+        $this->assertSame(['pagina.dashboard', 'pagina.mi-perfil'], DB::table('adm_actividad')->orderBy('id')->pluck('modulo')->all());
+        $this->assertSame([$sesion], DB::table('adm_actividad')->distinct()->pluck('sesion_id')->map(fn ($id) => (int) $id)->all());
+        // Sin sesiones ni permisos nuevos.
+        $this->assertSame(1, DB::table('adm_sesiones')->count());
+        $this->assertSame(0, DB::table('adm_grupos_permisos')->count());
+
+        $this->travel(90)->seconds();
+        $this->postJson(route('seguimiento.actividad'), ['visita' => $inicio, 'segundos' => 40])->assertNoContent();
+        $this->assertSame(40, $this->segundos((int) $inicio));
+
+        // Los reportes las identifican por su nombre y admiten filtrarlas.
+        $this->actingAs($this->admin)->get(route('admin.seguimiento', ['modulo' => 'pagina.dashboard']))->assertOk()
+            ->assertInertia(fn ($p) => $p->where('indicadores.visitas', 1)->where('modulos', fn ($m) => collect($m)->get('pagina.mi-perfil') === 'Mi perfil')
+                ->where('porModulo.0.nombre', 'Inicio'));
 
         // Solicitudes no válidas.
         $this->postJson(route('seguimiento.visita'), [])->assertUnprocessable();
@@ -95,8 +120,8 @@ class SeguimientoTest extends TestCase
 
         // Sin sesión autenticada no hay registro.
         $this->post(route('logout'));
-        $this->postJson(route('seguimiento.visita'), ['ruta' => '/admin/membresias'])->assertUnauthorized();
-        $this->assertSame(1, DB::table('adm_actividad')->count());
+        $this->postJson(route('seguimiento.visita'), ['ruta' => '/dashboard'])->assertUnauthorized();
+        $this->assertSame(2, DB::table('adm_actividad')->count());
     }
 
     public function test_suma_actividad_con_limites_del_servidor(): void

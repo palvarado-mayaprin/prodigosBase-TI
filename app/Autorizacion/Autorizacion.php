@@ -126,8 +126,10 @@ class Autorizacion
     }
 
     /**
-     * Rutas de entrada (VER) que la cuenta puede abrir. Solo presentación
-     * (menú y Dashboard): no protege rutas.
+     * Rutas de entrada (VER) que la cuenta puede abrir, en el orden del
+     * catálogo. Omite las funcionalidades desactivadas en el catálogo o en
+     * adm_funcionalidades. Solo presentación (menú y Dashboard): no protege
+     * rutas. Dos consultas como máximo, sin importar el tamaño del catálogo.
      *
      * @return list<string>
      */
@@ -135,10 +137,12 @@ class Autorizacion
     {
         $contexto = $this->contexto($request);
         $permitidos = $contexto['administrador'] ? [] : $this->permitidos($contexto['grupos']);
+        $inactivas = DB::table('adm_funcionalidades')->where('activo', false)->pluck('codigo')->all();
         $rutas = [];
         foreach (CatalogoPermisos::funcionalidades() as $codigo => $funcionalidad) {
             $ruta = $funcionalidad['ruta'];
-            if ($ruta !== null && ! in_array($ruta, $rutas, true) && Route::has($ruta) && ($contexto['administrador']
+            if ($ruta !== null && $funcionalidad['activo'] && ! in_array($codigo, $inactivas, true)
+                && ! in_array($ruta, $rutas, true) && Route::has($ruta) && ($contexto['administrador']
                 || (! $funcionalidad['soloAdministrador'] && in_array("$codigo:VER", $permitidos, true)))) {
                 $rutas[] = $ruta;
             }
