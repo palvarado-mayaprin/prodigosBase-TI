@@ -149,11 +149,12 @@ class Autorizacion
 
     /**
      * Protección del último administrador: ¿quedaría el sistema sin ninguna
-     * cuenta activa en un grupo administrador activo si `$usuarioId` dejara de
-     * serlo? Debe llamarse dentro de la transacción que hará el cambio: bloquea
-     * las membresías administrativas hasta su fin.
+     * cuenta activa en un grupo administrador activo si la cuenta `$usuarioId`
+     * dejara de ser administradora o el grupo `$grupoId` se desactivara?
+     * Debe llamarse dentro de la transacción que hará el cambio: bloquea las
+     * membresías administrativas hasta su fin.
      */
-    public function quedariaSinAdministradores(Connection $db, int $usuarioId): bool
+    public function quedariaSinAdministradores(Connection $db, ?int $usuarioId = null, ?int $grupoId = null): bool
     {
         abort_unless($db->transactionLevel() > 0, 500, 'La protección del último administrador exige una transacción.');
 
@@ -163,10 +164,33 @@ class Autorizacion
             ->where('g.es_administrador', true)
             ->where('g.activo', true)
             ->where('u.activo', true)
-            ->where('ug.usuario_id', '<>', $usuarioId)
+            ->when($usuarioId !== null, fn ($consulta) => $consulta->where('ug.usuario_id', '<>', $usuarioId))
+            ->when($grupoId !== null, fn ($consulta) => $consulta->where('ug.grupo_id', '<>', $grupoId))
             ->lockForUpdate()
             ->pluck('ug.usuario_id');
 
         return $otros->isEmpty();
+    }
+
+    /**
+     * Cuáles de los grupos indicados son administradores y están activos.
+     * Sirve para saber si una cuenta conserva la administración tras un cambio.
+     *
+     * @param  list<int>  $grupos
+     * @return list<int>
+     */
+    public function gruposAdministradores(Connection $db, array $grupos): array
+    {
+        if ($grupos === []) {
+            return [];
+        }
+
+        return array_values($db->table('adm_grupos')
+            ->whereIn('id', $grupos)
+            ->where('es_administrador', true)
+            ->where('activo', true)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all());
     }
 }

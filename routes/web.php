@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\GruposController;
+use App\Http\Controllers\Admin\MembresiasController;
+use App\Http\Controllers\Admin\PermisosController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CambioContrasenaController;
 use App\Http\Controllers\MiPerfilController;
+use App\Http\Middleware\AutorizarAdministrador;
 use App\Http\Middleware\AutorizarPermiso;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
@@ -56,4 +60,39 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('usuario')
         ->middleware(AutorizarPermiso::para('administracion.accesos.usuarios:EDITAR'))
         ->name('admin.usuarios.estado');
+
+    // Administración de Grupos (administracion.accesos.grupos).
+    Route::get('admin/grupos', [GruposController::class, 'index'])
+        ->middleware(AutorizarPermiso::para('administracion.accesos.grupos:VER'))
+        ->name('admin.grupos');
+    Route::post('admin/grupos', [GruposController::class, 'crear'])
+        ->middleware(AutorizarPermiso::para('administracion.accesos.grupos:CREAR'))
+        ->name('admin.grupos.crear');
+    Route::put('admin/grupos/{grupo}', [GruposController::class, 'actualizar'])
+        ->whereNumber('grupo')
+        ->middleware(AutorizarPermiso::para('administracion.accesos.grupos:EDITAR'))
+        ->name('admin.grupos.actualizar');
+    Route::put('admin/grupos/{grupo}/estado', [GruposController::class, 'estado'])
+        ->whereNumber('grupo')
+        ->middleware(AutorizarPermiso::para('administracion.accesos.grupos:EDITAR'))
+        ->name('admin.grupos.estado');
+
+    // Usuarios y grupos (administracion.accesos.membresias): consultar con
+    // VER; modificar, solo un grupo administrador.
+    Route::get('admin/membresias', [MembresiasController::class, 'index'])
+        ->middleware(AutorizarPermiso::para('administracion.accesos.membresias:VER'))
+        ->name('admin.membresias');
+    Route::put('admin/membresias/{usuario}', [MembresiasController::class, 'guardar'])
+        ->whereNumber('usuario')
+        ->middleware(AutorizarAdministrador::class)
+        ->name('admin.membresias.guardar');
+
+    // Administración de Permisos (administracion.accesos.permisos).
+    Route::get('admin/permisos', [PermisosController::class, 'index'])
+        ->middleware(AutorizarPermiso::para('administracion.accesos.permisos:VER'))
+        ->name('admin.permisos');
+    Route::put('admin/permisos/{grupo}', [PermisosController::class, 'guardar'])
+        ->whereNumber('grupo')
+        ->middleware(AutorizarPermiso::para('administracion.accesos.permisos:EDITAR'))
+        ->name('admin.permisos.guardar');
 });

@@ -1,5 +1,18 @@
 # Historial de cambios
 
+## 2026-11-12 — Etapa 5.2: Grupos, membresías y permisos
+
+- **Cambio:**
+    - Administración de Grupos (`admin/grupos`): alta, edición de nombre y descripción, activación y desactivación sin eliminación física, nombre único, detalle con integrantes y permisos; `es_administrador` se fija al crear; los grupos administradores se protegen para no dejar el sistema sin administradores ni quitar la administración a quien actúa (`App\Services\Admin\AdministrarGrupos`);
+    - Usuarios y grupos (`admin/membresias`): modalidades Usuarios → Grupos (edición) y Grupos → Usuarios (consulta) de PRODIGOS V2; concurrencia optimista con la base leída (`Relaciones`), sin duplicados, sin agregar a grupos inactivos, sin retirarse la propia administración y con la protección del último administrador (`AdministrarMembresias`); consultar exige VER y modificar, un grupo administrador;
+    - Administración de Permisos (`admin/permisos`): árbol del catálogo centralizado; solo se asignan permisos declarados, de funcionalidades activas y no `soloAdministrador`; los grupos administradores no se editan (`AdministrarPermisos`);
+    - todo auditado en la misma transacción (`CREAR`, `EDITAR`, `HABILITAR`, `DESHABILITAR`, `ASIGNAR`, `RETIRAR`);
+    - `Autorizacion::quedariaSinAdministradores` admite la desactivación de un grupo y se añade `gruposAdministradores`;
+    - `componentes.css` incorpora con tokens las familias de selección de PRODIGOS V2 (selector de modalidad, listas, opciones de grupo, indicadores de cambios y árbol de permisos); `lib/seleccion.ts` con sus pruebas JS.
+- **Sin cambios:** PRODIGOS V2, `.env`, SQL Server, IIS y el catálogo de permisos (ya declaraba estas funcionalidades). Las rutas quedan registradas para la navegación dinámica (`rutasPermitidas`).
+- **Verificación:** PHPUnit 116 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 7/7, Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** Sesiones Activas, Auditoría, Seguimiento de Uso, Dashboard y navegación; revisión visual en navegador y validación en SQL Server real cuando se autorice una base.
+
 ## 2026-11-12 — Etapa 5.1: Administración de Usuarios y Mi Perfil
 
 - **Cambio:**

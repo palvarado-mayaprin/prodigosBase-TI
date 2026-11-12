@@ -14,6 +14,9 @@ class PaletaTest extends TestCase
         'resources/css/tema/componentes.css',
         'resources/js/lib/alertas.ts',
         'resources/js/pages/admin/Usuarios.vue',
+        'resources/js/pages/admin/Grupos.vue',
+        'resources/js/pages/admin/Membresias.vue',
+        'resources/js/pages/admin/Permisos.vue',
         'resources/js/pages/MiPerfil.vue',
     ];
 

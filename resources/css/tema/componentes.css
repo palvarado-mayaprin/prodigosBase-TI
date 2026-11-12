@@ -6,8 +6,9 @@
  * anillos de foco se derivan con color-mix). Estas medidas son estructurales
  * y no se personalizan.
  *
- * Etapa 5.1: familias que usan Usuarios y Mi Perfil. La Etapa 6 completa el
- * resto (navegación, topbar, login, Dashboard, KPI, paginación…).
+ * Etapas 5.1 y 5.2: familias que usan Usuarios, Mi Perfil, Grupos,
+ * Membresías y Permisos. La Etapa 6 completa el resto (navegación, topbar,
+ * login, Dashboard, KPI, paginación…).
  */
 :root {
     --adm-fuente: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
@@ -355,6 +356,340 @@
     color: var(--adm-advertencia-texto);
 }
 
+.adm-badge-danger {
+    background: var(--adm-peligro-fondo);
+    border-color: var(--adm-peligro-borde);
+    color: var(--adm-peligro-texto);
+}
+
+/* ==========================================================
+   SELECCIÓN Y ASIGNACIONES (Membresías, Permisos)
+   ========================================================== */
+
+.adm-view-switch {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+    background: var(--adm-seleccion);
+}
+
+.adm-view-switch-button {
+    min-width: 0;
+    padding: 9px 14px;
+    border-radius: var(--adm-radio-sm);
+    color: var(--adm-color-marca);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background var(--adm-transicion),
+        color var(--adm-transicion);
+}
+
+.adm-view-switch-button:hover:not(.is-active):not(:disabled) {
+    background: var(--adm-superficie);
+}
+
+.adm-view-switch-button.is-active {
+    background: var(--adm-color-primario);
+    color: var(--adm-texto-inverso);
+    font-weight: 700;
+    box-shadow: 0 2px 6px
+        color-mix(in srgb, var(--adm-color-marca) 16%, transparent);
+}
+
+.adm-view-switch-button:focus-visible {
+    outline: 2px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+.adm-view-switch-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.adm-access-card
+    :is(.adm-user-name, .adm-user-code, .adm-group-name, .adm-group-code) {
+    overflow-wrap: anywhere;
+}
+
+.adm-access-groups .adm-group-option > span {
+    min-width: 0;
+}
+
+@media (min-width: 1024px) {
+    .adm-access-list,
+    .adm-access-groups {
+        max-height: min(36rem, 65dvh);
+        overflow-y: auto;
+    }
+}
+
+.adm-selected-header {
+    border-bottom: 1px solid var(--adm-borde);
+}
+
+.adm-selected-title {
+    margin-bottom: 4px;
+    font-size: 20px;
+}
+
+.adm-identity {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+}
+
+.adm-identity-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.adm-avatar {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--adm-seleccion);
+    color: var(--adm-color-primario);
+    font-family: var(--adm-fuente);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.adm-avatar.is-large {
+    width: 42px;
+    height: 42px;
+    font-size: 14px;
+}
+
+.adm-count-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    border-radius: var(--adm-radio-md);
+    background: var(--adm-seleccion);
+    color: var(--adm-color-marca);
+    font-size: 12px;
+}
+
+.adm-group-filter {
+    width: 148px;
+    max-width: 100%;
+}
+
+.adm-user-item,
+.adm-member-item,
+.adm-group-option {
+    padding: 12px 14px;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+    background: var(--adm-superficie);
+    font-family: var(--adm-fuente);
+}
+
+.adm-user-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    color: var(--adm-texto);
+    cursor: pointer;
+    transition: background var(--adm-transicion);
+}
+
+.adm-user-item:hover:not(:disabled) {
+    background: var(--adm-superficie-hover);
+    border-color: var(--adm-color-acento);
+}
+
+.adm-user-item.is-selected {
+    background: var(--adm-seleccion);
+    border-color: var(--adm-color-primario);
+    box-shadow: inset 3px 0 0 var(--adm-color-primario);
+}
+
+.adm-user-item:focus-visible,
+.adm-group-option:focus-within {
+    outline: 3px solid var(--adm-foco);
+    outline-offset: 2px;
+}
+
+.adm-user-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.adm-user-name {
+    display: block;
+    color: var(--adm-color-marca);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.adm-user-code {
+    display: block;
+    margin-top: 3px;
+    color: var(--adm-texto-suave);
+    font-size: 12px;
+}
+
+.adm-member-item {
+    color: var(--adm-texto);
+}
+
+.adm-group-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition:
+        background var(--adm-transicion),
+        border-color var(--adm-transicion);
+}
+
+.adm-group-option .adm-checkbox {
+    flex: none;
+}
+
+.adm-group-option:hover:not(:has(input:checked)):not(:has(input:disabled)) {
+    background: var(--adm-superficie-hover);
+    border-color: var(--adm-color-acento);
+}
+
+.adm-group-option:has(input:checked) {
+    background: var(--adm-seleccion);
+    border-color: var(--adm-color-primario);
+}
+
+.adm-group-option.is-admin {
+    border-color: var(--adm-color-primario);
+}
+
+.adm-group-option:has(input:disabled) {
+    cursor: default;
+}
+
+.adm-group-name {
+    display: block;
+    color: var(--adm-color-marca);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.adm-group-code {
+    display: block;
+    color: var(--adm-texto-suave);
+    font-size: 11px;
+}
+
+.adm-change-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+    font-family: var(--adm-fuente);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.adm-change-chip.is-add {
+    background: var(--adm-exito-fondo);
+    color: var(--adm-exito);
+}
+
+.adm-change-chip.is-remove {
+    background: var(--adm-peligro-fondo);
+    color: var(--adm-peligro);
+}
+
+.adm-change-chip.is-warning {
+    background: var(--adm-advertencia-fondo);
+    color: var(--adm-advertencia);
+}
+
+.adm-change-chip.is-clear {
+    background: var(--adm-superficie-hover);
+    color: var(--adm-texto-suave);
+}
+
+/* Árbol de permisos: área, módulo y funcionalidad. */
+.adm-tree-area {
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-lg);
+}
+
+.adm-tree-area-toggle,
+.adm-tree-module-toggle {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+.adm-tree-area-toggle {
+    padding: 12px 16px;
+    border-radius: var(--adm-radio-lg) var(--adm-radio-lg) 0 0;
+    background: var(--adm-superficie-hover);
+    color: var(--adm-color-marca);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+}
+
+.adm-tree-module-toggle {
+    padding: 8px;
+    border-radius: var(--adm-radio-md);
+    color: var(--adm-color-primario);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.adm-tree-module-toggle:hover {
+    background: var(--adm-superficie-hover);
+}
+
+.adm-tree-area-toggle:focus-visible,
+.adm-tree-module-toggle:focus-visible {
+    outline: 2px solid var(--adm-color-acento);
+}
+
+.adm-tree-count {
+    color: var(--adm-texto-suave);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.adm-tree-feature {
+    padding: 12px 16px;
+    border: 1px solid var(--adm-borde);
+    border-left: 4px solid var(--adm-color-primario);
+    border-radius: var(--adm-radio-md);
+    background: var(--adm-superficie);
+}
+
+.adm-tree-feature-description {
+    color: var(--adm-texto-suave);
+    font-size: 12px;
+}
+
 /* ==========================================================
    DIÁLOGOS (SweetAlert2, resources/js/lib/alertas.ts)
    ========================================================== */
@@ -431,6 +766,14 @@
 
     .adm-card {
         padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .adm-view-switch-button {
+        flex: 1;
+        padding-inline: 8px;
+        font-size: 12px;
     }
 }
 

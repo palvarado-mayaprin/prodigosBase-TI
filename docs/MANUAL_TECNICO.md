@@ -76,11 +76,42 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 - La cuenta sale solo de la sesión; se ignoran identificadores y campos no permitidos. El cambio de contraseña reutiliza `CambiarContrasena` y regenera la sesión.
 - **Pantalla** `MiPerfil.vue`: datos de solo lectura, contacto editable y cambio de contraseña con los requisitos en vivo (`lib/politicaContrasena.ts`, mismas expresiones que el servidor).
 
-### 6.3 Base compartida
+### 6.3 Administración de Grupos
+
+- **Rutas** (`administracion.accesos.grupos`, `soloAdministrador`): `GET admin/grupos` (VER), `POST admin/grupos` (CREAR), `PUT admin/grupos/{grupo}` y `PUT admin/grupos/{grupo}/estado` (EDITAR).
+- **Servicio** `App\Services\Admin\AdministrarGrupos`:
+    - alta, edición de nombre y descripción, activación y desactivación (`HABILITAR`/`DESHABILITAR`); los grupos no se eliminan;
+    - nombre único (comprobación en la transacción y restricción única como garantía final);
+    - `es_administrador` se fija al crear y no se edita;
+    - un grupo administrador no se desactiva si es el único que da la administración a quien actúa ni si el sistema quedaría sin administradores activos (`quedariaSinAdministradores($db, grupoId: …)`).
+- **Pantalla** `admin/Grupos.vue`: búsqueda local, formulario de alta y edición, confirmación de cambio de estado y detalle de consulta con integrantes y permisos.
+
+### 6.4 Usuarios y grupos (membresías)
+
+- **Rutas** (`administracion.accesos.membresias`, asignable): `GET admin/membresias` exige VER; `PUT admin/membresias/{usuario}` exige un grupo administrador (`AutorizarAdministrador`).
+- **Servicio** `App\Services\Admin\AdministrarMembresias::sincronizarGruposDeUsuario($actor, $usuario, $base, $grupos)`:
+    - concurrencia optimista (`Relaciones::diferencias`): si las membresías actuales ya no coinciden con la `base` que leyó la pantalla, responde el error `conflicto` y no guarda nada; una inserción concurrente duplicada (clave primaria) también se informa como conflicto;
+    - a un grupo inactivo no se agrega a nadie; sí se retira;
+    - nadie retira su propia capacidad administrativa ni deja el sistema sin administradores activos;
+    - cada alta y retiro se audita (`ASIGNAR`/`RETIRAR`, entidad `adm_usuarios_grupos`, registro `usuario:grupo`).
+- **Pantalla** `admin/Membresias.vue`: modalidades Usuarios → Grupos (edición con cambios pendientes, confirmación y recarga) y Grupos → Usuarios (consulta), como en PRODIGOS V2. Quien solo tiene VER la abre en modo consulta.
+
+### 6.5 Administración de Permisos
+
+- **Rutas** (`administracion.accesos.permisos`, `soloAdministrador`): `GET admin/permisos` (VER) y `PUT admin/permisos/{grupo}` (EDITAR).
+- **Servicio** `App\Services\Admin\AdministrarPermisos::sincronizar($grupo, $base, $permisos)`:
+    - solo asigna permisos sincronizados que estén declarados en `CatalogoPermisos`, de funcionalidades activas y no `soloAdministrador`; retirar se permite siempre (limpia asignaciones de funcionalidades retiradas);
+    - los permisos de un grupo administrador no se editan (acceso universal);
+    - misma concurrencia optimista y auditoría (`adm_grupos_permisos`, registro `grupo:permiso`, valor `codigo:ACCION`).
+- **Pantalla** `admin/Permisos.vue`: árbol área → módulo → funcionalidad con búsqueda, contadores, indicadores de cambios pendientes, panel expandible y confirmación con el detalle de los cambios.
+- La denegación por defecto no cambia: `Autorizacion` solo concede lo asignado a grupos activos.
+
+### 6.6 Base compartida
 
 - **Idioma:** `lang/es` (validación y autenticación) y `es` como idioma por defecto.
-- **Sistema visual:** `resources/css/tema/tokens.css` (único archivo con colores, `--adm-*`) y `componentes.css` (medidas de PRODIGOS V2 con prefijo `adm-`). En esta etapa incluye contenido, formularios, botones, tablas, avisos, insignias y diálogos; la Etapa 6 completa el resto.
+- **Sistema visual:** `resources/css/tema/tokens.css` (único archivo con colores, `--adm-*`) y `componentes.css` (medidas de PRODIGOS V2 con prefijo `adm-`). Incluye contenido, formularios, botones, tablas, avisos, insignias, diálogos y, desde la Etapa 5.2, el selector de modalidad, las listas de selección, las opciones de grupo, los indicadores de cambios y el árbol de permisos; la Etapa 6 completa el resto.
 - **Alertas:** `resources/js/lib/alertas.ts` (SweetAlert2 con carga diferida); los colores de los iconos se leen de los tokens.
+- **Selección:** `resources/js/lib/seleccion.ts` calcula agregados, retirados y cambios pendientes de membresías y permisos.
 
 ## 7. Comandos
 

@@ -222,7 +222,7 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 5.1: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 3/3 y PHPUnit con 91 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 5.2: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 7/7 y PHPUnit con 116 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
@@ -238,8 +238,11 @@ Con el primer administrador (sección 5.4):
 | -------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Administración de Usuarios | `/admin/usuarios`              | Crear una cuenta de prueba; editarla; restablecerle la contraseña (queda «Cambio de contraseña pendiente»); deshabilitarla y comprobar que no puede iniciar sesión; habilitarla. El botón de deshabilitar la propia cuenta está desactivado. Cada operación aparece en `adm_auditoria` sin contraseñas |
 | Mi Perfil                  | `/mi-perfil` (menú de usuario) | Cambiar correo y teléfono; cambiar la contraseña con la actual. Nombre y usuario son de solo lectura                                                                                                                                                                                                   |
+| Administración de Grupos   | `/admin/grupos`                | Crear un grupo de prueba; editar su nombre y descripción; consultar su detalle; desactivarlo y activarlo. Desactivar el único grupo administrador propio se rechaza                                                                                                                                    |
+| Usuarios y grupos          | `/admin/membresias`            | En Usuarios → Grupos, asignar y retirar el grupo de prueba a una cuenta (confirmación con el detalle). Retirarse a sí mismo el grupo administrador se rechaza. En Grupos → Usuarios, consultar los integrantes                                                                                         |
+| Administración de Permisos | `/admin/permisos`              | Asignar a un grupo no administrador `Usuarios y grupos · Consultar membresías` y comprobar que sus integrantes abren `/admin/membresias` en modo consulta; retirarlo. Las funcionalidades «Solo administrador» no se pueden marcar                                                                     |
 
-Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`. _Pendiente:_ el resto de los módulos (Etapa 5).
+Una cuenta sin grupo administrador recibe 403 en `/admin/usuarios`, `/admin/grupos` y `/admin/permisos`. Todas las operaciones aparecen en `adm_auditoria`. _Pendiente:_ Sesiones Activas, Auditoría, Seguimiento de Uso, Dashboard y navegación (Etapa 5).
 
 ## 10. Publicación en IIS
 
