@@ -181,7 +181,7 @@ Los textos son en español y describen la causa y la acción, sin detalles técn
 
 Para verificar con la paleta de ejemplo: copiar su bloque `:root` sobre el de `tokens.css`, compilar, revisar y restaurar con `git checkout resources/css/tema/tokens.css`. Las medidas no cambian porque `tokens.css` no contiene ninguna.
 
-El nombre y la descripción que muestran el inicio de sesión, el menú y el Dashboard se configuran con `APP_NAME` y `ADM_APP_DESCRIPCION`; no hay logotipos fijos.
+El nombre y la descripción que muestran el inicio de sesión, el menú y el Dashboard se configuran con `APP_NAME` y `ADM_APP_DESCRIPCION`; no hay logotipos fijos ni favicon de marca. Para usar un favicon propio, colocarlo en `public/` y sustituir el enlace `data:,` de `resources/views/app.blade.php`.
 
 ## 10. Accesibilidad
 

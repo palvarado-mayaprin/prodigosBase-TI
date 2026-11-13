@@ -4,7 +4,7 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 
 ## Estado
 
-**Etapa 6 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Usuarios, Mi Perfil, Grupos, Usuarios y grupos, Permisos, Sesiones Activas, Auditoría de Modificaciones y Seguimiento de Uso, con el subconjunto correspondiente del sistema visual. Incluye el Dashboard, la navegación dinámica según los permisos de cada cuenta y el sistema visual consolidado (inicio de sesión incluido), con la paleta como único aspecto personalizable.
+**Etapa 7 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Usuarios, Mi Perfil, Grupos, Usuarios y grupos, Permisos, Sesiones Activas, Auditoría de Modificaciones y Seguimiento de Uso, con el subconjunto correspondiente del sistema visual. Incluye el Dashboard, la navegación dinámica según los permisos de cada cuenta y el sistema visual consolidado (inicio de sesión incluido), con la paleta como único aspecto personalizable.
 
 | Etapa | Contenido                                                                                             | Estado     |
 | ----- | ----------------------------------------------------------------------------------------------------- | ---------- |
@@ -14,7 +14,8 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 | 4     | Autenticación, catálogo de permisos y auditoría                                                       | Completada |
 | 5     | Módulos administrativos                                                                               | Completada |
 | 6     | Sistema visual `adm-` con paleta configurable                                                         | Completada |
-| 7–9   | Limpieza, verificación integral y documentación final                                                 | Pendiente  |
+| 7     | Limpieza y desacoplamiento                                                                            | Completada |
+| 8–9   | Verificación integral y documentación final                                                           | Pendiente  |
 
 ## Alcance previsto
 

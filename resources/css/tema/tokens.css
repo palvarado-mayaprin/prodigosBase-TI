@@ -5,7 +5,7 @@
  * estructura, las medidas y la tipografía viven en componentes.css. Los
  * componentes de interfaz base (app.css), SweetAlert2, la barra de progreso
  * y el menú lateral también se derivan de aquí.
- * Valores de partida: paleta de PRODIGOS V2. Ejemplo alternativo y
+ * Valores de partida: paleta azul de la plantilla. Ejemplo alternativo y
  * procedimiento: docs/ejemplos/paleta-ejemplo.css y docs/GUIA_DISENO_UI.md.
  */
 :root {

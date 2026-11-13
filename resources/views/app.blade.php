@@ -12,9 +12,9 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        {{-- Sin icono de marca: evita pedir /favicon.ico. Para usar uno propio,
+             colocarlo en public/ y enlazarlo aquí (docs/GUIA_DISENO_UI.md). --}}
+        <link rel="icon" href="data:,">
 
         @fonts
 

@@ -2,7 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
-// Inicio de sesión y cambio de contraseña: distribución de PRODIGOS V2
+// Inicio de sesión y cambio de contraseña: distribución dividida
 // (contenido a la izquierda, panel de marca a la derecha en escritorio y
 // franja superior en móvil). La marca es neutra y configurable: APP_NAME y
 // ADM_APP_DESCRIPCION; los colores salen de tokens.css.

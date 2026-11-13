@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/login';
 
-// Inicio de sesión (Fortify): distribución y campos de PRODIGOS V2 con la
-// marca neutra de AuthSplitLayout.
+// Inicio de sesión (Fortify): campos con icono y la marca neutra de
+// AuthSplitLayout.
 defineOptions({
     layout: {
         title: 'Iniciar sesión',

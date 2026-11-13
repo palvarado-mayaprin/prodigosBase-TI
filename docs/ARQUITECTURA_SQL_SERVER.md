@@ -65,7 +65,7 @@ PK compuesta (`usuario_id`, `grupo_id`).
 | `activo`                   | bit             | NOT NULL, DEFAULT 1                           |
 | `created_at`, `updated_at` | datetime2(3)    | NULL                                          |
 
-La llena solo el comando de sincronización del catálogo (Etapa 4).
+La llena solo el comando de sincronización del catálogo (`adm:sincronizar-permisos`).
 
 ### 2.5 `adm_permisos`
 

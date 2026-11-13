@@ -1,5 +1,20 @@
 # Historial de cambios
 
+## 2026-11-13 — Etapa 7: limpieza y desacoplamiento final
+
+- **Decisión aprobada:** apariencia única y clara, sin modo oscuro automático; la paleta (29 tokens) es el único elemento visual personalizable.
+- **Cambio (solo limpieza verificada):**
+    - dependencias de desarrollo retiradas: `fakerphp/faker` (sin factorías ni usos; también `faker_locale` y `APP_FAKER_LOCALE`) y `laravel/pail` (exige `pcntl`, inexistente en Windows e IIS). `composer.lock` solo pierde esos paquetes;
+    - favicons genéricos del kit inicial (`favicon.ico`, `favicon.svg` con el logotipo de Laravel, `apple-touch-icon.png`) sustituidos por `<link rel="icon" href="data:,">`;
+    - `pnpm-workspace.yaml` (el proyecto usa npm), el comando de ejemplo `inspire` y los tipos `Appearance`/`ResolvedAppearance` del modo oscuro retirado;
+    - comentarios de código neutros (sin citar el sistema de referencia);
+    - documentación: contradicción corregida (iniciar sesión sí registra la sesión cuando la escritura está permitida), referencias de etapa obsoletas y sección de dependencias en el manual técnico.
+- **Conservado:** componentes base de `components/ui` (reutilizables), `components.json`, configuración SSR de Inertia, flujo de GitHub Actions, `laravel/tinker` y `concurrently` (`composer run dev`).
+- **Independencia:** sin rutas, servidores, bases, repositorios ni archivos de PRODIGOS V2; las menciones restantes son de origen del diseño en la documentación y el historial.
+- **Sin cambios:** lógica de autenticación, permisos, auditoría, sesiones, seguimiento y entornos; las nueve migraciones; PRODIGOS V2, `.env`, SQL Server e IIS.
+- **Verificación:** PHPUnit 156 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 13/13, Pint, Larastan 0, `npm run check`, `types:check` y `build`.
+- **Pendiente:** Etapa 8 (verificación integral) y Etapa 9 (documentación final y publicación en IIS).
+
 ## 2026-11-13 — Etapa 6: consolidación del lenguaje visual
 
 - **Cambio:**

@@ -1,6 +1,6 @@
 /*
- * Sistema visual de la plantilla (prefijo adm-), trasladado del lenguaje
- * visual de PRODIGOS V2 con las mismas medidas y jerarquías.
+ * Sistema visual de la plantilla (prefijo adm-): medidas, jerarquías y
+ * comportamiento de las pantallas administrativas.
  *
  * Sin colores literales: todo color sale de tokens.css (las sombras y los
  * anillos de foco se derivan con color-mix). Estas medidas son estructurales

@@ -47,7 +47,7 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 1. Declararla en `CatalogoPermisos::areas()` con su `ruta` (GET de entrada) e `icono` (un nombre de `resources/js/lib/iconos.ts`). Aparece sola en el menú y el Dashboard de quien pueda consultarla.
 2. Proteger sus rutas con `AutorizarPermiso::para()` o `AutorizarAdministrador`.
 3. Ejecutar `php artisan adm:sincronizar-permisos` en cada entorno.
-4. Asignar sus acciones a los grupos desde Administración de Permisos (Etapa 5).
+4. Asignar sus acciones a los grupos desde Administración de Permisos.
 
 ## 5. Auditoría
 
@@ -183,3 +183,17 @@ Los comandos que escriben usan `DestinoSql::exigirEscritura()`: en producción r
 ## 8. Pruebas
 
 Se ejecutan con SQLite en memoria y las mismas migraciones (`RefreshDatabase`). `tests/Concerns/CreaDatosAdministrativos.php` crea usuarios, grupos y asignaciones ficticios. `tests/js` contiene pruebas de la lógica del frontend (`npm run test:js`) y `tests/Feature/Visual/PaletaTest.php` vigila que no haya colores fuera de los tokens. Las validaciones propias de SQL Server están en el grupo `sqlsrv` (ver [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+
+## 9. Dependencias
+
+Solo las necesarias para la plantilla; `tests/Feature/NavegacionTest.php` comprueba que no haya referencias a módulos de otros sistemas.
+
+- **PHP:**
+    - producción: `laravel/framework`, `laravel/fortify` (solo inicio y cierre de sesión), `inertiajs/inertia-laravel`, `laravel/wayfinder` (rutas tipadas para el frontend) y `laravel/tinker` (consola de mantenimiento);
+    - desarrollo: `phpunit/phpunit`, `mockery/mockery`, `nunomaduro/collision`, `laravel/pao` (salida de las pruebas), `laravel/pint` y `larastan/larastan`.
+- **npm:**
+    - Vue, Inertia, `reka-ui`, `class-variance-authority`, `clsx` y `tailwind-merge` (componentes base), `@lucide/vue`, `@vueuse/core`, `vue-sonner`, `sweetalert2`, Tailwind y `tw-animate-css`;
+    - desarrollo: `vite-plus`, TypeScript, `vue-tsc`, `@types/node` (pruebas `node --test`), los plugins de Vite y `concurrently` (`composer run dev`).
+- **Retiradas en la Etapa 7:** `fakerphp/faker` (sin factorías ni usos) y `laravel/pail` (exige la extensión `pcntl`, inexistente en Windows e IIS).
+- **Componentes base:** `resources/js/components/ui` (shadcn-vue, `components.json`) se conserva completo aunque algunos componentes aún no se usen: es la base reutilizable de los módulos futuros.
+- **Archivos públicos:** sin favicon de marca (`<link rel="icon" href="data:,">` en `app.blade.php`); cada implantación puede agregar el suyo en `public/`.

@@ -11,7 +11,7 @@ Este manual se completa etapa por etapa. Cada sección indica si ya es aplicable
 | Node.js y npm                        | Node 24, npm 11             | El proyecto incluye `.npmrc` con `ignore-scripts=true`                                                                            |
 | Git                                  | 2.51                        |                                                                                                                                   |
 | Microsoft ODBC Driver for SQL Server | 17 o 18                     | Con el 18, revisar `DB_ENCRYPT` y `DB_TRUST_SERVER_CERTIFICATE`                                                                   |
-| Microsoft SQL Server                 | 2016 o superior             | Necesario a partir de la Etapa 3                                                                                                  |
+| Microsoft SQL Server                 | 2016 o superior             | Motor obligatorio de la aplicación                                                                                                |
 
 Comprobaciones:
 
@@ -210,7 +210,7 @@ composer run dev
 
 Inicia el servidor de Laravel y Vite. Solo se admiten conexiones desde el propio equipo (`127.0.0.1` o `::1`).
 
-Mientras no se configuren los destinos `ADM_*` (sección 3.1), toda la aplicación responde 403 «Base de datos no permitida.»: es el comportamiento seguro por defecto. El inicio de sesión usa el nombre de usuario y la contraseña de `adm_usuarios`; requiere haber creado el primer administrador (sección 5.4). Iniciar sesión no escribe en la base, así que también funciona con la producción en solo lectura.
+Mientras no se configuren los destinos `ADM_*` (sección 3.1), toda la aplicación responde 403 «Base de datos no permitida.»: es el comportamiento seguro por defecto. El inicio de sesión usa el nombre de usuario y la contraseña de `adm_usuarios`; requiere haber creado el primer administrador (sección 5.4). Iniciar sesión solo registra la sesión en `adm_sesiones` cuando la escritura está permitida; con la producción en solo lectura funciona igual, sin ese registro (sección 9).
 
 ## 7. Compilación y verificaciones
 
@@ -224,7 +224,7 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 6: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 13/13 y PHPUnit con 156 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 7: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 13/13 y PHPUnit con 156 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
