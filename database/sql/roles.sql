@@ -8,11 +8,15 @@
  * cuenta que pueda administrar roles (db_owner o db_securityadmin), mediante
  * sqlcmd o SSMS en modo SQLCMD:
  *
- *   sqlcmd -S <servidor> -d <base> -E -i database\sql\roles.sql ^
- *          -v UsuarioAplicacion="<usuario_app>" UsuarioDespliegue="<usuario_ddl>"
+ *   sqlcmd -S <servidor> -d <base> -E -b -i database\sql\roles.sql ^
+ *          -v BaseEsperada="<base>" UsuarioAplicacion="<usuario_app>" UsuarioDespliegue="<usuario_ddl>"
  *
- * Parámetros obligatorios en -v (usuarios de base de datos ya creados por el
- * DBA; pasar "" para omitir uno):
+ * Parámetros obligatorios en -v:
+ *   BaseEsperada       Nombre exacto de la base de -d. Si falta, está vacío o
+ *                      no coincide con DB_NAME(), el script se detiene antes
+ *                      de crear roles o tocar permisos (sin el parámetro,
+ *                      sqlcmd ni siquiera lo ejecuta).
+ * Usuarios de base de datos ya creados por el DBA (pasar "" para omitir uno):
  *   UsuarioAplicacion  Usuario del login que usa la aplicación (.env).
  *   UsuarioDespliegue  Usuario del login que ejecuta las migraciones; se usa
  *                      solo en la consola de despliegue, nunca en .env.
@@ -24,12 +28,15 @@
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
+/* 0. Destino, antes de cualquier cambio. THROW detiene todo el script. */
 DECLARE @base sysname = DB_NAME();
+DECLARE @esperada sysname = N'$(BaseEsperada)';
 IF @base IN (N'master', N'model', N'msdb', N'tempdb')
-BEGIN
-    RAISERROR(N'Ejecute el script conectado a la base de la aplicación, no a %s.', 16, 1, @base);
-    RETURN;
-END;
+    THROW 50003, N'Ejecute el script conectado a la base de la aplicación, no a una base del sistema.', 1;
+IF @esperada = N''
+    THROW 50004, N'Falta el parámetro BaseEsperada (-v BaseEsperada="<base>").', 1;
+IF @base COLLATE Latin1_General_CI_AS <> @esperada COLLATE Latin1_General_CI_AS
+    THROW 50005, N'La base conectada (DB_NAME()) no es la indicada en BaseEsperada. No se aplicó ningún cambio.', 1;
 
 BEGIN TRANSACTION;
 

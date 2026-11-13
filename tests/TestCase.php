@@ -4,6 +4,8 @@ namespace Tests;
 
 use App\Services\Admin\RegistroSesiones;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
+use Illuminate\Foundation\Console\Kernel;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Laravel\Fortify\Features;
 
@@ -14,6 +16,18 @@ abstract class TestCase extends BaseTestCase
         if (! Features::enabled($feature)) {
             $this->markTestSkipped($message ?? "Fortify feature [{$feature}] is not enabled.");
         }
+    }
+
+    /**
+     * Laravel no emite los eventos de consola (CommandStarting) en PHPUnit;
+     * GuardaDdl los usa para detener migrate antes de crear dbo.migrations.
+     * Llamar antes del primer artisan() de la prueba.
+     */
+    protected function activarEventosDeComandos(): void
+    {
+        $kernel = $this->app->make(ConsoleKernel::class);
+        $this->assertInstanceOf(Kernel::class, $kernel);
+        $kernel->rerouteSymfonyCommandEvents();
     }
 
     /**

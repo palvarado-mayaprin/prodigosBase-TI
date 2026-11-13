@@ -40,7 +40,7 @@ Ninguna de las tres cuentas tiene roles de servidor ni usuario en otra base. Con
 
 ### 1.4 Equipo de desarrollo
 
-PHP 8.4.1 o superior (lo exige `composer.lock`) con `pdo_sqlsrv` y `sqlsrv`, Microsoft ODBC Driver 17 o 18 y `sqlcmd`. Comprobación:
+PHP 8.4.1 o superior (`composer.json`: `^8.4.1`) con `pdo_sqlsrv` y `sqlsrv`, Microsoft ODBC Driver 17 o 18 y `sqlcmd`. Comprobación:
 
 ```powershell
 php -v
@@ -92,8 +92,10 @@ Desde la raíz del proyecto, con la cuenta del DBA (`-E` es autenticación de Wi
 
 ```powershell
 sqlcmd -S <servidor> -d prodigos_base_dev -E -b -i database\sql\roles.sql `
-       -v UsuarioAplicacion="adm_base_app" UsuarioDespliegue="adm_base_ddl"
+       -v BaseEsperada="prodigos_base_dev" UsuarioAplicacion="adm_base_app" UsuarioDespliegue="adm_base_ddl"
 ```
+
+`BaseEsperada` debe coincidir con la base de `-d` (`DB_NAME()`); si falta, está vacío o no coincide, el script se detiene sin crear roles ni tocar permisos.
 
 Esperado: nueve avisos «Omitida (aún no existe…)» y «Roles adm_aplicacion y adm_despliegue actualizados.».
 
@@ -153,12 +155,14 @@ $env:DB_USERNAME = 'adm_base_ddl'
 $env:DB_PASSWORD = [Net.NetworkCredential]::new('', (Read-Host 'Contraseña de adm_base_ddl' -AsSecureString)).Password
 php artisan adm:entorno        # misma verificación, ahora con la cuenta de despliegue
 php artisan migrate:status     # solo lectura; esperado: «Migration table not found»
-php artisan migrate --pretend  # muestra el DDL; crea la tabla dbo.migrations (vacía)
+php artisan migrate --pretend  # muestra el DDL; con el destino autorizado crea dbo.migrations (vacía)
 php artisan migrate            # esperado: las nueve migraciones DONE
 Remove-Item Env:DB_USERNAME, Env:DB_PASSWORD
 ```
 
-No usar `--force`, `migrate:fresh`, `migrate:reset`, `migrate:rollback` ni `db:wipe`. En desarrollo no hace falta `ADM_DESPLIEGUE_DDL`.
+No usar `--force`. `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y `db:wipe` están bloqueados en esta base (sección 6). En desarrollo no hace falta `ADM_DESPLIEGUE_DDL`.
+
+`GuardaDdl` actúa en dos momentos: al iniciar el comando (evento `CommandStarting`, antes de que `migrate` o `migrate --pretend` creen `dbo.migrations`) y al empezar el Migrator (evento `MigrationsStarted`). Una configuración incorrecta o no autorizada no llega a escribir nada.
 
 ### 2.7 Roles (segunda ejecución)
 
@@ -199,6 +203,7 @@ La contraseña temporal se pide oculta y dos veces. Comprobación en SQL: secci�
 Requisitos y salvaguardas:
 
 - base **dedicada, vacía** y cuyo nombre termine en `_pruebas`; si no termina así, falla sin conectarse a ella, y si no está vacía, falla antes de migrar;
+- exige `ADM_PRUEBAS_DESTRUCTIVAS` con el nombre exacto de esa base, que autoriza la limpieza final; sin ella falla antes de migrar;
 - crea el esquema con `migrate` (pasa por `GuardaDdl` con esa base como destino de desarrollo) y al terminar ejecuta `migrate:reset` y elimina `migrations`, **solo** si fue esta prueba la que creó el esquema;
 - cuenta con rol `adm_despliegue` en esa base y en ninguna otra;
 - se omite salvo `ADM_PRUEBAS_SQLSRV=1`; nunca usa `.env`.
@@ -218,7 +223,7 @@ GO
 
 ```powershell
 sqlcmd -S <servidor> -d prodigos_base_pruebas -E -b -i database\sql\roles.sql `
-       -v UsuarioAplicacion="" UsuarioDespliegue="adm_base_pruebas"
+       -v BaseEsperada="prodigos_base_pruebas" UsuarioAplicacion="" UsuarioDespliegue="adm_base_pruebas"
 sqlcmd -S <servidor> -U adm_base_pruebas -d prodigos_base_pruebas -b -Q "SET NOCOUNT ON; SELECT name FROM sys.databases WHERE database_id > 4 AND HAS_DBACCESS(name) = 1;"
 ```
 
@@ -234,8 +239,9 @@ $env:ADM_PRUEBAS_SQLSRV_BD = 'prodigos_base_pruebas'
 $env:ADM_PRUEBAS_SQLSRV_SERVIDOR = '<valor de SELECT @@SERVERNAME>'
 $env:ADM_PRUEBAS_SQLSRV_USUARIO = 'adm_base_pruebas'
 $env:ADM_PRUEBAS_SQLSRV_CLAVE = [Net.NetworkCredential]::new('', (Read-Host 'Contraseña de adm_base_pruebas' -AsSecureString)).Password
+$env:ADM_PRUEBAS_DESTRUCTIVAS = 'prodigos_base_pruebas'
 php artisan test --testsuite=Sqlsrv
-Remove-Item Env:ADM_PRUEBAS_SQLSRV*
+Remove-Item Env:ADM_PRUEBAS_SQLSRV*, Env:ADM_PRUEBAS_DESTRUCTIVAS
 ```
 
 Si el certificado lo exige, definir también `$env:DB_ENCRYPT` y `$env:DB_TRUST_SERVER_CERTIFICATE` en esa consola. Esperado: 1 prueba aprobada y la base de nuevo vacía (`SELECT name FROM sys.tables;` sin filas). Si `migrate` fallara a medias, el esquema parcial queda en `prodigos_base_pruebas` y se limpia a mano antes de repetir.
@@ -289,16 +295,18 @@ Solo cuentas y datos ficticios; nunca credenciales reales en capturas.
 
 ## 6. Riesgos y salvaguardas
 
-| Riesgo                                                                                               | Salvaguarda                                                                                                                                                                                                                      |
-| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Un comando actúa sobre la base de otro sistema                                                       | Las cuentas nuevas solo tienen usuario en su base (paso 2.4): cualquier conexión a otra base falla en SQL Server. Además `DestinoSql` exige que `DB_DATABASE`, `DB_NAME()` y `@@SERVERNAME` coincidan con el destino configurado |
-| `migrate` y `migrate --pretend` crean `dbo.migrations` antes de que `GuardaDdl` verifique el destino | Ejecutar `adm:entorno` con la cuenta de despliegue en la misma consola antes de migrar (paso 2.6); esa cuenta no tiene acceso a otras bases                                                                                      |
-| `db:wipe`, `migrate:fresh` y `migrate:reset` solo están prohibidos con `APP_ENV=production`          | No se usan (AGENTS.md, regla 4). Con `adm_base_app` fallan por falta de DDL; con la cuenta de despliegue solo alcanzarían `prodigos_base_dev`                                                                                    |
-| `roles.sql` solo rechaza las bases del sistema; actúa sobre la base indicada en `-d`                 | Comprobar `-d` antes de ejecutar; con `-b` se detiene ante errores. Si los usuarios indicados no existen en esa base, revierte todo (`THROW` con `XACT_ABORT`)                                                                   |
-| La prueba de integración vacía la base que se le indique                                             | Exige sufijo `_pruebas` y base vacía; solo revierte el esquema que creó (corregido en la Etapa 8.1: antes, un fallo de la comprobación de base vacía dejaba ejecutar `migrate:reset` en `tearDown`)                              |
-| Credenciales en el historial de la consola o en archivos                                             | Contraseñas pedidas con `Read-Host -AsSecureString`; nunca en `.env.example`, documentos ni capturas                                                                                                                             |
-| Intercalación sensible a mayúsculas                                                                  | Crear la base con `Modern_Spanish_CI_AS` (paso 2.2) y verificarla                                                                                                                                                                |
-| `composer.json` declara PHP `^8.3`, pero `composer.lock` exige 8.4.1                                 | Usar PHP 8.4 (documentado); alinear `composer.json` queda pendiente de decisión                                                                                                                                                  |
+| Riesgo                                                                              | Salvaguarda                                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Un comando actúa sobre la base de otro sistema                                      | Las cuentas nuevas solo tienen usuario en su base (paso 2.4): cualquier conexión a otra base falla en SQL Server. Además `DestinoSql` exige que `DB_DATABASE`, `DB_NAME()` y `@@SERVERNAME` coincidan con el destino configurado                                              |
+| `migrate` o `migrate --pretend` escriben antes de comprobar el destino              | **Corregido (Etapa 8.1, correcciones):** `GuardaDdl` se comprueba al iniciar el comando, antes de crear `dbo.migrations`. Con un destino incoherente o, en producción, sin `ADM_DESPLIEGUE_DDL`, no se escribe nada                                                           |
+| `db:wipe`, `migrate:fresh`, `migrate:refresh`, `migrate:reset` y `migrate:rollback` | **Corregido:** bloqueados salvo en una base de desarrollo cuyo nombre termine en `_pruebas`, con el destino real coincidente y la variable de proceso `ADM_PRUEBAS_DESTRUCTIVAS` igual a esa base. Nunca en producción ni en `prodigos_base_dev`. Ya no dependen de `APP_ENV` |
+| `roles.sql` sobre una base equivocada                                               | **Corregido:** exige `-v BaseEsperada` igual a `DB_NAME()`; si falta o no coincide, se detiene antes de cualquier cambio. Con `-b`, `sqlcmd` termina con error                                                                                                                |
+| La prueba de integración vacía la base que se le indique                            | Exige sufijo `_pruebas`, base vacía y `ADM_PRUEBAS_DESTRUCTIVAS`; solo revierte el esquema que creó                                                                                                                                                                           |
+| Credenciales en el historial de la consola o en archivos                            | Contraseñas pedidas con `Read-Host -AsSecureString`; nunca en `.env.example`, documentos ni capturas                                                                                                                                                                          |
+| Intercalación sensible a mayúsculas                                                 | Crear la base con `Modern_Spanish_CI_AS` (paso 2.2) y verificarla                                                                                                                                                                                                             |
+| Versión de PHP                                                                      | **Corregido:** `composer.json` exige `^8.4.1`, coherente con `composer.lock` y con el CI (PHP 8.4)                                                                                                                                                                            |
+
+**Limitación:** el rechazo de `roles.sql` y la guarda sobre un servidor real solo se han probado sin SQL Server (análisis del script y simulación en SQLite). Se confirman en la Etapa 8.2: ejecutar `roles.sql` con `BaseEsperada` distinta de `-d` y comprobar que no crea roles.
 
 ## 7. Condiciones para autorizar la creación de la base
 

@@ -24,7 +24,7 @@ Autenticación, Usuarios, Mi Perfil, Grupos y membresías, Permisos, Sesiones Ac
 
 ## Inicio rápido
 
-Ver [docs/MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md).
+Requisitos: PHP 8.4.1 o superior (`^8.4.1`) con `pdo_sqlsrv`, Composer 2, Node 24 y SQL Server 2016 o superior. Ver [docs/MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md).
 
 ```bash
 composer install

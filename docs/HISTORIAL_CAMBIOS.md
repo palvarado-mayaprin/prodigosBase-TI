@@ -1,5 +1,16 @@
 # Historial de cambios
 
+## 2026-11-13 — Etapa 8.1: correcciones aprobadas antes de la validación en SQL Server
+
+- **Migraciones:** `GuardaDdl` se comprueba al iniciar los comandos de esquema (evento `CommandStarting`), antes de que `migrate` o `migrate --pretend` creen `dbo.migrations`; se mantiene la comprobación en `MigrationsStarted`. Una configuración incorrecta o no autorizada no escribe nada.
+- **Comandos destructivos:** `db:wipe`, `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y cualquier migración hacia atrás solo se permiten en desarrollo, con destino real coincidente, base terminada en `_pruebas` y la variable de proceso `ADM_PRUEBAS_DESTRUCTIVAS` igual a esa base. No dependen de `APP_ENV`. La prueba de integración exige esa variable antes de migrar.
+- **`roles.sql`:** parámetro obligatorio `BaseEsperada`, comparado con `DB_NAME()` antes de crear roles o permisos; si falta o no coincide, `THROW` detiene el script. Ejemplos de `sqlcmd` con `-b` y el parámetro.
+- **PHP:** `composer.json` exige `^8.4.1`; `composer.lock` solo cambia su hash y su plataforma (`composer update --lock`, sin cambios de paquetes). CI en PHP 8.4.
+- **Pruebas:** `ComandosEsquemaTest` (migrate, `--pretend` y `migrate:install` sin autorización no crean `dbo.migrations`; destructivos rechazados en bases normales y en producción; limpieza autorizada en una base `_pruebas`; Migrator hacia atrás), `DespliegueTest` (`roles.sql` y coherencia de PHP) y la reversión de `EsquemaAdministrativoTest` con autorización expresa.
+- **Sin cambios:** módulos administrativos, pantallas, sistema visual, migraciones, `.env`, SQL Server, IIS y PRODIGOS V2.
+- **Limitación:** la ejecución real de `roles.sql` y de la guarda contra SQL Server queda para la Etapa 8.2.
+- **Verificación:** ver el informe de la intervención (PHPUnit, `test:js`, Pint, Larastan, `check`, `types:check` y `build`).
+
 ## 2026-11-13 — Etapa 8.1: preparación de la validación en SQL Server
 
 - **Preparado, no ejecutado:** `docs/VALIDACION_SQL_SERVER.md` con requisitos (SQL Server 2016+, compatibilidad 130, intercalación `Modern_Spanish_CI_AS`, tres cuentas sin roles de servidor y con acceso a una sola base), el procedimiento exacto (base, logins, `roles.sql`, migraciones, catálogo, administrador, verificaciones), la comprobación de aislamiento con `HAS_DBACCESS`, la prueba de integración, la configuración de Playwright MCP, los riesgos y las condiciones de autorización.

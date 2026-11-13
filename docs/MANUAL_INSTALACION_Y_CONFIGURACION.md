@@ -4,14 +4,14 @@ Este manual se completa etapa por etapa. Cada sección indica si ya es aplicable
 
 ## 1. Requisitos de software
 
-| Software                             | Versión verificada         | Notas                                                                                                                             |
-| ------------------------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| PHP                                  | 8.4 NTS x64 (mínimo 8.4.1) | Extensiones: `pdo_sqlsrv`, `sqlsrv`, `mbstring`, `openssl`, `fileinfo`, `intl`, `zip`, `curl`; `pdo_sqlite` solo para las pruebas |
-| Composer                             | 2.10                       |                                                                                                                                   |
-| Node.js y npm                        | Node 24, npm 11            | El proyecto incluye `.npmrc` con `ignore-scripts=true`                                                                            |
-| Git                                  | 2.51                       |                                                                                                                                   |
-| Microsoft ODBC Driver for SQL Server | 17 o 18                    | Con el 18, revisar `DB_ENCRYPT` y `DB_TRUST_SERVER_CERTIFICATE`                                                                   |
-| Microsoft SQL Server                 | 2016 o superior            | Motor obligatorio de la aplicación                                                                                                |
+| Software                             | Versión verificada     | Notas                                                                                                                             |
+| ------------------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| PHP                                  | 8.4 NTS x64 (`^8.4.1`) | Extensiones: `pdo_sqlsrv`, `sqlsrv`, `mbstring`, `openssl`, `fileinfo`, `intl`, `zip`, `curl`; `pdo_sqlite` solo para las pruebas |
+| Composer                             | 2.10                   |                                                                                                                                   |
+| Node.js y npm                        | Node 24, npm 11        | El proyecto incluye `.npmrc` con `ignore-scripts=true`                                                                            |
+| Git                                  | 2.51                   |                                                                                                                                   |
+| Microsoft ODBC Driver for SQL Server | 17 o 18                | Con el 18, revisar `DB_ENCRYPT` y `DB_TRUST_SERVER_CERTIFICATE`                                                                   |
+| Microsoft SQL Server                 | 2016 o superior        | Motor obligatorio de la aplicación                                                                                                |
 
 Comprobaciones:
 
@@ -99,7 +99,9 @@ Las migraciones tienen una autorización propia (`App\Entorno\GuardaDdl`), indep
 
 - siempre exigen que el destino real coincida con `ADM_ENTORNO`;
 - en producción exigen además la variable de proceso `ADM_DESPLIEGUE_DDL` con el nombre exacto de la base de producción, definida solo en la consola de despliegue y nunca en `.env`;
-- `ADM_PRODUCCION_ESCRITURA` nunca habilita DDL.
+- `ADM_PRODUCCION_ESCRITURA` nunca habilita DDL;
+- se comprueban al iniciar el comando, antes de cualquier escritura (también con `--pretend`);
+- `db:wipe`, `migrate:fresh`, `migrate:refresh`, `migrate:reset` y `migrate:rollback` solo se permiten en una base de desarrollo terminada en `_pruebas` y con la variable de proceso `ADM_PRUEBAS_DESTRUCTIVAS` igual a esa base; nunca en producción ni en la base normal de desarrollo.
 
 ## 4. Preparar SQL Server
 
@@ -136,10 +138,10 @@ Con autenticación de Windows, sustituir por `CREATE LOGIN [DOMINIO\cuenta] FROM
 
 ```powershell
 sqlcmd -S <servidor> -d prodigos_base_dev -E -b -i database\sql\roles.sql `
-       -v UsuarioAplicacion="<adm_base_app>" UsuarioDespliegue="<adm_base_ddl>"
+       -v BaseEsperada="prodigos_base_dev" UsuarioAplicacion="<adm_base_app>" UsuarioDespliegue="<adm_base_ddl>"
 ```
 
-`-b` detiene `sqlcmd` ante cualquier error; comprobar `-d` antes de ejecutar, porque el script actúa sobre esa base. Crea `adm_aplicacion` y `adm_despliegue` y añade los usuarios. Como aún no hay tablas, avisa de que omite sus permisos: es lo esperado.
+`BaseEsperada` debe coincidir con la base de `-d`: si falta o no coincide, el script se detiene sin cambios. `-b` hace que `sqlcmd` termine con error. Crea `adm_aplicacion` y `adm_despliegue` y añade los usuarios. Como aún no hay tablas, avisa de que omite sus permisos: es lo esperado.
 
 ### 4.4 Configurar y verificar
 
@@ -163,12 +165,12 @@ php artisan config:clear
 $env:DB_USERNAME = '<adm_base_ddl>'
 $env:DB_PASSWORD = '<contraseña>'
 php artisan adm:entorno         # verificar el destino con la cuenta de despliegue
-php artisan migrate --pretend   # revisar el DDL (crea la tabla dbo.migrations, vacía)
+php artisan migrate --pretend   # revisar el DDL (con el destino autorizado crea dbo.migrations, vacía)
 php artisan migrate
 Remove-Item Env:DB_USERNAME, Env:DB_PASSWORD
 ```
 
-`GuardaDdl` detiene la migración si el destino real no coincide; Laravel crea `dbo.migrations` antes de esa comprobación, de ahí el `adm:entorno` previo. En producción exige además `$env:ADM_DESPLIEGUE_DDL = '<base de producción>'` en la misma consola (y retirarla al terminar).
+`GuardaDdl` detiene el comando, antes de escribir nada, si el destino real no coincide. En producción exige además `$env:ADM_DESPLIEGUE_DDL = '<base de producción>'` en la misma consola (y retirarla al terminar).
 
 ### 5.2 Roles (segunda ejecución)
 

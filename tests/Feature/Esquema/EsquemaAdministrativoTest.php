@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Esquema;
 
+use App\Entorno\GuardaDdl;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -150,7 +151,14 @@ class EsquemaAdministrativoTest extends TestCase
 
     public function test_las_migraciones_se_revierten_por_completo(): void
     {
-        $this->artisan('migrate:rollback')->assertSuccessful();
+        // Revertir es destructivo: solo en una base "_pruebas" autorizada (GuardaDdl).
+        config()->set('entorno.destinos.desarrollo.base', 'adm_esquema_pruebas');
+        putenv(GuardaDdl::AUTORIZACION_DESTRUCTIVA.'=adm_esquema_pruebas');
+        try {
+            $this->artisan('migrate:rollback')->assertSuccessful();
+        } finally {
+            putenv(GuardaDdl::AUTORIZACION_DESTRUCTIVA);
+        }
         foreach (self::TABLAS as $tabla) {
             $this->assertFalse(Schema::hasTable($tabla), "Quedó $tabla");
         }

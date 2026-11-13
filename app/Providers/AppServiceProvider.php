@@ -8,6 +8,7 @@ use App\Services\Admin\RegistroSesiones;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +34,10 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         // DDL separado del interruptor de escritura: ver App\Entorno\GuardaDdl.
-        Event::listen(MigrationsStarted::class, fn () => app(GuardaDdl::class)->verificar(app('migrator')->getConnection()));
+        // Al iniciar el comando (antes de crear dbo.migrations) y, como
+        // segunda barrera, al iniciar el Migrator; hacia atrás es destructivo.
+        Event::listen(CommandStarting::class, fn (CommandStarting $evento) => app(GuardaDdl::class)->verificarComando($evento->command, $evento->input));
+        Event::listen(MigrationsStarted::class, fn (MigrationsStarted $evento) => app(GuardaDdl::class)->verificar(app('migrator')->getConnection(), $evento->method === 'down'));
 
         // Registro de sesiones (adm_sesiones): inicio y cierre normales.
         Event::listen(Login::class, function (Login $evento): void {

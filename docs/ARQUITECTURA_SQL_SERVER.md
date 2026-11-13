@@ -144,11 +144,11 @@ adm_usuarios ─┬─< adm_usuarios_grupos >─── adm_grupos ───< adm
 | `adm_aplicacion` | `SELECT, INSERT, UPDATE` en las tablas `adm_*`; `DELETE` solo en `adm_usuarios_grupos` y `adm_grupos_permisos`; en `adm_auditoria` solo `SELECT, INSERT` y `DENY UPDATE, DELETE`. Sin DDL |
 | `adm_despliegue` | `db_ddladmin` más `SELECT, INSERT, UPDATE, DELETE, REFERENCES` sobre el esquema `dbo` (migraciones y `dbo.migrations`). Se usa solo en la consola de despliegue                           |
 
-El script es idempotente: crea los roles, concede los permisos de las tablas que existan (avisa de las que falten) y añade los usuarios indicados con `-v UsuarioAplicacion=… UsuarioDespliegue=…`. Se ejecuta antes de las migraciones y otra vez después.
+El script es idempotente: crea los roles, concede los permisos de las tablas que existan (avisa de las que falten) y añade los usuarios indicados con `-v BaseEsperada=… UsuarioAplicacion=… UsuarioDespliegue=…`. Antes de cualquier cambio comprueba que `BaseEsperada` coincide con `DB_NAME()`. Se ejecuta antes de las migraciones y otra vez después.
 
 ## 5. Control de migraciones
 
-`App\Entorno\GuardaDdl` se ejecuta al empezar cualquier migración (evento `MigrationsStarted`) y la detiene si:
+`App\Entorno\GuardaDdl` se ejecuta al iniciar los comandos de esquema (`migrate`, `migrate:install`, `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y `db:wipe`; evento `CommandStarting`, antes de cualquier escritura, incluida `dbo.migrations` con `--pretend`) y otra vez al empezar el Migrator (`MigrationsStarted`). Detiene la operación si:
 
 - la migración no usa la conexión predeterminada (`DB_CONNECTION`), que es la que valida `DestinoSql` (impide desviarla con `--database`), o esa conexión no usa el driver `sqlsrv`;
 - el destino real (`DB_NAME()`, `@@SERVERNAME`) no coincide con `ADM_ENTORNO`;
@@ -156,7 +156,9 @@ El script es idempotente: crea los roles, concede los permisos de las tablas que
 
 `ADM_PRODUCCION_ESCRITURA` nunca habilita DDL.
 
-**Pruebas sobre SQLite.** `DestinoSql` y `GuardaDdl` validan la conexión predeterminada, la misma que usan la aplicación, sus servicios y las migraciones. La única excepción a «solo driver `sqlsrv`» es PHPUnit con SQLite en memoria (`phpunit.xml`: `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`), donde el destino se simula. Exige a la vez PHPUnit cargado y una base `:memory:`, así que no puede darse en una instalación real (que se instala sin dependencias de desarrollo y nunca usa `:memory:`). Fuera de esa simulación, cualquier conexión que no sea `sqlsrv` se rechaza. Las restricciones propias de SQL Server se prueban en el grupo `sqlsrv`. En producción Laravel prohíbe además `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y `db:wipe`.
+**Operaciones destructivas** (`db:wipe`, `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y cualquier migración hacia atrás): además de lo anterior, solo en el entorno de desarrollo, con una base cuyo nombre termine en `_pruebas` y con la variable de proceso `ADM_PRUEBAS_DESTRUCTIVAS` igual a esa base. No dependen de `APP_ENV`.
+
+**Pruebas sobre SQLite.** `DestinoSql` y `GuardaDdl` validan la conexión predeterminada, la misma que usan la aplicación, sus servicios y las migraciones. La única excepción a «solo driver `sqlsrv`» es PHPUnit con SQLite en memoria (`phpunit.xml`: `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`), donde el destino se simula. Exige a la vez PHPUnit cargado y una base `:memory:`, así que no puede darse en una instalación real (que se instala sin dependencias de desarrollo y nunca usa `:memory:`). Fuera de esa simulación, cualquier conexión que no sea `sqlsrv` se rechaza. Las restricciones propias de SQL Server se prueban en el grupo `sqlsrv`. Laravel no emite `CommandStarting` en PHPUnit; las pruebas que lo necesitan lo activan con `activarEventosDeComandos()` (`tests/TestCase.php`). En producción Laravel prohíbe además los comandos destructivos (`DB::prohibitDestructiveCommands`).
 
 ## 6. Pruebas
 
@@ -176,10 +178,11 @@ $env:ADM_PRUEBAS_SQLSRV_BD = 'prodigos_base_pruebas'
 $env:ADM_PRUEBAS_SQLSRV_SERVIDOR = '<valor de SELECT @@SERVERNAME>'
 $env:ADM_PRUEBAS_SQLSRV_USUARIO = '<usuario con rol adm_despliegue>'
 $env:ADM_PRUEBAS_SQLSRV_CLAVE = '<contraseña>'
+$env:ADM_PRUEBAS_DESTRUCTIVAS = 'prodigos_base_pruebas'   # autoriza la limpieza final
 php artisan test --testsuite=Sqlsrv
-Remove-Item Env:ADM_PRUEBAS_SQLSRV*
+Remove-Item Env:ADM_PRUEBAS_SQLSRV*, Env:ADM_PRUEBAS_DESTRUCTIVAS
 ```
 
 ## 6.1 Revisar el DDL antes de aplicarlo
 
-Con la conexión de desarrollo configurada, `php artisan migrate --pretend` muestra las sentencias sin ejecutarlas. También pasa por `GuardaDdl`, pero antes Laravel crea la tabla `dbo.migrations` si no existe; por eso se ejecuta `php artisan adm:entorno` primero con la misma cuenta. `php artisan migrate:status` es de solo lectura.
+Con la conexión de desarrollo configurada, `php artisan migrate --pretend` muestra las sentencias sin ejecutarlas. `GuardaDdl` lo comprueba antes de que Laravel cree `dbo.migrations`; con el destino autorizado, esa tabla se crea vacía. `php artisan migrate:status` es de solo lectura.

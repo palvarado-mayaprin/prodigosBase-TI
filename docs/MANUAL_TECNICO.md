@@ -17,7 +17,7 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 
 ## 2. Entorno y escritura
 
-`App\Entorno\DestinoSql` es la única autoridad sobre el destino SQL Server de la conexión predeterminada (`DB_CONNECTION`) y sobre la escritura. `App\Entorno\GuardaDdl` autoriza las migraciones por separado. Detalle en el manual de instalación, sección 3.
+`App\Entorno\DestinoSql` es la única autoridad sobre el destino SQL Server de la conexión predeterminada (`DB_CONNECTION`) y sobre la escritura. `App\Entorno\GuardaDdl` autoriza las migraciones por separado, al iniciar el comando (`CommandStarting`) y en el Migrator, y solo admite comandos destructivos en una base `_pruebas` autorizada con `ADM_PRUEBAS_DESTRUCTIVAS`. Detalle en el manual de instalación, sección 3.
 
 ## 3. Autenticación
 

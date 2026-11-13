@@ -16,9 +16,11 @@ use Tests\TestCase;
  *
  *   ADM_PRUEBAS_SQLSRV=1
  *   ADM_PRUEBAS_SQLSRV_HOST, _PORT, _BD, _USUARIO, _CLAVE y _SERVIDOR (@@SERVERNAME)
+ *   ADM_PRUEBAS_DESTRUCTIVAS = la misma base (autoriza la limpieza final)
  *
- * Por seguridad, la base debe terminar en "_pruebas". La prueba crea el esquema
- * con las migraciones (pasando por GuardaDdl) y lo elimina al terminar.
+ * Por seguridad, la base debe terminar en "_pruebas" y estar vacía. La prueba
+ * crea el esquema con las migraciones (pasando por GuardaDdl, también al
+ * iniciar el comando) y lo elimina al terminar.
  */
 #[Group('sqlsrv')]
 class EsquemaSqlServerTest extends TestCase
@@ -41,6 +43,10 @@ class EsquemaSqlServerTest extends TestCase
         if (! str_ends_with($base, '_pruebas')) {
             $this->fail('La base de integración debe terminar en "_pruebas".');
         }
+        if (getenv(GuardaDdl::AUTORIZACION_DESTRUCTIVA) !== $base) {
+            $this->fail('Defina '.GuardaDdl::AUTORIZACION_DESTRUCTIVA.'='.$base.' para autorizar la limpieza final.');
+        }
+        $this->activarEventosDeComandos();
 
         config()->set('database.connections.sqlsrv', [
             'driver' => 'sqlsrv',
