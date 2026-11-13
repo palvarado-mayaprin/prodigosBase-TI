@@ -1,5 +1,15 @@
 # Historial de cambios
 
+## 2026-11-13 — Etapa 8.1: preparación de la validación en SQL Server
+
+- **Preparado, no ejecutado:** `docs/VALIDACION_SQL_SERVER.md` con requisitos (SQL Server 2016+, compatibilidad 130, intercalación `Modern_Spanish_CI_AS`, tres cuentas sin roles de servidor y con acceso a una sola base), el procedimiento exacto (base, logins, `roles.sql`, migraciones, catálogo, administrador, verificaciones), la comprobación de aislamiento con `HAS_DBACCESS`, la prueba de integración, la configuración de Playwright MCP, los riesgos y las condiciones de autorización.
+- **CI (`.github/workflows/tests.yml`):** PHP 8.4 (el `composer.lock` exige 8.4.1; con 8.3 la instalación fallaba), Node 24 (pruebas TypeScript nativas) y nuevo paso `npm run test:js`.
+- **`public/robots.txt`:** `Disallow: /`; es una aplicación administrativa interna.
+- **Prueba de integración:** `tearDown` solo revierte el esquema si la prueba lo creó. PHPUnit ejecuta `tearDown` aunque `setUp` falle, así que una base `_pruebas` no vacía con tabla `migrations` habría perdido sus tablas.
+- **Documentación corregida:** `migrate --pretend` crea `dbo.migrations` antes de que `GuardaDdl` compruebe el destino (se antepone `adm:entorno` con la misma cuenta); `sqlcmd -b`; PHP mínimo 8.4.1.
+- **Sin cambios:** lógica de la aplicación, migraciones, `roles.sql`, `.env`, SQL Server, IIS y PRODIGOS V2.
+- **Verificación:** PHPUnit 156 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 13/13, Pint, Larastan 0, `npm run check`, `types:check` y `build`. El flujo de GitHub no se ejecutó (no hay repositorio remoto).
+
 ## 2026-11-13 — Etapa 7: limpieza y desacoplamiento final
 
 - **Decisión aprobada:** apariencia única y clara, sin modo oscuro automático; la paleta (29 tokens) es el único elemento visual personalizable.

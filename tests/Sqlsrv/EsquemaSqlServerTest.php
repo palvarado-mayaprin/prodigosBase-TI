@@ -23,6 +23,13 @@ use Tests\TestCase;
 #[Group('sqlsrv')]
 class EsquemaSqlServerTest extends TestCase
 {
+    /**
+     * Solo se revierte el esquema que creó esta prueba. PHPUnit ejecuta
+     * tearDown() aunque setUp() falle: sin esta marca, una base «_pruebas»
+     * que no estuviera vacía perdería sus tablas al revertir.
+     */
+    private bool $esquemaCreado = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,11 +60,12 @@ class EsquemaSqlServerTest extends TestCase
 
         $this->assertSame([], Schema::getTableListing(), 'La base de integración debe estar vacía.');
         $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+        $this->esquemaCreado = true;
     }
 
     protected function tearDown(): void
     {
-        if (getenv('ADM_PRUEBAS_SQLSRV') === '1' && Schema::hasTable('migrations')) {
+        if ($this->esquemaCreado && Schema::hasTable('migrations')) {
             $this->artisan('migrate:reset', ['--force' => true]);
             Schema::drop('migrations');
         }

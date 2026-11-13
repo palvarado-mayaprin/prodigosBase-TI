@@ -15,7 +15,8 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 | 5     | Módulos administrativos                                                                               | Completada |
 | 6     | Sistema visual `adm-` con paleta configurable                                                         | Completada |
 | 7     | Limpieza y desacoplamiento                                                                            | Completada |
-| 8–9   | Verificación integral y documentación final                                                           | Pendiente  |
+| 8     | Verificación integral en SQL Server ([preparación](docs/VALIDACION_SQL_SERVER.md))                    | En curso   |
+| 9     | Documentación final y publicación en IIS                                                              | Pendiente  |
 
 ## Alcance previsto
 
