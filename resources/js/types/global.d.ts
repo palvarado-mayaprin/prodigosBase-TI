@@ -19,6 +19,7 @@ declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: {
             name: string;
+            descripcionApp: string;
             auth: Auth;
             sidebarOpen: boolean;
             zonaHoraria: string;

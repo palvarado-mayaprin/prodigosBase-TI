@@ -2,7 +2,6 @@
 
 use App\Http\Middleware\ControlarAcceso;
 use App\Http\Middleware\ExigirCambioContrasena;
-use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ValidarSesion;
 use Illuminate\Foundation\Application;
@@ -18,11 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        $middleware->encryptCookies(except: ['sidebar_state']);
 
         // Origen y escritura antes que cualquier otro middleware web.
         $middleware->web(prepend: [ControlarAcceso::class], append: [
-            HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             // Sesión revocada o cerrada: termina antes de cualquier otra regla.

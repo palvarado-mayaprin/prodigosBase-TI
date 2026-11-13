@@ -15,8 +15,8 @@ Lee primero [AGENTS.md](AGENTS.md); sus reglas permanentes también rigen tu tra
 
 ## Lenguaje visual
 
-- Usar las clases `adm-`, los layouts y el helper de alertas existentes. No rediseñar estructura, medidas, tipografía ni jerarquías.
-- Los colores solo existen como tokens en `resources/css/tema/tokens.css`. Personalizar la paleta no altera la geometría.
+- Seguir [docs/GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md). Usar las clases `adm-`, los layouts y el helper de alertas existentes. No rediseñar estructura, medidas, tipografía ni jerarquías.
+- Los colores solo existen como tokens en `resources/css/tema/tokens.css` (sin modo oscuro, sin clases de color de Tailwind). Personalizar la paleta no altera la geometría.
 - Conservar accesibilidad (foco visible, teclado, `aria-*`), estados de carga y error, y comportamiento responsive.
 
 ## Verificación y control de versiones

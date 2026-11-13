@@ -159,7 +159,12 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 ### 6.10 Base compartida
 
 - **Idioma:** `lang/es` (validación y autenticación) y `es` como idioma por defecto.
-- **Sistema visual:** `resources/css/tema/tokens.css` (único archivo con colores, `--adm-*`) y `componentes.css` (medidas de PRODIGOS V2 con prefijo `adm-`). Incluye contenido, formularios, botones, tablas, avisos, insignias, diálogos y, desde la Etapa 5.2, el selector de modalidad, las listas de selección, las opciones de grupo, los indicadores de cambios y el árbol de permisos; la Etapa 6 completa el resto.
+- **Sistema visual** (detalle y reglas en [GUIA_DISENO_UI.md](GUIA_DISENO_UI.md)):
+    - `resources/css/tema/tokens.css` es el único archivo con colores (`--adm-*`); `componentes.css` contiene las medidas de PRODIGOS V2 con prefijo `adm-` y los colores derivados con `color-mix`;
+    - las variables de los componentes base (shadcn-vue) en `app.css`, el fondo y el indicador de SweetAlert2, la barra de progreso de Inertia y el fondo inicial de `app.blade.php` derivan de los tokens;
+    - paleta única y clara: se retiraron el modo oscuro automático (`HandleAppearance`, `useAppearance`, script de `app.blade.php`) y su paleta gris, que dejaban los componentes base con otros colores que las pantallas `adm-`;
+    - el inicio de sesión y el cambio de contraseña usan `layouts/auth/AuthSplitLayout.vue` (distribución de PRODIGOS V2) con marca neutra: inicial y nombre de `APP_NAME` y descripción de `ADM_APP_DESCRIPCION` (`descripcionApp` compartida);
+    - `tests/Feature/Visual/PaletaTest.php` recorre todo el frontend: sin colores literales ni clases de color de Tailwind fuera de `tokens.css`, paleta solo con colores, mismos tokens que `docs/ejemplos/paleta-ejemplo.css` y componentes base derivados.
 - **Alertas:** `resources/js/lib/alertas.ts` (SweetAlert2 con carga diferida); los colores de los iconos se leen de los tokens.
 - **Selección:** `resources/js/lib/seleccion.ts` calcula agregados, retirados y cambios pendientes de membresías y permisos.
 - **Fechas:** se guardan en UTC y se presentan y filtran en `app.zona_horaria` (`ADM_ZONA_HORARIA`, UTC por defecto; una zona no válida usa UTC) con `App\Support\Fechas`. La zona se comparte con la interfaz (`zonaHoraria`) y `lib/fechas.ts` la aplica.

@@ -2,8 +2,11 @@
  * Paleta de la aplicación: el ÚNICO archivo con colores.
  *
  * Para personalizar la plantilla se cambian solo estos valores; la
- * estructura, las medidas y la tipografía viven en componentes.css.
- * Valores de partida: paleta corporativa de PRODIGOS V2.
+ * estructura, las medidas y la tipografía viven en componentes.css. Los
+ * componentes de interfaz base (app.css), SweetAlert2, la barra de progreso
+ * y el menú lateral también se derivan de aquí.
+ * Valores de partida: paleta de PRODIGOS V2. Ejemplo alternativo y
+ * procedimiento: docs/ejemplos/paleta-ejemplo.css y docs/GUIA_DISENO_UI.md.
  */
 :root {
     /* Marca */

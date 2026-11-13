@@ -26,7 +26,9 @@ interface Confirmacion extends Mensaje {
 const estilo = {
     buttonsStyling: false,
     customClass: {
+        container: 'adm-swal-container',
         popup: 'adm-swal-popup',
+        loader: 'adm-swal-loader',
         htmlContainer: 'adm-swal-description',
         confirmButton: 'adm-swal-confirm',
         cancelButton: 'adm-swal-cancel',

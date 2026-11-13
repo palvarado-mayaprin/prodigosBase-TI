@@ -6,9 +6,7 @@
  * anillos de foco se derivan con color-mix). Estas medidas son estructurales
  * y no se personalizan.
  *
- * Etapas 5.1 a 5.5: módulos administrativos, navegación lateral, barra
- * superior y Dashboard. La Etapa 6 completa el resto (inicio de sesión y
- * guía de personalización).
+ * Guía de uso: docs/GUIA_DISENO_UI.md.
  */
 :root {
     --adm-fuente: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
@@ -19,6 +17,8 @@
         color-mix(in srgb, var(--adm-color-marca) 4.5%, transparent);
     --adm-transicion: 180ms ease;
     --adm-foco: color-mix(in srgb, var(--adm-color-acento) 25%, transparent);
+    /* Velo de diálogos, panel lateral móvil y SweetAlert2. */
+    --adm-velo: color-mix(in srgb, var(--adm-color-marca) 50%, transparent);
 }
 
 /* ==========================================================
@@ -1107,8 +1107,261 @@
 }
 
 /* ==========================================================
+   INICIO DE SESIÓN Y CAMBIO DE CONTRASEÑA (AuthSplitLayout)
+   ========================================================== */
+
+.adm-login {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 100svh;
+    overflow-x: clip;
+    background: linear-gradient(
+        160deg,
+        var(--adm-fondo) 0%,
+        var(--adm-superficie) 100%
+    );
+    color: var(--adm-texto);
+    font-family: var(--adm-fuente);
+}
+
+/* La franja de acento es el fondo del panel; ::before lo cubre salvo un borde. */
+.adm-login-brand {
+    position: relative;
+    display: flex;
+    height: 120px;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+        180deg,
+        var(--adm-color-primario) 0%,
+        var(--adm-color-acento) 100%
+    );
+}
+
+.adm-login-brand::before {
+    position: absolute;
+    inset: 0 0 4px;
+    background: var(--adm-menu-fondo);
+    content: '';
+}
+
+/* Marca neutra: inicial de APP_NAME en lugar de un logotipo. */
+.adm-login-monogram {
+    position: relative;
+    display: inline-flex;
+    width: 72px;
+    height: 72px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid
+        color-mix(in srgb, var(--adm-texto-inverso) 35%, transparent);
+    border-radius: 999px;
+    color: var(--adm-texto-inverso);
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.adm-login-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 40px;
+}
+
+.adm-login-inner {
+    width: 100%;
+    max-width: 28rem;
+}
+
+.adm-login-title {
+    color: var(--adm-color-marca);
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    overflow-wrap: anywhere;
+}
+
+.adm-login-card {
+    padding: 28px;
+    background: var(--adm-superficie);
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-lg);
+    box-shadow: var(--adm-sombra);
+}
+
+.adm-login-card-title {
+    color: var(--adm-color-marca);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.adm-login-field {
+    position: relative;
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    background: var(--adm-superficie-hover);
+    border: 1px solid var(--adm-borde);
+    border-radius: var(--adm-radio-md);
+    transition:
+        border-color var(--adm-transicion),
+        box-shadow var(--adm-transicion);
+}
+
+.adm-login-field:hover {
+    border-color: var(--adm-color-acento);
+}
+
+.adm-login-field:focus-within {
+    border-color: var(--adm-color-primario);
+    box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--adm-color-acento) 30%, transparent);
+}
+
+.adm-login-field.is-error {
+    border-color: var(--adm-peligro);
+}
+
+.adm-login-field.is-error:focus-within {
+    box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--adm-peligro) 22%, transparent);
+}
+
+.adm-login-field-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--adm-texto-suave);
+}
+
+.adm-login-field-control {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* El botón de PasswordInput se posiciona respecto al campo completo. */
+.adm-login-field-control > .relative {
+    position: static;
+}
+
+.adm-login-field-control button {
+    color: var(--adm-texto-suave);
+}
+
+.adm-login-field-control button:hover {
+    color: var(--adm-color-marca);
+}
+
+.adm-login-field-control button:focus-visible {
+    box-shadow: none;
+    outline: 2px solid var(--adm-color-acento);
+    outline-offset: -6px;
+}
+
+.adm-login-field-label {
+    color: var(--adm-texto-suave);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.adm-login-field-input {
+    height: auto;
+    min-height: 24px;
+    padding-block: 0;
+    padding-left: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--adm-texto);
+    font-size: 15px;
+    font-weight: 500;
+    outline: none;
+}
+
+.adm-login-field-input:focus-visible {
+    box-shadow: none;
+}
+
+.adm-login-field-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 40px var(--adm-superficie-hover) inset;
+    -webkit-text-fill-color: var(--adm-texto);
+}
+
+.adm-login-error p {
+    color: var(--adm-peligro);
+    font-size: 13px;
+}
+
+.adm-login-submit {
+    width: 100%;
+    min-height: 48px;
+}
+
+@media (min-width: 640px) {
+    .adm-login-content {
+        padding: 40px 24px 56px;
+    }
+
+    .adm-login-card {
+        padding: 32px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .adm-login {
+        grid-template-columns: 58fr 42fr;
+        grid-template-rows: 1fr;
+    }
+
+    .adm-login-content {
+        grid-row: 1;
+        grid-column: 1;
+        padding: 48px;
+    }
+
+    /* Borde izquierdo en diagonal; ::before deja visible una franja paralela. */
+    .adm-login-brand {
+        grid-row: 1;
+        grid-column: 2;
+        height: auto;
+        padding-left: 8%;
+        clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    .adm-login-brand::before {
+        inset: 0;
+        clip-path: polygon(17% 0, 100% 0, 100% 100%, 3% 100%);
+    }
+
+    .adm-login-monogram {
+        width: 120px;
+        height: 120px;
+        font-size: 60px;
+    }
+}
+
+/* ==========================================================
    DIÁLOGOS (SweetAlert2, resources/js/lib/alertas.ts)
    ========================================================== */
+
+.swal2-container.adm-swal-container:is(
+        .swal2-backdrop-show,
+        .swal2-noanimation
+    ) {
+    background: var(--adm-velo);
+}
+
+.adm-swal-popup .swal2-loader.adm-swal-loader {
+    border-color: var(--adm-color-primario) transparent;
+}
 
 .swal2-popup.adm-swal-popup {
     width: min(32rem, calc(100vw - 2rem));
@@ -1194,6 +1447,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .adm-login-field,
     .adm-sidebar,
     .adm-sidebar *,
     .adm-module-card,

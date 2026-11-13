@@ -1,5 +1,18 @@
 # Historial de cambios
 
+## 2026-11-13 — Etapa 6: consolidación del lenguaje visual
+
+- **Cambio:**
+    - inicio de sesión y cambio de contraseña con la distribución de PRODIGOS V2 (`AuthSplitLayout`, familia `adm-login-*`): campos con icono, botón «Aceptar», panel de marca en diagonal; marca neutra (inicial y nombre de `APP_NAME`, descripción `ADM_APP_DESCRIPCION`) en lugar de logotipos; Fortify sin cambios;
+    - componentes base (shadcn-vue) derivados de los tokens en `app.css`; sin colores fijos en botones, insignias, velos de diálogo, errores de campo y avatar; barra de progreso, fondo y carga de SweetAlert2 y fondo inicial del documento con tokens;
+    - paleta única y clara: se retiran el modo oscuro automático (`HandleAppearance`, `useAppearance`, script de `app.blade.php`) y su paleta gris; se eliminan los logotipos del kit inicial (`AppLogo`, `AppLogoIcon`, `AuthSimpleLayout`);
+    - `PasswordInput`: botón de mostrar contraseña en español, accesible con teclado y con `aria-pressed`;
+    - `docs/GUIA_DISENO_UI.md` (estructura, jerarquía, tipografía, tokens, clases `adm-*`, patrones, responsive, accesibilidad, cambio de paleta y reglas) y `docs/ejemplos/paleta-ejemplo.css` (segunda paleta para verificar la personalización);
+    - `PaletaTest` revisa todo el frontend y comprueba que la paleta solo contenga colores y que la de ejemplo tenga los mismos tokens.
+- **Sin cambios:** PRODIGOS V2, `.env`, lógica administrativa, esquema, SQL Server, IIS y dependencias.
+- **Verificación:** PHPUnit 156 aprobadas y 1 omitida (integración `sqlsrv`), `test:js` 13/13, Pint, Larastan 0, `npm run check`, `types:check` y `build`. Contraste AA (4,5:1) calculado en los pares de texto de ambas paletas. Sin revisión con navegador: no hay entorno local con base SQL Server autorizada.
+- **Pendiente:** revisión visual en navegador (escritorio, móvil y teclado) con ambas paletas; Etapas 7 a 9.
+
 ## 2026-11-12 — Etapa 5.5: Dashboard y navegación dinámica
 
 - **Cambio:**

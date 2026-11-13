@@ -1,5 +1,4 @@
 import { createInertiaApp } from '@inertiajs/vue3';
-import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
@@ -26,13 +25,11 @@ void createInertiaApp({
             },
         });
     },
+    // Barra de progreso de Inertia con el color de acento de la paleta.
     progress: {
-        color: '#4B5563',
+        color: 'var(--adm-color-acento)',
     },
 });
-
-// This will set light / dark mode on page load...
-initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();

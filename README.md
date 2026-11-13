@@ -4,7 +4,7 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 
 ## Estado
 
-**Etapa 5 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Usuarios, Mi Perfil, Grupos, Usuarios y grupos, Permisos, Sesiones Activas, Auditoría de Modificaciones y Seguimiento de Uso, con el subconjunto correspondiente del sistema visual. Incluye el Dashboard y la navegación dinámica según los permisos de cada cuenta.
+**Etapa 6 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Usuarios, Mi Perfil, Grupos, Usuarios y grupos, Permisos, Sesiones Activas, Auditoría de Modificaciones y Seguimiento de Uso, con el subconjunto correspondiente del sistema visual. Incluye el Dashboard, la navegación dinámica según los permisos de cada cuenta y el sistema visual consolidado (inicio de sesión incluido), con la paleta como único aspecto personalizable.
 
 | Etapa | Contenido                                                                                             | Estado     |
 | ----- | ----------------------------------------------------------------------------------------------------- | ---------- |
@@ -13,7 +13,7 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 | 3     | Esquema SQL Server (migraciones `adm_*`, roles SQL, control de DDL)                                   | Completada |
 | 4     | Autenticación, catálogo de permisos y auditoría                                                       | Completada |
 | 5     | Módulos administrativos                                                                               | Completada |
-| 6     | Sistema visual `adm-` con paleta configurable                                                         | Pendiente  |
+| 6     | Sistema visual `adm-` con paleta configurable                                                         | Completada |
 | 7–9   | Limpieza, verificación integral y documentación final                                                 | Pendiente  |
 
 ## Alcance previsto
@@ -37,5 +37,6 @@ composer test
 
 - [AGENTS.md](AGENTS.md) y [CLAUDE.md](CLAUDE.md): reglas permanentes y arquitectónicas.
 - [docs/MANUAL_TECNICO.md](docs/MANUAL_TECNICO.md): autenticación, autorización, auditoría y comandos.
+- [docs/GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md): lenguaje visual, clases `adm-*`, patrones y cambio de paleta.
 - [docs/ARQUITECTURA_SQL_SERVER.md](docs/ARQUITECTURA_SQL_SERVER.md): modelo de datos, permisos SQL y pruebas de integración.
 - [docs/HISTORIAL_CAMBIOS.md](docs/HISTORIAL_CAMBIOS.md): historial.

@@ -1,0 +1,50 @@
+/*
+ * Paleta de EJEMPLO para verificar la personalización (no se importa ni se
+ * compila). Define exactamente los mismos tokens que
+ * resources/css/tema/tokens.css, solo con otros colores.
+ *
+ * Para probarla: copiar su bloque :root sobre el de tokens.css, ejecutar
+ * `npm run build` y recorrer las pantallas; las medidas, la tipografía y la
+ * estructura no cambian. Después restaurar tokens.css (git checkout).
+ * Procedimiento completo: docs/GUIA_DISENO_UI.md, sección 9.
+ */
+:root {
+    /* Marca */
+    --adm-color-marca: #123c35;
+    --adm-color-primario: #1f6f5f;
+    --adm-color-acento: #3fa58f;
+
+    /* Superficies */
+    --adm-fondo: #f3f5f4;
+    --adm-superficie: #ffffff;
+    --adm-superficie-hover: #f6faf9;
+    --adm-seleccion: #e3f1ee;
+    --adm-borde: #cfe0dc;
+
+    /* Menú lateral */
+    --adm-menu-fondo: #123c35;
+    --adm-menu-texto: #dcefea;
+    --adm-menu-texto-suave: #a8cbc3;
+    --adm-menu-activo: #1f6f5f;
+
+    /* Texto */
+    --adm-texto: #17302b;
+    --adm-texto-suave: #55665f;
+    --adm-texto-inverso: #ffffff;
+
+    /* Estados: color principal, fondo, borde y texto de avisos e insignias */
+    --adm-exito: #1d7a4e;
+    --adm-exito-fondo: #eaf7ef;
+    --adm-exito-borde: #9fd3b4;
+    --adm-exito-texto: #145f3b;
+
+    --adm-advertencia: #8f6200;
+    --adm-advertencia-fondo: #fff6e0;
+    --adm-advertencia-borde: #e2c27a;
+    --adm-advertencia-texto: #6e4a00;
+
+    --adm-peligro: #a8201a;
+    --adm-peligro-fondo: #fdeeec;
+    --adm-peligro-borde: #e4a39c;
+    --adm-peligro-texto: #861a15;
+}

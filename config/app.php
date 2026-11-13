@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Descripción neutra de la aplicación (inicio de sesión y Dashboard).
+    'descripcion' => env('ADM_APP_DESCRIPCION', 'Plataforma administrativa'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

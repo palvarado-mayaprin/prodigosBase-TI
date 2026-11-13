@@ -41,16 +41,17 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-| Variable                                            | Valor de ejemplo                   | Uso                                                                              |
-| --------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------- |
-| `DB_CONNECTION`                                     | `sqlsrv`                           | Motor obligatorio                                                                |
-| `DB_HOST`, `DB_PORT`                                | `127.0.0.1`, `1433`                | Servidor SQL Server propio                                                       |
-| `DB_DATABASE`                                       | `prodigos_base_dev`                | Base vacía de desarrollo propia                                                  |
-| `DB_USERNAME`, `DB_PASSWORD`                        | vacíos                             | Credenciales personales; nunca se versionan                                      |
-| `DB_URL`                                            | vacío                              | Debe permanecer vacío                                                            |
-| `DB_ENCRYPT`, `DB_TRUST_SERVER_CERTIFICATE`         | comentadas                         | Según el controlador ODBC y el certificado                                       |
-| `SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION` | `file`, `file`, `sync`             | No requieren tablas en SQL Server                                                |
-| `ADM_ZONA_HORARIA`                                  | `UTC` o p. ej. `America/Guatemala` | Zona en que se muestran y filtran las fechas (se guardan en UTC). No válida: UTC |
+| Variable                                            | Valor de ejemplo                               | Uso                                                                              |
+| --------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| `DB_CONNECTION`                                     | `sqlsrv`                                       | Motor obligatorio                                                                |
+| `DB_HOST`, `DB_PORT`                                | `127.0.0.1`, `1433`                            | Servidor SQL Server propio                                                       |
+| `DB_DATABASE`                                       | `prodigos_base_dev`                            | Base vacía de desarrollo propia                                                  |
+| `DB_USERNAME`, `DB_PASSWORD`                        | vacíos                                         | Credenciales personales; nunca se versionan                                      |
+| `DB_URL`                                            | vacío                                          | Debe permanecer vacío                                                            |
+| `DB_ENCRYPT`, `DB_TRUST_SERVER_CERTIFICATE`         | comentadas                                     | Según el controlador ODBC y el certificado                                       |
+| `SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION` | `file`, `file`, `sync`                         | No requieren tablas en SQL Server                                                |
+| `APP_NAME`, `ADM_APP_DESCRIPCION`                   | `prodigosBase-TI`, `Plataforma administrativa` | Nombre y descripción neutros del inicio de sesión, el menú y el Dashboard        |
+| `ADM_ZONA_HORARIA`                                  | `UTC` o p. ej. `America/Guatemala`             | Zona en que se muestran y filtran las fechas (se guardan en UTC). No válida: UTC |
 
 ### 3.1 Control centralizado de entornos
 
@@ -223,13 +224,18 @@ composer test          # Pint, Larastan (nivel del proyecto) y PHPUnit
 
 Las pruebas usan SQLite en memoria (`phpunit.xml`); nunca se conectan a SQL Server.
 
-Resultado esperado en la Etapa 5.5: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 13/13 y PHPUnit con 153 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Resultado esperado en la Etapa 6: compilación correcta, sin errores de tipos ni de formato, Pint y Larastan sin errores, `test:js` 13/13 y PHPUnit con 156 pruebas aprobadas y 1 omitida (la integración con SQL Server, que se habilita según [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
 
 ## 8. Personalizar la paleta
 
-La paleta vive solo en `resources/css/tema/tokens.css` (variables `--adm-*`). Para personalizarla se editan esos valores y se ejecuta `npm run build`; la estructura y las medidas están en `componentes.css` y no se modifican. La prueba `tests/Feature/Visual/PaletaTest.php` impide colores literales fuera de los tokens.
+La paleta vive solo en `resources/css/tema/tokens.css` (variables `--adm-*`); es el único aspecto visual personalizable y no hay modo oscuro.
 
-_Pendiente (Etapa 6):_ completar el sistema visual (navegación, encabezado, inicio de sesión, Dashboard) y la guía de personalización.
+1. Editar los valores de `tokens.css` conservando todos sus nombres. `docs/ejemplos/paleta-ejemplo.css` es una segunda paleta completa de ejemplo.
+2. Ejecutar `npm run build`.
+3. Recorrer el inicio de sesión, el Dashboard, una tabla con filtros, un formulario y una confirmación.
+4. Ejecutar `php artisan test --filter=PaletaTest`.
+
+Las medidas, la tipografía y la estructura (`componentes.css`) no cambian. El nombre y la descripción visibles se configuran con `APP_NAME` y `ADM_APP_DESCRIPCION`. Procedimiento, contraste mínimo y reglas para pantallas nuevas: [GUIA_DISENO_UI.md](GUIA_DISENO_UI.md).
 
 ## 9. Verificación de módulos
 

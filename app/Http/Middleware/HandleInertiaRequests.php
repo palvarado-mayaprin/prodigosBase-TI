@@ -43,6 +43,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'descripcionApp' => config('app.descripcion'),
             // Solo los datos que muestra la interfaz; nunca el modelo completo.
             'auth' => [
                 'user' => $usuario instanceof Usuario ? [
