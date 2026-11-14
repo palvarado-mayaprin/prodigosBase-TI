@@ -1,6 +1,6 @@
 # Validación integral en SQL Server (Etapa 8)
 
-Procedimiento para crear un entorno SQL Server de desarrollo **propio de prodigosBase-TI** y validar en él el esquema, los roles, las pruebas de integración y la aplicación. Preparado en la Etapa 8.1; **nada de esto se ha ejecutado todavía**. Requiere autorización expresa (sección 7).
+Procedimiento para crear un entorno SQL Server de desarrollo **propio de prodigosBase-TI** y validar en él el esquema, los roles, las pruebas de integración y la aplicación. Preparado en la Etapa 8.1 y **ejecutado en la Etapa 8.2 sobre una instancia local dedicada** (sección 8). Cualquier otro servidor requiere autorización expresa (sección 7).
 
 Los valores entre `<>` se sustituyen al ejecutar. Los nombres de base y de login son los propuestos; si se cambian, se cambian en todos los pasos. Las contraseñas nunca se escriben en archivos, documentos ni en el historial de la consola.
 
@@ -306,7 +306,7 @@ Solo cuentas y datos ficticios; nunca credenciales reales en capturas.
 | Intercalación sensible a mayúsculas                                                 | Crear la base con `Modern_Spanish_CI_AS` (paso 2.2) y verificarla                                                                                                                                                                                                             |
 | Versión de PHP                                                                      | **Corregido:** `composer.json` exige `^8.4.1`, coherente con `composer.lock` y con el CI (PHP 8.4)                                                                                                                                                                            |
 
-**Limitación:** el rechazo de `roles.sql` y la guarda sobre un servidor real solo se han probado sin SQL Server (análisis del script y simulación en SQLite). Se confirman en la Etapa 8.2: ejecutar `roles.sql` con `BaseEsperada` distinta de `-d` y comprobar que no crea roles.
+**Confirmado en la Etapa 8.2 (instancia local):** `roles.sql` con `BaseEsperada` distinta de `-d` se detiene con 50005 sin crear roles, y `GuardaDdl` bloquea contra el servidor real un destino incorrecto (`migrate` y `migrate --pretend`) y los comandos destructivos sobre `prodigos_base_dev`, sin crear `dbo.migrations`.
 
 ## 7. Condiciones para autorizar la creación de la base
 
@@ -316,3 +316,60 @@ Solo cuentas y datos ficticios; nunca credenciales reales en capturas.
 4. Aceptación de las tres cuentas sin roles de servidor y con acceso a una sola base cada una.
 5. Respaldo del `.env` actual del equipo antes de editarlo.
 6. Autorización expresa para ejecutar las migraciones y `roles.sql` en esas bases, y para la revisión con Playwright cuando la aplicación funcione.
+
+## 8. Instancia local dedicada (Etapa 8.2)
+
+Entorno de validación propio, sin relación con servidores de la empresa. Se puede reproducir en cualquier equipo de desarrollo.
+
+### 8.1 Instalación
+
+| Elemento                   | Valor                                                                                                                                                                                                                                    |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Producto                   | SQL Server 2022 Developer (16.0.1000.6), solo el componente del motor (`FEATURES=SQLENGINE`)                                                                                                                                             |
+| Instancia                  | `PRODIGOSBASE` (`@@SERVERNAME` = `<EQUIPO>\PRODIGOSBASE`), separada de cualquier otra instancia del equipo                                                                                                                               |
+| Medio                      | ISO oficial `SQLServer2022-x64-ENU-Dev.iso` de `download.microsoft.com`; `setup.exe` con firma Microsoft válida. Los instaladores web `SQL2022-SSEI-*.exe` (16.2211) ya no funcionan («Esta versión del instalador ya no es compatible») |
+| Disco                      | NTFS. SQL Server no admite exFAT para archivos de instancia ni de datos (el instalador falla con «No se puede encontrar el valor solicitado 'exFAT'»)                                                                                    |
+| Intercalación del servidor | `Modern_Spanish_CI_AS`                                                                                                                                                                                                                   |
+| Autenticación              | Mixta (las tres cuentas son logins SQL); administración con Windows (`SQLSYSADMINACCOUNTS`); `sa` con contraseña aleatoria no conservada y **deshabilitado**                                                                             |
+| Red                        | TCP solo en `127.0.0.1:14330` (`ListenOnAllIPs=0`, resto de direcciones deshabilitadas), canalizaciones con nombre desactivadas, SQL Browser deshabilitado. Sin reglas de firewall                                                       |
+| Servicios                  | Motor automático; Agente y telemetría (CEIP) de la instancia deshabilitados                                                                                                                                                              |
+
+Instalación desatendida con un archivo de configuración (`ACTION=Install`, `FEATURES=SQLENGINE`, `INSTANCENAME=PRODIGOSBASE`, `SQLCOLLATION`, `SQLSYSADMINACCOUNTS`, `SECURITYMODE=SQL`, `AGTSVCSTARTUPTYPE=Disabled`, `SQLTELSVCSTARTUPTYPE=Disabled`, `TCPENABLED=0`, `NPENABLED=0`, `UPDATEENABLED=False`) y `setup.exe /ConfigurationFile=<archivo> /IACCEPTSQLSERVERLICENSETERMS /SAPWD=<aleatoria>`. Después: `ALTER LOGIN sa DISABLE;` y la configuración TCP de la tabla en la clave `SuperSocketNetLib\Tcp` de la instancia (con reinicio del servicio).
+
+### 8.2 Bases con los scripts de `docs/sql/preparacion`
+
+Los tres scripts toman el servidor esperado de la variable sqlcmd `ServidorEsperado`; sin ella (por ejemplo, en SSMS fuera del modo SQLCMD) la comprobación de servidor falla y se detienen. `02` fija la compatibilidad 150 en cada base recién creada.
+
+```powershell
+cd docs\sql\preparacion
+sqlcmd -S tcp:127.0.0.1,14330 -E -b -f 65001 -W -v ServidorEsperado="<EQUIPO>\PRODIGOSBASE" -i 01_verificacion_previa.sql
+sqlcmd -S tcp:127.0.0.1,14330 -E -b -f 65001 -v ServidorEsperado="<EQUIPO>\PRODIGOSBASE" -i 02_crear_bases.sql
+sqlcmd -S tcp:127.0.0.1,14330 -E -b -f 65001 -W -i 03_verificacion_posterior.sql
+```
+
+Comprobado: con `ServidorEsperado` incorrecto, `02` termina con 50101 sin crear nada; repetido tras crear las bases, termina con 50104.
+
+### 8.3 Cuentas y conexión
+
+Se siguen los pasos 2.2 a 2.9 y la sección 3 con `-S tcp:127.0.0.1,14330`, `DB_HOST=127.0.0.1`, `DB_PORT=14330`, `ADM_DESARROLLO_SERVIDOR=<EQUIPO>\PRODIGOSBASE` y `ADM_PRUEBAS_SQLSRV_PORT=14330`. Notas prácticas:
+
+- **Contraseñas:** se generan aleatoriamente y se guardan cifradas con DPAPI del usuario de Windows (`ConvertFrom-SecureString`) fuera del repositorio; se pasan a `sqlcmd` con `SQLCMDPASSWORD` o como variables de entorno del proceso, nunca en la línea de comandos ni en archivos del proyecto.
+- **`sqlcmd -I`:** `sqlcmd` arranca con `QUOTED_IDENTIFIER` desactivado; las escrituras manuales sobre tablas con índices filtrados fallan con el error 1934 si no se añade `-I`.
+- **Parámetro vacío en PowerShell 5.1:** `UsuarioAplicacion=""` se pierde al pasar a `sqlcmd` (error «Invalid argument»); ejecutar esa llamada con `cmd /c '<comando>'`.
+- **`adm:crear-administrador`:** pide la contraseña oculta en la consola de Windows y no admite redirección de la entrada; ejecutarlo en una consola interactiva.
+- **Puerto de la aplicación:** si `127.0.0.1:8000` ya está en uso por otra aplicación, `php artisan serve` informa de que arrancó pero las peticiones llegan a la otra. Usar otro puerto (`--port=8010`) y ajustar `APP_URL`.
+
+### 8.4 Resultados (2026-11-13)
+
+| Comprobación                       | Resultado                                                                                                                                                                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bases                              | `prodigos_base_dev` y `prodigos_base_pruebas`: ONLINE, `Modern_Spanish_CI_AS`, compatibilidad 150, vacías al crearse                                                                |
+| Aislamiento                        | Cada cuenta solo accede a su base; ninguna tiene roles de servidor                                                                                                                  |
+| `roles.sql`                        | Rechazo con `BaseEsperada` distinta (50005); dos ejecuciones en desarrollo (antes y después de migrar) y una en pruebas con `UsuarioAplicacion=""`                                  |
+| `GuardaDdl`                        | Destino incorrecto (`migrate`, `--pretend`), `migrate:reset` y `db:wipe` sobre `prodigos_base_dev` (incluso con `ADM_PRUEBAS_DESTRUCTIVAS=prodigos_base_dev`): bloqueados, 0 tablas |
+| Migraciones                        | Nueve, con `adm_base_ddl`; 9 tablas `adm_*` y 9 filas en `dbo.migrations`                                                                                                           |
+| Catálogo                           | 7 funcionalidades y 13 acciones; la segunda sincronización no cambia nada                                                                                                           |
+| Administrador                      | Cuenta ficticia con cambio de contraseña obligatorio; auditoría con la contraseña oculta y sin el hash                                                                              |
+| Permisos de `adm_base_app`         | Denegados: UPDATE y DELETE en `adm_auditoria`, DELETE en `adm_usuarios`, CREATE TABLE, ALTER, TRUNCATE y acceso a `prodigos_base_pruebas`. Permitidos: SELECT e INSERT              |
+| Integración (`--testsuite=Sqlsrv`) | 1 prueba y 11 aserciones aprobadas; `prodigos_base_pruebas` vacía al terminar                                                                                                       |
+| Navegador                          | Inicio de sesión fallido con mensaje genérico. El resto de la revisión (sección 5) queda pendiente                                                                                  |

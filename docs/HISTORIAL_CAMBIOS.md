@@ -1,5 +1,15 @@
 # Historial de cambios
 
+## 2026-11-13 — Etapa 8.2: validación en una instancia SQL Server local
+
+- **Entorno:** SQL Server 2022 Developer en la instancia local dedicada `PRODIGOSBASE` (solo motor, TCP únicamente en `127.0.0.1:14330`, `sa` deshabilitado, Agente y telemetría deshabilitados). Bases `prodigos_base_dev` y `prodigos_base_pruebas` (`Modern_Spanish_CI_AS`, compatibilidad 150), tres cuentas separadas, `roles.sql`, nueve migraciones, catálogo y administrador ficticio. Detalle y resultados en la sección 8 de `docs/VALIDACION_SQL_SERVER.md`.
+- **Defecto corregido en `roles.sql`:** con `UsuarioAplicacion=""` o `UsuarioDespliegue=""` (omisión documentada) el script no compilaba (`ADD MEMBER []`, error 1038). La pertenencia se añade ahora con SQL dinámico y `QUOTENAME` sobre una variable.
+- **Scripts `docs/sql/preparacion`:** servidor esperado en la variable sqlcmd `ServidorEsperado` (SRVOPTIMUS o la instancia local), con la misma detención si no coincide o falta; `02` fija la compatibilidad 150 en las bases recién creadas.
+- **Confirmado contra SQL Server real:** rechazo de `roles.sql` con `BaseEsperada` distinta, bloqueo de `GuardaDdl` (destino incorrecto, `--pretend`, `migrate:reset`, `db:wipe`), aislamiento de cuentas, permisos denegados de la cuenta de aplicación y prueba de integración aprobada.
+- **Sin cambios:** código de la aplicación, migraciones, pantallas, SRVOPTIMUS, IIS y PRODIGOS V2. El `.env` local apunta a la instancia nueva (no se versiona).
+- **Pendiente:** revisión completa en navegador con Playwright (sección 5), sesiones y concurrencia en dos navegadores.
+- **Verificación:** `composer test` (PHPUnit 164 aprobadas, 1 omitida), `test:js` 13/13, `check`, `types:check` y `build`.
+
 ## 2026-11-13 — Etapa 8.1: correcciones aprobadas antes de la validación en SQL Server
 
 - **Migraciones:** `GuardaDdl` se comprueba al iniciar los comandos de esquema (evento `CommandStarting`), antes de que `migrate` o `migrate --pretend` creen `dbo.migrations`; se mantiene la comprobación en `MigrationsStarted`. Una configuración incorrecta o no autorizada no escribe nada.

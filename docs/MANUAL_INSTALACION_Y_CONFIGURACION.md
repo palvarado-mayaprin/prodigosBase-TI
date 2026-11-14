@@ -107,6 +107,8 @@ Las migraciones tienen una autorización propia (`App\Entorno\GuardaDdl`), indep
 
 El modelo completo está en [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md). El procedimiento detallado para crear la base de desarrollo, con la comprobación de aislamiento de las cuentas y la prueba de integración, está en [VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md). Estos pasos los ejecuta quien administre el servidor (o el propio desarrollador en su instancia local), con una cuenta con permisos para crear bases y logins. Los valores entre `<>` son ejemplos y las contraseñas nunca se versionan.
 
+Para una instancia local dedicada (SQL Server 2022 Developer, instancia `PRODIGOSBASE`, TCP solo en `127.0.0.1`) y los scripts de `docs/sql/preparacion`, ver la [sección 8 de VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md#8-instancia-local-dedicada-etapa-82).
+
 ### 4.1 Base vacía
 
 ```sql

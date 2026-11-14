@@ -94,21 +94,33 @@ DEALLOCATE tablas;
 IF OBJECT_ID(N'dbo.adm_auditoria', N'U') IS NOT NULL
     DENY UPDATE, DELETE ON dbo.adm_auditoria TO adm_aplicacion;
 
-/* 4. Pertenencia de los usuarios indicados. */
-IF N'$(UsuarioAplicacion)' <> N''
+/*
+ * 4. Pertenencia de los usuarios indicados. El nombre va en una variable y
+ *    se cita con QUOTENAME: un parámetro vacío ("") se omite sin dejar un
+ *    identificador [] que impediría compilar el script.
+ */
+DECLARE @usuario sysname = N'$(UsuarioAplicacion)';
+IF @usuario <> N''
 BEGIN
-    IF DATABASE_PRINCIPAL_ID(N'$(UsuarioAplicacion)') IS NULL
+    IF DATABASE_PRINCIPAL_ID(@usuario) IS NULL
         THROW 50001, N'No existe el usuario de base de datos indicado en UsuarioAplicacion.', 1;
-    ELSE IF IS_ROLEMEMBER(N'adm_aplicacion', N'$(UsuarioAplicacion)') = 0
-        ALTER ROLE adm_aplicacion ADD MEMBER [$(UsuarioAplicacion)];
+    IF IS_ROLEMEMBER(N'adm_aplicacion', @usuario) = 0
+    BEGIN
+        SET @sql = N'ALTER ROLE adm_aplicacion ADD MEMBER ' + QUOTENAME(@usuario) + N';';
+        EXEC sys.sp_executesql @sql;
+    END;
 END;
 
-IF N'$(UsuarioDespliegue)' <> N''
+SET @usuario = N'$(UsuarioDespliegue)';
+IF @usuario <> N''
 BEGIN
-    IF DATABASE_PRINCIPAL_ID(N'$(UsuarioDespliegue)') IS NULL
+    IF DATABASE_PRINCIPAL_ID(@usuario) IS NULL
         THROW 50002, N'No existe el usuario de base de datos indicado en UsuarioDespliegue.', 1;
-    ELSE IF IS_ROLEMEMBER(N'adm_despliegue', N'$(UsuarioDespliegue)') = 0
-        ALTER ROLE adm_despliegue ADD MEMBER [$(UsuarioDespliegue)];
+    IF IS_ROLEMEMBER(N'adm_despliegue', @usuario) = 0
+    BEGIN
+        SET @sql = N'ALTER ROLE adm_despliegue ADD MEMBER ' + QUOTENAME(@usuario) + N';';
+        EXEC sys.sp_executesql @sql;
+    END;
 END;
 
 COMMIT TRANSACTION;
