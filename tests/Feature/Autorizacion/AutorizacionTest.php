@@ -51,6 +51,41 @@ class AutorizacionTest extends TestCase
         $this->get('/_prueba/administrador')->assertForbidden();
     }
 
+    public function test_toda_ruta_de_la_aplicacion_exige_un_permiso_o_esta_en_la_lista_de_rutas_propias(): void
+    {
+        // Rutas sin permiso del catálogo: acceso, cuenta propia, registro de uso
+        // y la comprobación de estado de Laravel (/up, sin datos).
+        $propias = [
+            'home', 'login', 'login.store', 'logout', 'dashboard', 'contrasena.editar', 'contrasena.actualizar',
+            'mi-perfil', 'mi-perfil.actualizar', 'mi-perfil.contrasena', 'seguimiento.visita', 'seguimiento.actividad',
+        ];
+        $sinPermiso = [];
+        foreach (Route::getRoutes() as $ruta) {
+            $nombre = (string) $ruta->getName();
+            if (str_starts_with($ruta->uri(), '_prueba/') || $ruta->uri() === 'up' || in_array($nombre, $propias, true)) {
+                continue;
+            }
+            $middleware = implode(' ', $ruta->gatherMiddleware());
+            if (! str_contains($middleware, 'auth') || ! str_contains($middleware, 'Autorizar')) {
+                $sinPermiso[] = $nombre.' '.$ruta->uri();
+            }
+        }
+
+        $this->assertSame([], $sinPermiso);
+    }
+
+    public function test_la_pagina_403_esta_en_espanol_y_no_expone_detalles(): void
+    {
+        $this->actingAs($this->crearUsuario());
+
+        $this->get('/_prueba/usuarios')->assertForbidden()
+            ->assertSee('Acceso denegado')
+            ->assertSee('No tiene permiso para acceder a esta página.')
+            ->assertSee('Volver al inicio')
+            ->assertDontSee('Forbidden')
+            ->assertDontSee(self::USUARIOS);
+    }
+
     public function test_concede_el_permiso_asignado_a_un_grupo_activo(): void
     {
         $usuario = $this->crearUsuario();

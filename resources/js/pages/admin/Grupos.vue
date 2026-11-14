@@ -18,6 +18,7 @@ import {
     mostrarExito,
 } from '@/lib/alertas';
 import { iniciales } from '@/lib/seleccion';
+import { plural } from '@/lib/textos';
 import { dashboard } from '@/routes';
 import { grupos as rutaGrupos } from '@/routes/admin';
 import { actualizar, crear, estado } from '@/routes/admin/grupos';
@@ -364,7 +365,14 @@ async function alternarEstado(grupo: Grupo) {
                             autocomplete="off"
                         />
                         <p class="adm-muted text-xs" aria-live="polite">
-                            {{ gruposFiltrados.length }} grupos encontrados
+                            {{ gruposFiltrados.length }}
+                            {{
+                                plural(
+                                    gruposFiltrados.length,
+                                    'grupo encontrado',
+                                    'grupos encontrados',
+                                )
+                            }}
                         </p>
                     </div>
                     <button

@@ -94,7 +94,7 @@ Derivan de los tokens, sin colores propios:
 
 | Familia                | Clases                                                                                                                                                                                                                                                                                                                                    |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contenido              | `adm-main`, `adm-page-title`, `adm-page-subtitle`, `adm-page-note`, `adm-muted`, `adm-card`, `adm-card-title`, `adm-requerido`                                                                                                                                                                                                            |
+| Contenido              | `adm-saltar`, `adm-contenido`, `adm-main`, `adm-page-title`, `adm-page-subtitle`, `adm-page-note`, `adm-muted`, `adm-card`, `adm-card-title`, `adm-requerido`                                                                                                                                                                             |
 | Formularios            | `adm-label`, `adm-input` (también `select`), `adm-checkbox`, `adm-field-error`, `adm-requisito-cumplido`                                                                                                                                                                                                                                  |
 | Botones                | `adm-btn` + `adm-btn-primary`, `-secondary`, `-neutral`, `-danger`; `adm-icon-btn`                                                                                                                                                                                                                                                        |
 | Tablas                 | `adm-table-scroll`, `adm-table` (`tr.is-inactive`, `.is-num`, `td.is-wrap`), `adm-table-actions`, `adm-table-pagination`                                                                                                                                                                                                                  |
@@ -145,18 +145,22 @@ Referencia: `pages/admin/Membresias.vue`, `pages/admin/Permisos.vue`.
 
 ### 7.4 Alertas, carga y estados
 
-| Situación                      | Patrón                                                                                             |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Confirmar una acción           | `confirmarAccion({ titulo, descripcion, confirmar })` (el foco queda en «Cancelar»)                |
-| Operación en curso             | `mostrarCarga()` … `cerrarCarga()`, con los botones deshabilitados y `aria-busy`                   |
-| Éxito / error / conflicto      | `mostrarExito`, `mostrarError`, `mostrarAdvertencia`                                               |
-| Lista vacía                    | `.adm-alert.adm-alert-info` con `role="status"` y un texto que diga qué hacer                      |
-| Sin datos por filtros          | El mismo aviso, sugiriendo ampliar o limpiar los filtros                                           |
-| Error de validación del filtro | `.adm-alert.adm-alert-danger` con `role="alert"`                                                   |
-| Modo solo lectura              | `.adm-alert.adm-alert-warning` «Consulta de producción: solo lectura.»; se ocultan las acciones    |
-| Estado de una fila             | `.adm-badge-success` (activo), `-neutral` (inactivo), `-warning` (pendiente), `-danger` (revocado) |
+| Situación                      | Patrón                                                                                                |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Confirmar una acción           | `confirmarAccion({ titulo, descripcion, confirmar })` (el foco queda en «Cancelar»)                   |
+| Operación en curso             | `mostrarCarga()` … `cerrarCarga()`, con los botones deshabilitados y `aria-busy`                      |
+| Éxito / error / conflicto      | `mostrarExito`, `mostrarError`, `mostrarAdvertencia` (al cerrar, el foco vuelve al control de origen) |
+| Lista vacía                    | `.adm-alert.adm-alert-info` con `role="status"` y un texto que diga qué hacer                         |
+| Sin datos por filtros          | El mismo aviso, sugiriendo ampliar o limpiar los filtros                                              |
+| Error de validación del filtro | `.adm-alert.adm-alert-danger` con `role="alert"`                                                      |
+| Modo solo lectura              | `.adm-alert.adm-alert-warning` «Consulta de producción: solo lectura.»; se ocultan las acciones       |
+| Estado de una fila             | `.adm-badge-success` (activo), `-neutral` (inactivo), `-warning` (pendiente), `-danger` (revocado)    |
 
 Los textos son en español y describen la causa y la acción, sin detalles técnicos.
+
+- **Trato:** siempre de usted («Seleccione un grupo», «Podrá consultar…», «Revise los campos…»).
+- **Contadores:** con concordancia de número mediante `plural()` de `lib/textos.ts` («1 usuario encontrado», «2 usuarios encontrados»).
+- **Errores HTTP:** la página 403 (`resources/views/errors/403.blade.php`) usa la familia `adm-login-*`, con el título «Acceso denegado» y «Volver al inicio».
 
 ## 8. Comportamiento responsive
 
@@ -188,7 +192,8 @@ El nombre y la descripción que muestran el inicio de sesión, el menú y el Das
 - **Foco visible:** en todos los controles: anillo `--adm-foco` en campos y contorno `--adm-color-acento` en botones, enlaces y tarjetas.
 - **Teclado:**
     - todo es operable con el teclado, incluido mostrar u ocultar la contraseña;
-    - los diálogos devuelven el foco al botón que los abrió;
+    - el primer elemento enfocable es el enlace «Saltar al contenido» (`.adm-saltar`, oculto hasta recibir el foco), que lleva el foco a `main#contenido`;
+    - los diálogos devuelven el foco al botón que los abrió; tras un guardado, `mostrarCarga()` recuerda el control de origen y, al cerrar el mensaje, el foco vuelve al primer campo con `aria-invalid` de ese formulario o, si no hay, al control;
     - las confirmaciones enfocan «Cancelar».
 - **Atributos ARIA:**
     - `aria-invalid` y `aria-describedby` en campos con error;

@@ -1456,3 +1456,28 @@
         transition-duration: 0.01ms;
     }
 }
+
+/* Enlace «Saltar al contenido»: fuera de la vista hasta recibir el foco. */
+.adm-saltar {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 100;
+    padding: 10px 16px;
+    border-radius: var(--adm-radio-md);
+    background: var(--adm-color-primario);
+    color: var(--adm-texto-inverso);
+    font-weight: 600;
+    transform: translateY(-200%);
+}
+
+.adm-saltar:focus {
+    transform: none;
+    outline: 3px solid var(--adm-color-acento);
+    outline-offset: 2px;
+}
+
+/* Destino del enlace: recibe el foco por programa, sin contorno. */
+.adm-contenido:focus {
+    outline: none;
+}

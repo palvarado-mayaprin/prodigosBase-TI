@@ -1,5 +1,19 @@
 # Historial de cambios
 
+## 2026-11-14 — Etapa 8.3: validación final de seguridad, integridad y accesibilidad
+
+- **Interfaz y accesibilidad** (observaciones de la Etapa 8.2):
+    - página 403 propia en español (`resources/views/errors/403.blade.php`) con la distribución del inicio de sesión; conserva el código 403, muestra solo el mensaje explícito de `abort()` y funciona sin assets compilados;
+    - enlace «Saltar al contenido» (`.adm-saltar`), visible al recibir el foco, que lleva el foco a `main#contenido`;
+    - `alertas.ts`: tras guardar, el foco vuelve al primer campo con error del formulario de origen o, si no hay, al control que inició la acción (antes quedaba en `body` porque los campos se deshabilitan durante el guardado);
+    - contadores con concordancia de número (`plural()` en `lib/textos.ts`) en Usuarios, Grupos, Membresías, Permisos, Sesiones, Auditoría y Seguimiento;
+    - trato de usted en Membresías y Permisos («Seleccione…», «Podrá…»).
+- **Seguridad:** revisión de los controles existentes sin repetir baterías. Riesgo no cubierto: nada impedía declarar una ruta sin permiso. `AutorizacionTest` comprueba ahora que toda ruta exige `auth` y autorización salvo una lista explícita (acceso, cuenta propia, registro de uso y `/up`), y que la página 403 está en español sin detalles internos.
+- **SQL Server real** (`T01003PRODIGOSBASE`): suite `Sqlsrv` aprobada sobre `prodigos_base_pruebas`, que queda sin objetos; integridad y permisos de roles verificados en `prodigos_base_dev` (sección 8.6 de `docs/VALIDACION_SQL_SERVER.md`).
+- **Playwright focalizado:** solo las cinco correcciones, en escritorio, móvil y teclado.
+- **Sin cambios:** esquema SQL, migraciones, catálogo, tokens, dependencias, `.env`, SRVOPTIMUS, IIS y PRODIGOS V2.
+- **Verificación:** `composer test` (PHPUnit 166 aprobadas, 1 omitida), suite `Sqlsrv` (1 prueba, 11 aserciones), `test:js` 14/14, `check`, `types:check` y `build`.
+
 ## 2026-11-13 — Etapa 8.2: revisión en navegador, sesiones y concurrencia
 
 - **Ejecutado con Playwright MCP** (Edge sin ventana, `127.0.0.1:8010`, assets compilados, cuentas ficticias `admin.pruebas` y `usuario.pruebas`): inicio de sesión correcto e incorrecto, cambio obligatorio de contraseña (con desvío desde otras rutas y confirmación distinta), cierre de sesión, Dashboard, menú lateral (contraído, buscador, móvil), Usuarios, Mi Perfil, Grupos, Membresías, Permisos, Sesiones Activas, Auditoría y Seguimiento con filtros, formularios, confirmaciones, estados vacíos, paginación y las 10 exportaciones. Detalle en la sección 8.4 de `docs/VALIDACION_SQL_SERVER.md`.

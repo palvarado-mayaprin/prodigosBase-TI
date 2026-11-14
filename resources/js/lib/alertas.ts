@@ -70,9 +70,32 @@ export async function confirmarAccion({
     return respuesta.isConfirmed;
 }
 
+// Control que inició la acción. Durante el guardado los campos se
+// deshabilitan y el foco cae en <body>; al cerrar el mensaje se devuelve al
+// primer campo con error del mismo formulario o, si no hay, a ese control.
+let origenFoco: HTMLElement | null = null;
+
+function elementoActivo(): HTMLElement | null {
+    const activo = document.activeElement;
+    return activo instanceof HTMLElement && activo !== document.body
+        ? activo
+        : null;
+}
+
+function restaurarFoco(origen: HTMLElement | null, conError: boolean): void {
+    const ambito = origen?.closest('form') ?? document;
+    const campo = conError
+        ? ambito.querySelector<HTMLElement>(
+              '[aria-invalid="true"]:not(:disabled)',
+          )
+        : null;
+    (campo ?? (origen?.isConnected ? origen : null))?.focus();
+}
+
 export async function mostrarCarga(
     titulo = 'Guardando cambios...',
 ): Promise<void> {
+    origenFoco = elementoActivo();
     const Swal = await cargarSweetAlert();
     await new Promise<void>((resolve) => {
         void Swal.fire({
@@ -98,6 +121,8 @@ async function mostrarMensaje(
     icon: keyof typeof colores,
     { titulo, descripcion }: Mensaje,
 ): Promise<void> {
+    const origen = origenFoco ?? elementoActivo();
+    origenFoco = null;
     const Swal = await cargarSweetAlert();
     await Swal.fire({
         ...estilo,
@@ -106,7 +131,9 @@ async function mostrarMensaje(
         title: titulo,
         text: descripcion,
         confirmButtonText: 'Entendido',
+        returnFocus: false,
     });
+    restaurarFoco(origen, icon !== 'success');
 }
 
 export function mostrarExito(mensaje: Mensaje): Promise<void> {

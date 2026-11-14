@@ -28,7 +28,7 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
     - 5 intentos por minuto por usuario e IP; CSRF y regeneración de la sesión los aplican Laravel y Fortify;
     - solo escribe el registro de la sesión (`adm_sesiones`) y únicamente si `DestinoSql` lo permite; con la producción en solo lectura el inicio de sesión funciona igual, sin registro (sección 6.6).
 - **Política de contraseñas** (`Password::defaults()` en `AppServiceProvider`): 12 a 72 caracteres (bcrypt usa los primeros 72 bytes), letras, mayúsculas y minúsculas, números y símbolos, en todos los entornos.
-- **Cambio obligatorio:** con `debe_cambiar_password = 1`, `ExigirCambioContrasena` solo permite `contrasena.editar`, `contrasena.actualizar` y `logout`; redirige el resto o responde 403 en JSON. `App\Services\Admin\CambiarContrasena` comprueba la contraseña actual, exige una distinta, actualiza el hash, libera la marca y audita en la misma transacción; después se regenera la sesión.
+- **Cambio obligatorio:** con `debe_cambiar_password = 1`, `ExigirCambioContrasena` solo permite `contrasena.editar`, `contrasena.actualizar` y `logout`; redirige el resto o responde 403 en JSON; el registro de uso (`seguimiento.*`) responde 204 sin registrar nada. `App\Services\Admin\CambiarContrasena` comprueba la contraseña actual, exige una distinta, actualiza el hash, libera la marca y audita en la misma transacción; después se regenera la sesión.
 
 ## 4. Autorización
 
@@ -41,6 +41,8 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
     - `rutasPermitidas()` alimenta el menú y el Dashboard (solo presentación): omite funcionalidades desactivadas en el catálogo o en `adm_funcionalidades` y hace dos consultas como máximo;
     - `quedariaSinAdministradores()` protege del último administrador activo; se usa dentro de la transacción del cambio y bloquea las membresías administrativas.
 - **Middleware:** `AutorizarPermiso::para('codigo:ACCION', …)` (basta uno) y `AutorizarAdministrador`. Un fallo de SQL responde 503.
+- **Rutas sin permiso del catálogo:** solo las de acceso, la cuenta propia (Dashboard, Mi Perfil, cambio de contraseña) y el registro de uso. `AutorizacionTest` falla si otra ruta carece de `auth` y de un middleware de autorización; una ruta propia nueva se añade a su lista de forma explícita.
+- **Página 403:** `resources/views/errors/403.blade.php`, en español y con la distribución del inicio de sesión. Muestra solo el mensaje explícito de `abort()` (o uno genérico) y mantiene el código 403; las peticiones JSON siguen recibiendo `{ message }`.
 
 ### 4.1 Registrar una funcionalidad nueva
 

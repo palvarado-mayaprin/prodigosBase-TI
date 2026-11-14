@@ -22,6 +22,7 @@ import {
     diferencia,
     iniciales,
 } from '@/lib/seleccion';
+import { plural } from '@/lib/textos';
 import { dashboard } from '@/routes';
 import { permisos as rutaPermisos } from '@/routes/admin';
 import { guardar as rutaGuardar } from '@/routes/admin/permisos';
@@ -387,7 +388,14 @@ onUnmounted(() => window.removeEventListener('beforeunload', advertirSalida));
                         class="adm-input mb-4"
                     />
                     <p class="adm-muted mb-3 text-xs" aria-live="polite">
-                        {{ gruposFiltrados.length }} grupos encontrados
+                        {{ gruposFiltrados.length }}
+                        {{
+                            plural(
+                                gruposFiltrados.length,
+                                'grupo encontrado',
+                                'grupos encontrados',
+                            )
+                        }}
                     </p>
                     <div class="adm-access-list space-y-2">
                         <button
@@ -789,13 +797,13 @@ onUnmounted(() => window.removeEventListener('beforeunload', advertirSalida));
                     >
                         <ShieldCheck class="mb-4 size-12" aria-hidden="true" />
                         <h2 class="text-lg font-semibold">
-                            Selecciona un grupo
+                            Seleccione un grupo
                         </h2>
                         <p class="mt-2 text-sm">
                             {{
                                 soloLectura
-                                    ? 'Podrás consultar sus permisos por funcionalidad.'
-                                    : 'Podrás consultar y editar sus permisos por funcionalidad.'
+                                    ? 'Podrá consultar sus permisos por funcionalidad.'
+                                    : 'Podrá consultar y editar sus permisos por funcionalidad.'
                             }}
                         </p>
                     </div>

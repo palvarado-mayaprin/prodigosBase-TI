@@ -13,12 +13,28 @@ type Props = {
 withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
+
+// Lleva el foco al contenido sin añadir #contenido a la URL.
+function saltarAlContenido() {
+    document.getElementById('contenido')?.focus();
+}
 </script>
 
 <template>
     <AppShell variant="sidebar">
+        <a
+            href="#contenido"
+            class="adm-saltar"
+            @click.prevent="saltarAlContenido"
+            >Saltar al contenido</a
+        >
         <AppSidebar />
-        <AppContent variant="sidebar" class="min-w-0 overflow-x-clip">
+        <AppContent
+            id="contenido"
+            tabindex="-1"
+            variant="sidebar"
+            class="adm-contenido min-w-0 overflow-x-clip"
+        >
             <AppSidebarHeader :breadcrumbs="breadcrumbs" />
             <slot />
         </AppContent>

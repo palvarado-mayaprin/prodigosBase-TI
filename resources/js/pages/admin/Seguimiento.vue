@@ -10,6 +10,7 @@ import {
 } from '@lucide/vue';
 import { computed, reactive, ref, watch } from 'vue';
 import { duracion, fechaDia, fechaHora } from '@/lib/fechas';
+import { plural } from '@/lib/textos';
 import { dashboard } from '@/routes';
 import { seguimiento } from '@/routes/admin';
 import { exportar } from '@/routes/admin/seguimiento';
@@ -560,7 +561,8 @@ const urlExportar = (reporte: string, formato: 'csv' | 'xlsx') =>
                         </div>
                         <details class="mt-4">
                             <summary class="adm-details-summary">
-                                Ver tabla diaria ({{ diario.length }} días)
+                                Ver tabla diaria ({{ diario.length }}
+                                {{ plural(diario.length, 'día', 'días') }})
                             </summary>
                             <div class="adm-table-scroll mt-3">
                                 <table class="adm-table">
@@ -780,7 +782,10 @@ const urlExportar = (reporte: string, formato: 'csv' | 'xlsx') =>
                                 {{ n(historial.from ?? 0) }}–{{
                                     n(historial.to ?? 0)
                                 }}
-                                de {{ n(historial.total) }} visitas
+                                de {{ n(historial.total) }}
+                                {{
+                                    plural(historial.total, 'visita', 'visitas')
+                                }}
                             </p>
                         </div>
                         <div class="adm-table-scroll">

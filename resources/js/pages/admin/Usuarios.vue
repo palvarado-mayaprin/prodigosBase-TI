@@ -19,6 +19,7 @@ import {
     mostrarExito,
 } from '@/lib/alertas';
 import { DESCRIPCION_POLITICA } from '@/lib/politicaContrasena';
+import { plural } from '@/lib/textos';
 import { dashboard } from '@/routes';
 import { usuarios as rutaUsuarios } from '@/routes/admin';
 import { actualizar, crear, estado } from '@/routes/admin/usuarios';
@@ -576,7 +577,14 @@ const secciones: { titulo: string; campos: Campo[] }[] = [
                             autocomplete="off"
                         />
                         <p class="adm-muted text-xs" aria-live="polite">
-                            {{ usuariosFiltrados.length }} usuarios encontrados
+                            {{ usuariosFiltrados.length }}
+                            {{
+                                plural(
+                                    usuariosFiltrados.length,
+                                    'usuario encontrado',
+                                    'usuarios encontrados',
+                                )
+                            }}
                         </p>
                     </div>
                     <button

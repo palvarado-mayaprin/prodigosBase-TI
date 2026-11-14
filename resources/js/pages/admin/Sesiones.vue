@@ -10,6 +10,7 @@ import {
     mostrarExito,
 } from '@/lib/alertas';
 import { fechaHora as formatoFecha } from '@/lib/fechas';
+import { plural } from '@/lib/textos';
 import { dashboard } from '@/routes';
 import { sesiones as rutaSesiones } from '@/routes/admin';
 import { revocar, revocarUsuario } from '@/routes/admin/sesiones';
@@ -325,7 +326,7 @@ async function revocarTodas(sesion: Sesion) {
                     </h2>
                     <p class="adm-muted text-xs" aria-live="polite">
                         {{ filtradas.length }} de {{ sesiones.length }}
-                        sesiones
+                        {{ plural(sesiones.length, 'sesión', 'sesiones') }}
                     </p>
                 </div>
 

@@ -396,4 +396,17 @@ Playwright MCP 0.0.84 (Edge sin ventana), un único `php artisan serve` en `127.
 
 **Concurrencia simultánea:** `php artisan serve` atiende una petición cada vez, así que la simultaneidad real se probó con dos procesos PHP sincronizados que llaman a `AdministrarPermisos::sincronizar` con la misma base. El segundo espera el bloqueo del primero (unos 1.100 ms) y recibe el conflicto; queda una sola auditoría por ronda.
 
-**Observaciones sin corregir (mejoras, fuera del alcance de la etapa):** no hay páginas de error propias (los 403 muestran la página genérica en inglés de Laravel, también al deshabilitar una cuenta con la sesión abierta); no hay enlace «Saltar al contenido»; tras cerrar la alerta de validación, el foco vuelve a `body`; los contadores dicen «1 usuarios encontrados»; Membresías mezcla tuteo («Selecciona un usuario») con el trato de usted.
+**Observaciones sin corregir en la Etapa 8.2 (resueltas en la 8.3, sección 8.6):** no hay páginas de error propias (los 403 muestran la página genérica en inglés de Laravel, también al deshabilitar una cuenta con la sesión abierta); no hay enlace «Saltar al contenido»; tras cerrar la alerta de validación, el foco vuelve a `body`; los contadores dicen «1 usuarios encontrados»; Membresías mezcla tuteo («Selecciona un usuario») con el trato de usted.
+
+### 8.6 Validación final (Etapa 8.3, 2026-11-14)
+
+| Comprobación                       | Resultado                                                                                                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Destino                            | `@@SERVERNAME` = `T01003PRODIGOSBASE`; solo `prodigos_base_dev` y `prodigos_base_pruebas`                                                                                                                    |
+| Integración (`--testsuite=Sqlsrv`) | 1 prueba y 11 aserciones aprobadas con `adm_base_pruebas` (contraseña descifrada con DPAPI en la sesión, sin mostrarla); `prodigos_base_pruebas` sin objetos de usuario al terminar                          |
+| Integridad (`prodigos_base_dev`)   | 9 claves foráneas y 4 CHECK habilitadas y confiables, ninguna en cascada; 0 membresías o permisos huérfanos, 0 membresías duplicadas; 1 administrador activo                                                 |
+| Roles                              | `adm_aplicacion`: SELECT, INSERT y UPDATE por tabla, DELETE solo en las tablas de relación y DENY UPDATE y DELETE en `adm_auditoria`; `adm_base_app` y `adm_base_ddl` solo en su rol                         |
+| Autorización                       | Prueba nueva: toda ruta exige `auth` y un middleware de autorización salvo la lista explícita de rutas propias                                                                                               |
+| Navegador (focalizado)             | 403 en español (escritorio y móvil, sin desborde); «Saltar al contenido» como primer Tab y foco en `main`; foco en el primer campo con error tras la alerta; «1 usuario encontrado»; «Seleccione un usuario» |
+
+Playwright solo revisó las cinco correcciones (cuentas ficticias, secretos con nombre, `127.0.0.1:8010`, assets compilados). La consola solo registró el 403 provocado a propósito.

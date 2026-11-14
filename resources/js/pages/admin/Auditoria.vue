@@ -23,6 +23,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { fechaHora } from '@/lib/fechas';
+import { plural } from '@/lib/textos';
 import { dashboard } from '@/routes';
 import { auditoria } from '@/routes/admin';
 import { exportar } from '@/routes/admin/auditoria';
@@ -500,7 +501,8 @@ function alCerrarDetalle(evento: Event) {
                         {{ n(registros.from ?? 0) }}–{{
                             n(registros.to ?? 0)
                         }}
-                        de {{ n(registros.total) }} registros
+                        de {{ n(registros.total) }}
+                        {{ plural(registros.total, 'registro', 'registros') }}
                     </p>
                 </div>
 
