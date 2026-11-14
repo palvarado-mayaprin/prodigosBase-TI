@@ -256,7 +256,7 @@ Con el administrador inicial, recorrer la tabla de la sección 9 del [manual de 
 
 ## 5. Revisión en navegador con Playwright MCP
 
-Preparada, **no ejecutada**. Solo procede con la base de desarrollo de este documento funcionando y autorizada.
+**Ejecutada en la Etapa 8.2** sobre la instancia local (resultados en la sección 8.5). Solo procede con la base de desarrollo de este documento funcionando y autorizada.
 
 Configuración del proyecto: crear `.mcp.json` en la raíz (está en `.gitignore`, no se versiona). Versión fija, perfil en memoria y navegación limitada al servidor local:
 
@@ -358,18 +358,42 @@ Se siguen los pasos 2.2 a 2.9 y la sección 3 con `-S tcp:127.0.0.1,14330`, `DB_
 - **Parámetro vacío en PowerShell 5.1:** `UsuarioAplicacion=""` se pierde al pasar a `sqlcmd` (error «Invalid argument»); ejecutar esa llamada con `cmd /c '<comando>'`.
 - **`adm:crear-administrador`:** pide la contraseña oculta en la consola de Windows y no admite redirección de la entrada; ejecutarlo en una consola interactiva.
 - **Puerto de la aplicación:** si `127.0.0.1:8000` ya está en uso por otra aplicación, `php artisan serve` informa de que arrancó pero las peticiones llegan a la otra. Usar otro puerto (`--port=8010`) y ajustar `APP_URL`.
+- **Varias pestañas con `php artisan serve`:** en Windows el servidor integrado atiende una conexión cada vez; al abrir una segunda pestaña, las conexiones anticipadas del navegador lo bloquean hasta unos 60 s. No es un defecto de la aplicación. Para la revisión, usar una pestaña por contexto y esperar a `domcontentloaded`.
 
 ### 8.4 Resultados (2026-11-13)
 
-| Comprobación                       | Resultado                                                                                                                                                                           |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bases                              | `prodigos_base_dev` y `prodigos_base_pruebas`: ONLINE, `Modern_Spanish_CI_AS`, compatibilidad 150, vacías al crearse                                                                |
-| Aislamiento                        | Cada cuenta solo accede a su base; ninguna tiene roles de servidor                                                                                                                  |
-| `roles.sql`                        | Rechazo con `BaseEsperada` distinta (50005); dos ejecuciones en desarrollo (antes y después de migrar) y una en pruebas con `UsuarioAplicacion=""`                                  |
-| `GuardaDdl`                        | Destino incorrecto (`migrate`, `--pretend`), `migrate:reset` y `db:wipe` sobre `prodigos_base_dev` (incluso con `ADM_PRUEBAS_DESTRUCTIVAS=prodigos_base_dev`): bloqueados, 0 tablas |
-| Migraciones                        | Nueve, con `adm_base_ddl`; 9 tablas `adm_*` y 9 filas en `dbo.migrations`                                                                                                           |
-| Catálogo                           | 7 funcionalidades y 13 acciones; la segunda sincronización no cambia nada                                                                                                           |
-| Administrador                      | Cuenta ficticia con cambio de contraseña obligatorio; auditoría con la contraseña oculta y sin el hash                                                                              |
-| Permisos de `adm_base_app`         | Denegados: UPDATE y DELETE en `adm_auditoria`, DELETE en `adm_usuarios`, CREATE TABLE, ALTER, TRUNCATE y acceso a `prodigos_base_pruebas`. Permitidos: SELECT e INSERT              |
-| Integración (`--testsuite=Sqlsrv`) | 1 prueba y 11 aserciones aprobadas; `prodigos_base_pruebas` vacía al terminar                                                                                                       |
-| Navegador                          | Inicio de sesión fallido con mensaje genérico. El resto de la revisión (sección 5) queda pendiente                                                                                  |
+| Comprobación                       | Resultado                                                                                                                                                                            |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Bases                              | `prodigos_base_dev` y `prodigos_base_pruebas`: ONLINE, `Modern_Spanish_CI_AS`, compatibilidad 150, vacías al crearse                                                                 |
+| Aislamiento                        | Cada cuenta solo accede a su base; ninguna tiene roles de servidor                                                                                                                   |
+| `roles.sql`                        | Rechazo con `BaseEsperada` distinta (50005); dos ejecuciones en desarrollo (antes y después de migrar) y una en pruebas con `UsuarioAplicacion=""`                                   |
+| `GuardaDdl`                        | Destino incorrecto (`migrate`, `--pretend`), `migrate:reset` y `db:wipe` sobre `prodigos_base_dev` (incluso con `ADM_PRUEBAS_DESTRUCTIVAS=prodigos_base_dev`): bloqueados, 0 tablas  |
+| Migraciones                        | Nueve, con `adm_base_ddl`; 9 tablas `adm_*` y 9 filas en `dbo.migrations`                                                                                                            |
+| Catálogo                           | 7 funcionalidades y 13 acciones; la segunda sincronización no cambia nada                                                                                                            |
+| Administrador                      | Cuenta ficticia con cambio de contraseña obligatorio; auditoría con la contraseña oculta y sin el hash                                                                               |
+| Permisos de `adm_base_app`         | Denegados: UPDATE y DELETE en `adm_auditoria`, DELETE en `adm_usuarios`, CREATE TABLE, ALTER, TRUNCATE y acceso a `prodigos_base_pruebas`. Permitidos: SELECT e INSERT               |
+| Integración (`--testsuite=Sqlsrv`) | 1 prueba y 11 aserciones aprobadas; `prodigos_base_pruebas` vacía al terminar                                                                                                        |
+| Navegador                          | Revisión completa de la sección 5 (detalle en 8.5). Consola sin errores ni advertencias tras las correcciones                                                                        |
+| Sesiones                           | Dos sesiones independientes; revocación y deshabilitación expulsan solo la sesión afectada; el cierre de sesión en un navegador no afecta al otro                                    |
+| Concurrencia                       | Membresías y permisos con datos desactualizados: aviso de conflicto sin cambios. Dos procesos simultáneos sobre el mismo grupo: uno guarda, el otro recibe el conflicto (dos rondas) |
+
+### 8.5 Revisión en navegador (2026-11-13)
+
+Playwright MCP 0.0.84 (Edge sin ventana), un único `php artisan serve` en `127.0.0.1:8010` con assets compilados (sin Vite), cuentas ficticias `admin.pruebas` y `usuario.pruebas` y un grupo ficticio «Consulta Pruebas». Las contraseñas se pasan al navegador como secretos con nombre (DPAPI) y nunca aparecen en respuestas ni capturas. Capturas en `storage/app/revision-visual` (no versionado).
+
+| Área                         | Comprobado                                                                                                                                                                                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Acceso                       | Inicio de sesión correcto e incorrecto (mensaje genérico; la contraseña anterior deja de servir tras el restablecimiento); cierre de sesión; tras salir, `/dashboard` vuelve al inicio de sesión      |
+| Cambio obligatorio           | Tras el alta y tras el restablecimiento por el administrador; otras rutas redirigen al cambio; confirmación distinta rechazada; después, Dashboard                                                    |
+| Dashboard y navegación       | Siete módulos para el administrador; para un grupo con solo «Consultar membresías», solo Inicio y Usuarios y grupos (en modo consulta); `/admin/usuarios` y el `PUT` de membresías responden 403      |
+| Usuarios y Mi Perfil         | Alta, validación de obligatorios, búsqueda, estado vacío, orden con `aria-sort`, edición, deshabilitar y habilitar con confirmación; Mi Perfil con correo inválido rechazado y datos guardados        |
+| Grupos, Membresías, Permisos | Alta, nombre duplicado con otras mayúsculas rechazado, detalle con estados vacíos, asignaciones con confirmación de los cambios y aviso de conflicto                                                  |
+| Sesiones Activas             | Lista con «Esta sesión», filtros, revocación con confirmación; la sesión revocada vuelve al inicio con «Su sesión fue finalizada»                                                                     |
+| Auditoría y Seguimiento      | Filtros (acción, usuario, módulo), paginación, estados vacíos e indicadores; exportaciones CSV (con BOM) y XLSX que conservan los filtros y no contienen hashes                                       |
+| Diseño                       | Escritorio 1366×768 y móvil 390×844: menú expandido, contraído con descripciones emergentes, buscador, migas, panel móvil (Esc lo cierra), tablas con desplazamiento propio y sin desbordar la página |
+| Teclado y diálogos           | Tab y Mayús+Tab en orden lógico con foco visible; SweetAlert2 con foco inicial en Cancelar en las confirmaciones y Esc para cerrar                                                                    |
+| Paleta alternativa           | `docs/ejemplos/paleta-ejemplo.css` inyectada en el navegador (sin tocar `tokens.css`): inicio de sesión, Dashboard y Usuarios con geometría idéntica a la paleta principal                            |
+
+**Concurrencia simultánea:** `php artisan serve` atiende una petición cada vez, así que la simultaneidad real se probó con dos procesos PHP sincronizados que llaman a `AdministrarPermisos::sincronizar` con la misma base. El segundo espera el bloqueo del primero (unos 1.100 ms) y recibe el conflicto; queda una sola auditoría por ronda.
+
+**Observaciones sin corregir (mejoras, fuera del alcance de la etapa):** no hay páginas de error propias (los 403 muestran la página genérica en inglés de Laravel, también al deshabilitar una cuenta con la sesión abierta); no hay enlace «Saltar al contenido»; tras cerrar la alerta de validación, el foco vuelve a `body`; los contadores dicen «1 usuarios encontrados»; Membresías mezcla tuteo («Selecciona un usuario») con el trato de usted.

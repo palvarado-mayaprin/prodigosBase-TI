@@ -1,5 +1,18 @@
 # Historial de cambios
 
+## 2026-11-13 — Etapa 8.2: revisión en navegador, sesiones y concurrencia
+
+- **Ejecutado con Playwright MCP** (Edge sin ventana, `127.0.0.1:8010`, assets compilados, cuentas ficticias `admin.pruebas` y `usuario.pruebas`): inicio de sesión correcto e incorrecto, cambio obligatorio de contraseña (con desvío desde otras rutas y confirmación distinta), cierre de sesión, Dashboard, menú lateral (contraído, buscador, móvil), Usuarios, Mi Perfil, Grupos, Membresías, Permisos, Sesiones Activas, Auditoría y Seguimiento con filtros, formularios, confirmaciones, estados vacíos, paginación y las 10 exportaciones. Detalle en la sección 8.4 de `docs/VALIDACION_SQL_SERVER.md`.
+- **Sesiones:** dos sesiones independientes; la revocación y la deshabilitación de la cuenta expulsan solo a la sesión afectada; el cierre de sesión en un navegador no afecta al otro.
+- **Concurrencia en SQL Server:** conflicto de membresías y de permisos con datos desactualizados; y dos procesos simultáneos sobre el mismo grupo con la misma base: uno guarda y el otro recibe el conflicto, con una sola auditoría por ronda.
+- **Defectos corregidos:**
+    - con el cambio de contraseña obligatorio, el registro de uso del navegador recibía 403 y dejaba un error en la consola. `ExigirCambioContrasena` responde 204 a `seguimiento.*` sin registrar nada (prueba en `CambioContrasenaTest`);
+    - el menú lateral en móvil no aplicaba la clase `adm-sidebar` (se perdía en `Sheet`) y sus encabezados, módulos y marca salían sin el estilo del escritorio. `Sidebar.vue` la aplica ahora al panel;
+    - textos de accesibilidad en inglés: botón del menú («Mostrar u ocultar el menú lateral»), título y descripción del panel móvil y región de notificaciones («Notificaciones»);
+    - advertencia de SweetAlert2 por `allowEnterKey` (obsoleto) en la alerta de carga, que no tiene botones.
+- **Sin cambios:** migraciones, permisos, catálogo, `.env`, SRVOPTIMUS, IIS y PRODIGOS V2.
+- **Verificación:** `composer test` (PHPUnit 164 aprobadas, 1 omitida), `test:js` 13/13, `check`, `types:check` y `build`.
+
 ## 2026-11-13 — Etapa 8.2: validación en una instancia SQL Server local
 
 - **Entorno:** SQL Server 2022 Developer en la instancia local dedicada `PRODIGOSBASE` (solo motor, TCP únicamente en `127.0.0.1:14330`, `sa` deshabilitado, Agente y telemetría deshabilitados). Bases `prodigos_base_dev` y `prodigos_base_pruebas` (`Modern_Spanish_CI_AS`, compatibilidad 150), tres cuentas separadas, `roles.sql`, nueve migraciones, catálogo y administrador ficticio. Detalle y resultados en la sección 8 de `docs/VALIDACION_SQL_SERVER.md`.
@@ -7,7 +20,7 @@
 - **Scripts `docs/sql/preparacion`:** servidor esperado en la variable sqlcmd `ServidorEsperado` (SRVOPTIMUS o la instancia local), con la misma detención si no coincide o falta; `02` fija la compatibilidad 150 en las bases recién creadas.
 - **Confirmado contra SQL Server real:** rechazo de `roles.sql` con `BaseEsperada` distinta, bloqueo de `GuardaDdl` (destino incorrecto, `--pretend`, `migrate:reset`, `db:wipe`), aislamiento de cuentas, permisos denegados de la cuenta de aplicación y prueba de integración aprobada.
 - **Sin cambios:** código de la aplicación, migraciones, pantallas, SRVOPTIMUS, IIS y PRODIGOS V2. El `.env` local apunta a la instancia nueva (no se versiona).
-- **Pendiente:** revisión completa en navegador con Playwright (sección 5), sesiones y concurrencia en dos navegadores.
+- **Pendiente:** revisión completa en navegador con Playwright (sección 5), sesiones y concurrencia en dos navegadores (completado en la entrada «Etapa 8.2: revisión en navegador, sesiones y concurrencia»).
 - **Verificación:** `composer test` (PHPUnit 164 aprobadas, 1 omitida), `test:js` 13/13, `check`, `types:check` y `build`.
 
 ## 2026-11-13 — Etapa 8.1: correcciones aprobadas antes de la validación en SQL Server

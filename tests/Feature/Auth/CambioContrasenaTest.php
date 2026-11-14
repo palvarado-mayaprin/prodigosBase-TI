@@ -31,6 +31,9 @@ class CambioContrasenaTest extends TestCase
 
         $this->get(route('dashboard'))->assertRedirect(route('contrasena.editar'));
         $this->getJson(route('dashboard'))->assertForbidden();
+        $this->postJson(route('seguimiento.visita'), ['ruta' => '/cambiar-contrasena'])->assertNoContent();
+        $this->postJson(route('seguimiento.actividad'), ['visita' => 1, 'segundos' => 5])->assertNoContent();
+        $this->assertSame(0, DB::table('adm_actividad')->count());
         $this->get(route('contrasena.editar'))->assertOk()
             ->assertInertia(fn ($pagina) => $pagina->component('auth/CambiarContrasena')->where('obligatorio', true));
         $this->post(route('logout'))->assertRedirect();

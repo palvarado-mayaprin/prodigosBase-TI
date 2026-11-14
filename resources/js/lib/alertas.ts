@@ -81,7 +81,6 @@ export async function mostrarCarga(
             showConfirmButton: false,
             allowOutsideClick: false,
             allowEscapeKey: false,
-            allowEnterKey: false,
             didOpen: () => {
                 Swal.showLoading();
                 resolve();
