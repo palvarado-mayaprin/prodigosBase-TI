@@ -236,7 +236,7 @@ npm run types:check    # TypeScript (vue-tsc)
 npm run build          # compilación de producción
 ```
 
-Resultado esperado (Etapa 9): PHPUnit con 172 pruebas, 171 aprobadas y 1 omitida (la integración con SQL Server), `test:js` 14/14 y el resto sin errores. Las mismas comprobaciones se ejecutan en GitHub Actions (`.github/workflows/tests.yml`).
+Resultado esperado (Fase 4, intervención 4.1): PHPUnit con 175 pruebas, 174 aprobadas y 1 omitida (la integración con SQL Server), `test:js` 14/14 y el resto sin errores. Las mismas comprobaciones se ejecutan en GitHub Actions (`.github/workflows/tests.yml`).
 
 - **SQL Server real:** la suite `Sqlsrv` se ejecuta aparte, sobre una base dedicada `_pruebas`: [VALIDACION_SQL_SERVER.md, sección 3](VALIDACION_SQL_SERVER.md#3-prueba-de-integración-sql-server).
 - **Navegador:** revisión con Playwright MCP: [VALIDACION_SQL_SERVER.md, sección 5](VALIDACION_SQL_SERVER.md#5-revisión-en-navegador-con-playwright-mcp).

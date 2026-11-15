@@ -1,5 +1,13 @@
 # Historial de cambios
 
+## 2026-11-15 — Fase 4, intervención 4.1: Inertia DevTools deshabilitado (hallazgo A1)
+
+- **Causa:** `inertiajs/inertia-laravel` incluye Inertia DevTools, que el paquete activa con `APP_ENV=local`. Grababa cada petición en `storage/inertia-devtools` y la servía sin autenticación en `/_inertia/devtools/entries`. Como solo oculta campos con nombres exactos en inglés, `contrasena_actual` quedaba en texto plano.
+- **Corrección:** `config/inertia.php` fija `devtools.enabled = false` en todos los entornos, sin variable de entorno: no graba peticiones ni declara sus rutas. No se modificó `vendor` ni se añadieron dependencias. Nota en `.env.example` y en `docs/MANUAL_TECNICO.md` (sección 9): las herramientas de diagnóstico no deben almacenar credenciales.
+- **Prueba de regresión:** `tests/Feature/DevToolsInertiaTest.php` comprueba que queda deshabilitado también con `APP_ENV=local`, que sus rutas no existen (404) y que un cambio de contraseña no genera capturas. Con el comportamiento por defecto del paquete, la última prueba falla.
+- **Limpieza local (fuera del repositorio):** se eliminaron solo los registros generados por el paquete en `storage/inertia-devtools`. Se rotaron las contraseñas de las cuentas ficticias de `prodigos_base_dev` con `CambiarContrasena` (auditado), se renovaron los valores ficticios de prueba cifrados con DPAPI y se revocaron sus sesiones abiertas.
+- **Sin cambios:** módulos administrativos, esquema SQL, `DestinoSql`, `GuardaDdl`, IIS, SRVOPTIMUS y PRODIGOS V2.
+
 ## 2026-11-14 — Etapa 9: documentación definitiva e instalación limpia reproducible
 
 - **Instalación limpia:** dos recorridos desde una copia limpia del repositorio, con una base y logins temporales en `T01003\PRODIGOSBASE` y un administrador ficticio, siguiendo solo el manual; el segundo, sin intervenciones. Después se eliminaron la base, los logins, el clon y las credenciales temporales. Resultados en la sección 9 de `docs/VALIDACION_SQL_SERVER.md`.

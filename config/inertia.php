@@ -67,4 +67,25 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | DevTools (deshabilitado)
+    |--------------------------------------------------------------------------
+    |
+    | Inertia DevTools graba cada petición en storage/inertia-devtools (cuerpo,
+    | props y cabeceras) y la sirve en /_inertia/devtools/entries; el paquete
+    | lo activa por defecto con APP_ENV=local. Solo oculta campos por nombre
+    | exacto en inglés, así que contrasena_actual quedaba en texto plano.
+    | Desactivado en todos los entornos y sin variable de entorno: no registra
+    | peticiones ni declara sus rutas. Las herramientas de diagnóstico no deben
+    | almacenar credenciales (docs/MANUAL_TECNICO.md, sección 9).
+    |
+    */
+
+    'devtools' => [
+
+        'enabled' => false,
+
+    ],
+
 ];
