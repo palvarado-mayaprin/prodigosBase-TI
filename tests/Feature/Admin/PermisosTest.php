@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Autorizacion\CatalogoPermisos;
 use App\Entorno\DestinoSql;
 use App\Models\Usuario;
 use App\Services\Admin\Relaciones;
@@ -63,13 +64,16 @@ class PermisosTest extends TestCase
         $ver = $this->id('administracion.accesos.membresias:VER');
         $this->asignarPermiso($this->soporte, 'administracion.accesos.membresias:VER');
 
+        // Posición del área base: un proyecto derivado puede añadir otras áreas.
+        $i = array_search('administracion', array_keys(CatalogoPermisos::areas()), true);
+
         $this->get(route('admin.permisos'))->assertOk()->assertInertia(fn ($pagina) => $pagina
             ->component('admin/Permisos')
             ->where('soloLectura', false)
-            ->where('areas.0.area', 'administracion')
-            ->where('areas.0.modulos.0.funcionalidades.0.codigo', 'administracion.accesos.usuarios')
-            ->where('areas.0.modulos.0.funcionalidades.0.soloAdministrador', true)
-            ->where('areas.0.modulos.0.funcionalidades.2.acciones.0.permisoId', $ver)
+            ->where("areas.$i.area", 'administracion')
+            ->where("areas.$i.modulos.0.funcionalidades.0.codigo", 'administracion.accesos.usuarios')
+            ->where("areas.$i.modulos.0.funcionalidades.0.soloAdministrador", true)
+            ->where("areas.$i.modulos.0.funcionalidades.2.acciones.0.permisoId", $ver)
             ->where('grupos.1.nombre', 'Soporte')
             ->where('grupos.1.permisos', [$ver]));
     }

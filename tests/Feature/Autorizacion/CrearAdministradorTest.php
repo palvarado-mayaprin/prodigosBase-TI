@@ -2,10 +2,13 @@
 
 namespace Tests\Feature\Autorizacion;
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\PendingCommand;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Tests\Concerns\CreaDatosAdministrativos;
 use Tests\TestCase;
 
@@ -88,5 +91,38 @@ class CrearAdministradorTest extends TestCase
         $this->artisan('adm:crear-administrador', ['--usuario' => 'x'])
             ->expectsOutputToContain('Escritura no permitida')->assertFailed();
         $this->assertSame(0, DB::table('adm_usuarios')->count());
+    }
+
+    /** Instalación desatendida: la contraseña llega por la entrada estándar, nunca como argumento. */
+    private function crearDesdeEntrada(string $entrada): array
+    {
+        $comando = $this->app->make(Kernel::class)->all()['adm:crear-administrador'];
+        $flujo = fopen('php://memory', 'r+');
+        fwrite($flujo, $entrada);
+        rewind($flujo);
+        $input = new ArrayInput(['command' => 'adm:crear-administrador',
+            '--usuario' => 'admin.desatendido', '--nombre' => 'Ana', '--apellidos' => 'Pérez', '--leer-contrasena' => true,
+        ]);
+        $input->setStream($flujo);
+        $input->setInteractive(false);
+        $salida = new BufferedOutput;
+
+        return [$comando->run($input, $salida), $salida->fetch()];
+    }
+
+    public function test_lee_la_contrasena_de_la_entrada_estandar_sin_mostrarla(): void
+    {
+        // Con la marca BOM que antepone PowerShell 5.1 y el salto de línea de Windows.
+        [$codigo, $salida] = $this->crearDesdeEntrada("\u{FEFF}".self::TEMPORAL."\r\n");
+
+        $this->assertSame(0, $codigo);
+        $this->assertStringNotContainsString(self::TEMPORAL, $salida);
+        $usuario = DB::table('adm_usuarios')->sole();
+        $this->assertTrue(Hash::check(self::TEMPORAL, $usuario->password));
+        $this->assertSame(1, (int) $usuario->debe_cambiar_password);
+
+        [$codigo] = $this->crearDesdeEntrada("debil\n");
+        $this->assertSame(1, $codigo);
+        $this->assertSame(1, DB::table('adm_usuarios')->count());
     }
 }

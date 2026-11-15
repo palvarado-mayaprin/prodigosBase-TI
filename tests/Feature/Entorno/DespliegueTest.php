@@ -45,7 +45,8 @@ class DespliegueTest extends TestCase
                 $this->assertMatchesRegularExpression('~-d (\S+) .*BaseEsperada="\1"|-d <base> .*BaseEsperada="<base>"~s', $ejemplo, "$archivo: $ejemplo");
             }
         }
-        $this->assertGreaterThanOrEqual(4, $ejemplos);
+        // Cabecera de roles.sql, manual de instalación (3.3) y prueba de integración.
+        $this->assertGreaterThanOrEqual(3, $ejemplos);
     }
 
     public function test_la_version_de_php_es_coherente(): void

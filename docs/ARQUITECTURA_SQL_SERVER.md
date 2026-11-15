@@ -168,21 +168,8 @@ El script es idempotente: crea los roles, concede los permisos de las tablas que
 | Guarda de DDL          | `tests/Feature/Entorno/MigracionesProductivasTest.php` | `migrate` en producción sin `ADM_DESPLIEGUE_DDL` no crea tablas aunque la escritura esté habilitada; con la variable sí; solo la conexión predeterminada con driver `sqlsrv` |
 | Integración SQL Server | `tests/Sqlsrv` (grupo `sqlsrv`)                        | Índice filtrado de email, `ISJSON`, `SYSUTCDATETIME()`, CHECK de segundos y tipos reales. Se omite salvo habilitación expresa                                                |
 
-Para la integración se necesita una base **vacía y dedicada** cuyo nombre termine en `_pruebas`. La prueba crea el esquema con las migraciones y, solo si lo creó ella, lo elimina al terminar. Preparación de la base y de su cuenta: [VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md#3-prueba-de-integración-sql-server).
+Para la integración se necesita una base **vacía y dedicada** cuyo nombre termine en `_pruebas`. La prueba crea el esquema con las migraciones y, solo si lo creó ella, lo elimina al terminar. Preparación de la base, de su cuenta y ejecución: [VALIDACION_SQL_SERVER.md, sección 3](VALIDACION_SQL_SERVER.md#3-prueba-de-integración-sql-server).
 
-```powershell
-$env:ADM_PRUEBAS_SQLSRV = '1'
-$env:ADM_PRUEBAS_SQLSRV_HOST = '<servidor>'
-$env:ADM_PRUEBAS_SQLSRV_PORT = '1433'
-$env:ADM_PRUEBAS_SQLSRV_BD = 'prodigos_base_pruebas'
-$env:ADM_PRUEBAS_SQLSRV_SERVIDOR = '<valor de SELECT @@SERVERNAME>'
-$env:ADM_PRUEBAS_SQLSRV_USUARIO = '<usuario con rol adm_despliegue>'
-$env:ADM_PRUEBAS_SQLSRV_CLAVE = '<contraseña>'
-$env:ADM_PRUEBAS_DESTRUCTIVAS = 'prodigos_base_pruebas'   # autoriza la limpieza final
-php artisan test --testsuite=Sqlsrv
-Remove-Item Env:ADM_PRUEBAS_SQLSRV*, Env:ADM_PRUEBAS_DESTRUCTIVAS
-```
-
-## 6.1 Revisar el DDL antes de aplicarlo
+### 6.1 Revisar el DDL antes de aplicarlo
 
 Con la conexión de desarrollo configurada, `php artisan migrate --pretend` muestra las sentencias sin ejecutarlas. `GuardaDdl` lo comprueba antes de que Laravel cree `dbo.migrations`; con el destino autorizado, esa tabla se crea vacía. `php artisan migrate:status` es de solo lectura.

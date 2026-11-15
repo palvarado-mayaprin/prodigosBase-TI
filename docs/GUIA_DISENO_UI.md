@@ -160,7 +160,7 @@ Los textos son en español y describen la causa y la acción, sin detalles técn
 
 - **Trato:** siempre de usted («Seleccione un grupo», «Podrá consultar…», «Revise los campos…»).
 - **Contadores:** con concordancia de número mediante `plural()` de `lib/textos.ts` («1 usuario encontrado», «2 usuarios encontrados»).
-- **Errores HTTP:** la página 403 (`resources/views/errors/403.blade.php`) usa la familia `adm-login-*`, con el título «Acceso denegado» y «Volver al inicio».
+- **Errores HTTP:** las páginas 403, 404, 419, 429, 500 y 503 (`resources/views/errors/`) comparten `plantilla.blade.php`, con la familia `adm-login-*`, el código, un título («Acceso denegado», «Página no encontrada»…), un texto sin detalles técnicos y «Volver al inicio».
 
 ## 8. Comportamiento responsive
 
@@ -193,7 +193,7 @@ El nombre y la descripción que muestran el inicio de sesión, el menú y el Das
 - **Teclado:**
     - todo es operable con el teclado, incluido mostrar u ocultar la contraseña;
     - el primer elemento enfocable es el enlace «Saltar al contenido» (`.adm-saltar`, oculto hasta recibir el foco), que lleva el foco a `main#contenido`;
-    - los diálogos devuelven el foco al botón que los abrió; tras un guardado, `mostrarCarga()` recuerda el control de origen y, al cerrar el mensaje, el foco vuelve al primer campo con `aria-invalid` de ese formulario o, si no hay, al control;
+    - los diálogos devuelven el foco al botón que los abrió; tras un guardado, `mostrarCarga()` recuerda el control de origen y, al cerrar el mensaje, el foco vuelve al primer campo con `aria-invalid` de ese formulario o, si no hay, al control; si el control ya no existe (el formulario se cerró al guardar), el foco va al contenido principal (`main#contenido`);
     - las confirmaciones enfocan «Cancelar».
 - **Atributos ARIA:**
     - `aria-invalid` y `aria-describedby` en campos con error;

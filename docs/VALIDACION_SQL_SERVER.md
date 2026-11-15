@@ -1,8 +1,8 @@
-# Validación integral en SQL Server (Etapa 8)
+# Validación en SQL Server y en navegador
 
-Procedimiento para crear un entorno SQL Server de desarrollo **propio de prodigosBase-TI** y validar en él el esquema, los roles, las pruebas de integración y la aplicación. Preparado en la Etapa 8.1 y **ejecutado en la Etapa 8.2 sobre una instancia local dedicada** (sección 8). Cualquier otro servidor requiere autorización expresa (sección 7).
+Pruebas de prodigosBase-TI contra SQL Server real y en navegador, y registro de sus resultados. La **instalación** (bases, cuentas, roles, `.env`, migraciones y primer administrador) está solo en el [manual de instalación](MANUAL_INSTALACION_Y_CONFIGURACION.md); este documento añade los requisitos detallados del servidor, la prueba de integración, la revisión con Playwright y los resultados de cada etapa (secciones 8 y 9).
 
-Los valores entre `<>` se sustituyen al ejecutar. Los nombres de base y de login son los propuestos; si se cambian, se cambian en todos los pasos. Las contraseñas nunca se escriben en archivos, documentos ni en el historial de la consola.
+Los valores entre `<>` se sustituyen al ejecutar. Las contraseñas nunca se escriben en archivos, documentos ni en el historial de la consola. Cualquier servidor compartido requiere autorización expresa del DBA (sección 7).
 
 ## 1. Requisitos
 
@@ -50,151 +50,14 @@ sqlcmd -?                         # cualquier versión
 
 ## 2. Instalación de la base de desarrollo
 
-### 2.1 Comprobaciones previas (DBA)
-
-Con una cuenta que pueda crear bases y logins (`sysadmin`, o `dbcreator` más `securityadmin`):
+Secciones 3 a 5 del [manual de instalación](MANUAL_INSTALACION_Y_CONFIGURACION.md#3-preparar-sql-server): comprobaciones previas, base y logins, `roles.sql` (dos ejecuciones), aislamiento de las cuentas, `.env`, migraciones con la cuenta de despliegue, catálogo y primer administrador. Comprobación adicional de los permisos del rol de la aplicación:
 
 ```sql
-SELECT @@SERVERNAME AS servidor,                                   -- valor para ADM_DESARROLLO_SERVIDOR
-       SERVERPROPERTY('ProductVersion') AS version,                -- 13.x (2016) o superior
-       SERVERPROPERTY('IsIntegratedSecurityOnly') AS solo_windows; -- 0 para usar logins SQL
-SELECT name FROM sys.databases
-WHERE name IN (N'prodigos_base_dev', N'prodigos_base_pruebas');   -- 0 filas: los nombres están libres
-SELECT name FROM sys.server_principals
-WHERE name IN (N'adm_base_app', N'adm_base_ddl', N'adm_base_pruebas'); -- 0 filas
-```
-
-Si alguna consulta devuelve filas, detenerse: no se reutilizan bases ni logins existentes.
-
-### 2.2 Base y logins (DBA)
-
-```sql
-USE master;
-CREATE DATABASE prodigos_base_dev COLLATE Modern_Spanish_CI_AS;
-GO
-SELECT name, compatibility_level, collation_name
-FROM sys.databases WHERE name = N'prodigos_base_dev';   -- nivel >= 130; Modern_Spanish_CI_AS
-GO
-CREATE LOGIN adm_base_app WITH PASSWORD = N'<contraseña segura>', DEFAULT_DATABASE = prodigos_base_dev, CHECK_POLICY = ON;
-CREATE LOGIN adm_base_ddl WITH PASSWORD = N'<contraseña segura>', DEFAULT_DATABASE = prodigos_base_dev, CHECK_POLICY = ON;
-GO
-USE prodigos_base_dev;
-CREATE USER adm_base_app FOR LOGIN adm_base_app;
-CREATE USER adm_base_ddl FOR LOGIN adm_base_ddl;
-GO
-```
-
-Si el nivel de compatibilidad fuera menor que 130: `ALTER DATABASE prodigos_base_dev SET COMPATIBILITY_LEVEL = 130;`.
-
-### 2.3 Roles (primera ejecución)
-
-Desde la raíz del proyecto, con la cuenta del DBA (`-E` es autenticación de Windows). `-b` hace que `sqlcmd` termine con error ante cualquier fallo, y `-d` fija la base: **comprobar el nombre antes de pulsar Intro**.
-
-```powershell
-sqlcmd -S <servidor> -d prodigos_base_dev -E -b -i database\sql\roles.sql `
-       -v BaseEsperada="prodigos_base_dev" UsuarioAplicacion="adm_base_app" UsuarioDespliegue="adm_base_ddl"
-```
-
-`BaseEsperada` debe coincidir con la base de `-d` (`DB_NAME()`); si falta, está vacío o no coincide, el script se detiene sin crear roles ni tocar permisos.
-
-Esperado: nueve avisos «Omitida (aún no existe…)» y «Roles adm_aplicacion y adm_despliegue actualizados.».
-
-### 2.4 Aislamiento de las cuentas
-
-Como DBA, las cuentas no tienen roles de servidor:
-
-```sql
-SELECT l.name AS login, r.name AS rol_servidor
-FROM sys.server_role_members m
-JOIN sys.server_principals r ON r.principal_id = m.role_principal_id
-JOIN sys.server_principals l ON l.principal_id = m.member_principal_id
-WHERE l.name IN (N'adm_base_app', N'adm_base_ddl');     -- 0 filas
-```
-
-Con cada cuenta (`sqlcmd` pide la contraseña al omitir `-P`):
-
-```powershell
-sqlcmd -S <servidor> -U adm_base_app -d prodigos_base_dev -b -Q "SET NOCOUNT ON; SELECT name FROM sys.databases WHERE database_id > 4 AND HAS_DBACCESS(name) = 1;"
-sqlcmd -S <servidor> -U adm_base_ddl -d prodigos_base_dev -b -Q "SET NOCOUNT ON; SELECT name FROM sys.databases WHERE database_id > 4 AND HAS_DBACCESS(name) = 1;"
-```
-
-Esperado en ambas: **solo** `prodigos_base_dev`. Si aparece cualquier otra base (por ejemplo, por un usuario `guest` habilitado en ella), detenerse y avisar al DBA.
-
-### 2.5 Configurar `.env`
-
-Lo edita la persona responsable del equipo (respaldar antes el archivo):
-
-| Variable                                       | Valor                                                   |
-| ---------------------------------------------- | ------------------------------------------------------- |
-| `DB_CONNECTION`                                | `sqlsrv`                                                |
-| `DB_HOST`, `DB_PORT`                           | `<servidor>`, `1433`                                    |
-| `DB_DATABASE`                                  | `prodigos_base_dev`                                     |
-| `DB_USERNAME`, `DB_PASSWORD`                   | `adm_base_app` y su contraseña                          |
-| `DB_URL`                                       | vacío                                                   |
-| `DB_ENCRYPT`, `DB_TRUST_SERVER_CERTIFICATE`    | según el controlador ODBC y el certificado del servidor |
-| `ADM_ENTORNO`                                  | `desarrollo`                                            |
-| `ADM_DESARROLLO_SERVIDOR`                      | valor exacto de `SELECT @@SERVERNAME` (paso 2.1)        |
-| `ADM_DESARROLLO_BD`                            | `prodigos_base_dev`                                     |
-| `ADM_PRODUCCION_SERVIDOR`, `ADM_PRODUCCION_BD` | vacíos (este equipo no tiene destino productivo)        |
-| `ADM_PRODUCCION_ESCRITURA`                     | `false`                                                 |
-
-```powershell
-php artisan config:clear
-php artisan adm:entorno
-```
-
-Esperado: base y servidor reales iguales a los esperados, escritura `HABILITADA`, migraciones `permitidas` y «Destino coherente con el entorno seleccionado.». Si termina con error, no continuar.
-
-### 2.6 Migraciones (cuenta de despliegue)
-
-En una consola PowerShell nueva, desde la raíz del proyecto. Las variables de proceso prevalecen sobre `.env` y desaparecen al cerrar la consola; la contraseña se pide oculta para que no quede en el historial.
-
-```powershell
-php artisan config:clear
-$env:DB_USERNAME = 'adm_base_ddl'
-$env:DB_PASSWORD = [Net.NetworkCredential]::new('', (Read-Host 'Contraseña de adm_base_ddl' -AsSecureString)).Password
-php artisan adm:entorno        # misma verificación, ahora con la cuenta de despliegue
-php artisan migrate:status     # solo lectura; esperado: «Migration table not found»
-php artisan migrate --pretend  # muestra el DDL; con el destino autorizado crea dbo.migrations (vacía)
-php artisan migrate            # esperado: las nueve migraciones DONE
-Remove-Item Env:DB_USERNAME, Env:DB_PASSWORD
-```
-
-No usar `--force`. `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback` y `db:wipe` están bloqueados en esta base (sección 6). En desarrollo no hace falta `ADM_DESPLIEGUE_DDL`.
-
-`GuardaDdl` actúa en dos momentos: al iniciar el comando (evento `CommandStarting`, antes de que `migrate` o `migrate --pretend` creen `dbo.migrations`) y al empezar el Migrator (evento `MigrationsStarted`). Una configuración incorrecta o no autorizada no llega a escribir nada.
-
-### 2.7 Roles (segunda ejecución)
-
-Repetir el comando del paso 2.3. Esperado: «Permisos … sobre dbo.adm_…» para las nueve tablas.
-
-### 2.8 Comprobación del esquema y de los permisos (DBA o despliegue)
-
-```sql
-USE prodigos_base_dev;
-SELECT name FROM sys.tables WHERE name LIKE N'adm[_]%' ORDER BY name;   -- 9 tablas
-SELECT migration FROM dbo.migrations ORDER BY id;                        -- 9 migraciones
 SELECT OBJECT_NAME(major_id) AS tabla, permission_name, state_desc
 FROM sys.database_permissions
 WHERE grantee_principal_id = DATABASE_PRINCIPAL_ID(N'adm_aplicacion')
 ORDER BY tabla, permission_name;   -- DENY UPDATE y DELETE en adm_auditoria
 ```
-
-Las nueve tablas: `adm_actividad`, `adm_auditoria`, `adm_funcionalidades`, `adm_grupos`, `adm_grupos_permisos`, `adm_permisos`, `adm_sesiones`, `adm_usuarios` y `adm_usuarios_grupos`.
-
-### 2.9 Catálogo y primer administrador (cuenta de la aplicación)
-
-En una consola sin las variables del paso 2.6 (usa la cuenta de `.env`):
-
-```powershell
-php artisan config:clear
-php artisan adm:entorno
-php artisan adm:sincronizar-permisos
-php artisan adm:sincronizar-permisos   # segunda vez: sin cambios (idempotente)
-php artisan adm:crear-administrador --usuario=<usuario> --nombre="<Nombre>" --apellidos="<Apellidos>"
-```
-
-La contraseña temporal se pide oculta y dos veces. Comprobación en SQL: sección 5.4 del [manual de instalación](MANUAL_INSTALACION_Y_CONFIGURACION.md#54-catálogo-de-permisos-y-primer-administrador).
 
 ## 3. Prueba de integración SQL Server
 
@@ -222,7 +85,7 @@ GO
 ```
 
 ```powershell
-sqlcmd -S <servidor> -d prodigos_base_pruebas -E -b -i database\sql\roles.sql `
+sqlcmd -S <servidor> -d prodigos_base_pruebas -E -b -f 65001 -i database\sql\roles.sql `
        -v BaseEsperada="prodigos_base_pruebas" UsuarioAplicacion="" UsuarioDespliegue="adm_base_pruebas"
 sqlcmd -S <servidor> -U adm_base_pruebas -d prodigos_base_pruebas -b -Q "SET NOCOUNT ON; SELECT name FROM sys.databases WHERE database_id > 4 AND HAS_DBACCESS(name) = 1;"
 ```
@@ -248,7 +111,7 @@ Si el certificado lo exige, definir también `$env:DB_ENCRYPT` y `$env:DB_TRUST_
 
 ## 4. Validación funcional
 
-Con el administrador inicial, recorrer la tabla de la sección 9 del [manual de instalación](MANUAL_INSTALACION_Y_CONFIGURACION.md#9-verificación-de-módulos) con cuentas de prueba ficticias. Además, en SQL Server real:
+Con el administrador inicial, recorrer la tabla de la sección 7 del [manual de instalación](MANUAL_INSTALACION_Y_CONFIGURACION.md#7-verificaciones-y-pruebas) con cuentas de prueba ficticias. Además, en SQL Server real:
 
 - **Sesiones:** iniciar sesión en dos navegadores, revocar una desde Sesiones Activas y comprobar que su siguiente petición vuelve al inicio de sesión.
 - **Concurrencia:** abrir la misma membresía o los mismos permisos en dos pestañas, guardar en una y después en la otra; la segunda debe recibir el aviso de conflicto y no aplicar sus cambios.
@@ -256,36 +119,46 @@ Con el administrador inicial, recorrer la tabla de la sección 9 del [manual de 
 
 ## 5. Revisión en navegador con Playwright MCP
 
-**Ejecutada en la Etapa 8.2** sobre la instancia local (resultados en la sección 8.5). Solo procede con la base de desarrollo de este documento funcionando y autorizada.
+Ejecutada en las Etapas 8.2 y 8.3 (resultados en las secciones 8.5 y 8.6). Solo procede con una base de desarrollo funcionando y autorizada.
 
-Configuración del proyecto: crear `.mcp.json` en la raíz (está en `.gitignore`, no se versiona). Versión fija, perfil en memoria y navegación limitada al servidor local:
+Configuración: `.mcp.json` en la raíz (está en `.gitignore`, no se versiona), con versión fija, perfil en memoria, navegación limitada al servidor local y las contraseñas de las cuentas ficticias entregadas como **secretos con nombre**:
 
 ```json
 {
     "mcpServers": {
-        "playwright": {
+        "playwright-pbti": {
             "type": "stdio",
-            "command": "npx",
+            "command": "powershell.exe",
             "args": [
-                "@playwright/mcp@0.0.85",
+                "-NoProfile",
+                "-NonInteractive",
+                "-File",
+                "<carpeta local>\\iniciar-mcp.ps1",
                 "--isolated",
+                "--headless",
+                "--browser",
+                "msedge",
                 "--allowed-origins",
-                "http://127.0.0.1:8000",
+                "http://127.0.0.1:8010",
+                "--output-dir",
+                "storage/app/revision-visual",
                 "--viewport-size",
                 "1366x768",
-                "--output-dir",
-                "storage/app/revision-visual"
+                "--codegen",
+                "none"
             ]
         }
     }
 }
 ```
 
-`--allowed-origins` no es una barrera de seguridad; la protección real es que la aplicación solo admite conexiones del propio equipo y apunta a la base de desarrollo. `storage/app` está excluido del control de versiones.
+`iniciar-mcp.ps1` vive fuera del repositorio: descifra con DPAPI las contraseñas ficticias, las escribe en un archivo temporal con permisos solo del usuario (que borra a los 30 segundos) y lanza `@playwright/mcp` (versión fija, instalada localmente) con `--secrets <archivo>`. En el navegador se escribe el **nombre** del secreto (p. ej. `ADM_ADMIN_CLAVE`), nunca su valor, y Playwright oculta los valores en sus respuestas. No usar «Mostrar contraseña» en capturas.
+
+`--allowed-origins` no es una barrera de seguridad; la protección real es que la aplicación solo admite conexiones del propio equipo y apunta a la base de desarrollo. `storage/app` está excluido del control de versiones. Con `php artisan serve`, usar una pestaña por contexto (sección 8.3).
 
 Guion de la revisión:
 
-1. `composer run dev` y `php artisan adm:entorno` coherente.
+1. `npm run build`, `php artisan serve --host=127.0.0.1 --port=8010` y `php artisan adm:entorno` coherente (sin Vite).
 2. Escritorio (1366×768) y móvil (390×844, con `browser_resize`): inicio de sesión (error y correcto), cambio de contraseña obligatorio, Dashboard, menú lateral (contraído y buscador), cada módulo administrativo con sus filtros, formularios, confirmaciones y estados vacíos.
 3. Teclado: recorrido con Tab y Mayús+Tab, foco visible, Esc en diálogos.
 4. Con la paleta de `docs/ejemplos/paleta-ejemplo.css` aplicada temporalmente (y restaurada al terminar), repetir inicio de sesión, Dashboard y una tabla.
@@ -297,21 +170,23 @@ Solo cuentas y datos ficticios; nunca credenciales reales en capturas.
 
 | Riesgo                                                                              | Salvaguarda                                                                                                                                                                                                                                                                   |
 | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Un comando actúa sobre la base de otro sistema                                      | Las cuentas nuevas solo tienen usuario en su base (paso 2.4): cualquier conexión a otra base falla en SQL Server. Además `DestinoSql` exige que `DB_DATABASE`, `DB_NAME()` y `@@SERVERNAME` coincidan con el destino configurado                                              |
+| Un comando actúa sobre la base de otro sistema                                      | Las cuentas nuevas solo tienen usuario en su base (manual de instalación, 3.4): cualquier conexión a otra base falla en SQL Server. Además `DestinoSql` exige que `DB_DATABASE`, `DB_NAME()` y `@@SERVERNAME` coincidan con el destino configurado                            |
 | `migrate` o `migrate --pretend` escriben antes de comprobar el destino              | **Corregido (Etapa 8.1, correcciones):** `GuardaDdl` se comprueba al iniciar el comando, antes de crear `dbo.migrations`. Con un destino incoherente o, en producción, sin `ADM_DESPLIEGUE_DDL`, no se escribe nada                                                           |
 | `db:wipe`, `migrate:fresh`, `migrate:refresh`, `migrate:reset` y `migrate:rollback` | **Corregido:** bloqueados salvo en una base de desarrollo cuyo nombre termine en `_pruebas`, con el destino real coincidente y la variable de proceso `ADM_PRUEBAS_DESTRUCTIVAS` igual a esa base. Nunca en producción ni en `prodigos_base_dev`. Ya no dependen de `APP_ENV` |
 | `roles.sql` sobre una base equivocada                                               | **Corregido:** exige `-v BaseEsperada` igual a `DB_NAME()`; si falta o no coincide, se detiene antes de cualquier cambio. Con `-b`, `sqlcmd` termina con error                                                                                                                |
 | La prueba de integración vacía la base que se le indique                            | Exige sufijo `_pruebas`, base vacía y `ADM_PRUEBAS_DESTRUCTIVAS`; solo revierte el esquema que creó                                                                                                                                                                           |
 | Credenciales en el historial de la consola o en archivos                            | Contraseñas pedidas con `Read-Host -AsSecureString`; nunca en `.env.example`, documentos ni capturas                                                                                                                                                                          |
-| Intercalación sensible a mayúsculas                                                 | Crear la base con `Modern_Spanish_CI_AS` (paso 2.2) y verificarla                                                                                                                                                                                                             |
+| Intercalación sensible a mayúsculas                                                 | Crear la base con `Modern_Spanish_CI_AS` (manual de instalación, 3.2) y verificarla                                                                                                                                                                                           |
 | Versión de PHP                                                                      | **Corregido:** `composer.json` exige `^8.4.1`, coherente con `composer.lock` y con el CI (PHP 8.4)                                                                                                                                                                            |
 
 **Confirmado en la Etapa 8.2 (instancia local):** `roles.sql` con `BaseEsperada` distinta de `-d` se detiene con 50005 sin crear roles, y `GuardaDdl` bloquea contra el servidor real un destino incorrecto (`migrate` y `migrate --pretend`) y los comandos destructivos sobre `prodigos_base_dev`, sin crear `dbo.migrations`.
 
-## 7. Condiciones para autorizar la creación de la base
+## 7. Autorización en servidores compartidos
+
+En una instancia local dedicada (sección 8) basta seguir el manual. En cualquier otro servidor, antes de crear nada:
 
 1. Servidor SQL Server de desarrollo identificado (nombre y `@@SERVERNAME`), distinto de cualquier servidor productivo o, si se comparte instancia, con aprobación expresa del DBA.
-2. Nombres `prodigos_base_dev` y `prodigos_base_pruebas` libres (paso 2.1).
+2. Nombres `prodigos_base_dev` y `prodigos_base_pruebas` libres (manual de instalación, 3.1).
 3. DBA responsable de crear bases y logins y de custodiar las contraseñas.
 4. Aceptación de las tres cuentas sin roles de servidor y con acceso a una sola base cada una.
 5. Respaldo del `.env` actual del equipo antes de editarlo.
@@ -351,12 +226,12 @@ Comprobado: con `ServidorEsperado` incorrecto, `02` termina con 50101 sin crear 
 
 ### 8.3 Cuentas y conexión
 
-Se siguen los pasos 2.2 a 2.9 y la sección 3 con `-S tcp:127.0.0.1,14330`, `DB_HOST=127.0.0.1`, `DB_PORT=14330`, `ADM_DESARROLLO_SERVIDOR=<EQUIPO>\PRODIGOSBASE` y `ADM_PRUEBAS_SQLSRV_PORT=14330`. Notas prácticas:
+Se siguen las secciones 3 a 5 del manual de instalación y la sección 3 de este documento con `-S tcp:127.0.0.1,14330`, `DB_HOST=127.0.0.1`, `DB_PORT=14330`, `ADM_DESARROLLO_SERVIDOR=<EQUIPO>\PRODIGOSBASE` y `ADM_PRUEBAS_SQLSRV_PORT=14330`. Notas prácticas:
 
 - **Contraseñas:** se generan aleatoriamente y se guardan cifradas con DPAPI del usuario de Windows (`ConvertFrom-SecureString`) fuera del repositorio; se pasan a `sqlcmd` con `SQLCMDPASSWORD` o como variables de entorno del proceso, nunca en la línea de comandos ni en archivos del proyecto.
 - **`sqlcmd -I`:** `sqlcmd` arranca con `QUOTED_IDENTIFIER` desactivado; las escrituras manuales sobre tablas con índices filtrados fallan con el error 1934 si no se añade `-I`.
 - **Parámetro vacío en PowerShell 5.1:** `UsuarioAplicacion=""` se pierde al pasar a `sqlcmd` (error «Invalid argument»); ejecutar esa llamada con `cmd /c '<comando>'`.
-- **`adm:crear-administrador`:** pide la contraseña oculta en la consola de Windows y no admite redirección de la entrada; ejecutarlo en una consola interactiva.
+- **`adm:crear-administrador`:** la petición oculta de Windows no admite la entrada redirigida; en una consola no interactiva usar `--leer-contrasena` (manual de instalación, 5.3, desde la Etapa 9).
 - **Puerto de la aplicación:** si `127.0.0.1:8000` ya está en uso por otra aplicación, `php artisan serve` informa de que arrancó pero las peticiones llegan a la otra. Usar otro puerto (`--port=8010`) y ajustar `APP_URL`.
 - **Varias pestañas con `php artisan serve`:** en Windows el servidor integrado atiende una conexión cada vez; al abrir una segunda pestaña, las conexiones anticipadas del navegador lo bloquean hasta unos 60 s. No es un defecto de la aplicación. Para la revisión, usar una pestaña por contexto y esperar a `domcontentloaded`.
 
@@ -410,3 +285,36 @@ Playwright MCP 0.0.84 (Edge sin ventana), un único `php artisan serve` en `127.
 | Navegador (focalizado)             | 403 en español (escritorio y móvil, sin desborde); «Saltar al contenido» como primer Tab y foco en `main`; foco en el primer campo con error tras la alerta; «1 usuario encontrado»; «Seleccione un usuario» |
 
 Playwright solo revisó las cinco correcciones (cuentas ficticias, secretos con nombre, `127.0.0.1:8010`, assets compilados). La consola solo registró el 403 provocado a propósito.
+
+## 9. Instalación limpia (Etapa 9)
+
+**2026-11-14.** Validación de que la plantilla se instala y se reutiliza desde cero siguiendo solo el [manual de instalación](MANUAL_INSTALACION_Y_CONFIGURACION.md), sin datos ni credenciales del proyecto.
+
+**Condiciones:** copia limpia del repositorio (`git clone`) en un directorio temporal, sin `.env`, `vendor` ni `node_modules`; instancia `T01003\PRODIGOSBASE`; base temporal `prodigos_base_instalacion_tmp` y logins `adm_inst_app` y `adm_inst_ddl` creados para la prueba, con contraseñas aleatorias cifradas con DPAPI; administrador ficticio `admin.instalacion`. `prodigos_base_dev` y `prodigos_base_pruebas` no se tocaron. Al terminar, tras comprobar servidor, fecha de creación, tablas y cuentas, se eliminaron la base, los logins, el clon y las credenciales temporales.
+
+Se hicieron dos recorridos: el primero, sobre el commit `8e4c1fc`, sirvió para encontrar los problemas; el segundo, sobre el contenido final y con el manual reescrito, se completó sin intervenciones.
+
+| Paso (manual)                  | Resultado del segundo recorrido                                                                                                                                                                             |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1–2. Requisitos y dependencias | `composer install` y `npm ci` según los lock; `npm run build` correcto incluso antes de crear `.env`                                                                                                        |
+| 3. SQL Server                  | Base `Modern_Spanish_CI_AS` con compatibilidad 160; logins con contraseñas pasadas como variables de `sqlcmd`; `roles.sql` con acentos correctos; cuentas sin roles de servidor y con acceso solo a su base |
+| 4. `.env`                      | `adm:entorno`: destino coherente, escritura `HABILITADA`, migraciones `permitidas`                                                                                                                          |
+| 5. Esquema y datos iniciales   | Nueve migraciones con la cuenta de despliegue; segunda ejecución de `roles.sql` con permisos en las nueve tablas; 7 funcionalidades; administrador creado con `--leer-contrasena`; 24 auditorías sin hashes |
+| 6. Ejecución local             | Por HTTP: contraseña incorrecta rechazada; contraseña temporal → cambio obligatorio → Dashboard; Administración de Usuarios; cierre de sesión; nueva contraseña → Dashboard; 404 en español                 |
+| 7. Verificaciones              | PHPUnit 172 pruebas (171 aprobadas, 1 omitida), Pint, Larastan, `test:js` 14/14, `check` y `types:check` en la copia limpia                                                                                 |
+
+**Reutilización** (en el clon, sin incorporarla a la plantilla): `APP_NAME` y `ADM_APP_DESCRIPCION` nuevos, visibles en el inicio de sesión y compartidos con la interfaz; paleta sustituida en `tokens.css` y compilada; funcionalidad ficticia `operaciones.inventario.articulos` en un área nueva, con su ruta, su permiso y una pantalla. La sincronización la auditó (1 funcionalidad y 2 acciones). El administrador la vio en el menú y el Dashboard y la abrió; una cuenta ficticia sin permisos no la vio y recibió 403. La suite de la plantilla pasó con el área añadida.
+
+**Problemas encontrados y corregidos:**
+
+| Problema                                                                                                                                                                                    | Corrección                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| El manual ejecutaba `roles.sql` sin `-f 65001`: los mensajes salían como «aÃºn»                                                                                                             | `-f 65001` en todos los ejemplos                                                                            |
+| `adm:crear-administrador` no se puede usar sin una consola interactiva: con la entrada redirigida, la confirmación nunca coincide                                                           | Opción `--leer-contrasena`: una línea de la entrada estándar, sin argumentos en la línea de comandos ni eco |
+| PowerShell 5.1 antepone la marca BOM al canalizar texto y la contraseña guardada no coincidía                                                                                               | `--leer-contrasena` descarta la marca BOM inicial (prueba en `CrearAdministradorTest`)                      |
+| Las pruebas de la plantilla fallaban en un proyecto derivado con un área nueva (exigían que todo el catálogo fuera `administracion` y en primera posición)                                  | Localizan el área `administracion` por su nombre y comprueban solo sus funcionalidades                      |
+| `composer setup` usaba `npm install`, que puede reescribir el lock                                                                                                                          | `npm ci`                                                                                                    |
+| Instalación repartida entre el manual y este documento, con pasos distintos, un ejemplo con la contraseña en la consola (`ARQUITECTURA_SQL_SERVER.md`) y un ejemplo de `.mcp.json` obsoleto | Procedimiento único en el manual; este documento y la arquitectura enlazan a él                             |
+| El `.env` de la prueba exige `DB_PASSWORD`: es lo esperado (`.env` no se versiona y se borró con el clon)                                                                                   | Sin cambios                                                                                                 |
+
+**Observaciones del entorno:** el límite de 5 intentos de inicio de sesión por minuto respondió 429 al repetir la verificación con contraseñas mal enviadas (PowerShell 5.1 no codifica `+` ni `%` en un cuerpo de formulario en hashtable); es el comportamiento esperado. La publicación en IIS no se probó (sección 9 del manual).

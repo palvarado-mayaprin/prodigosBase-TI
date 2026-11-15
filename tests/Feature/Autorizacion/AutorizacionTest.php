@@ -173,7 +173,11 @@ class AutorizacionTest extends TestCase
         $this->agregarAGrupo($usuario, $this->crearGrupo('Administradores', administrador: true));
         $request = Request::create('/');
         $request->setUserResolver(fn () => $usuario);
-        $this->assertSame(['admin.usuarios', 'admin.grupos', 'admin.membresias', 'admin.permisos', 'admin.sesiones', 'admin.auditoria', 'admin.seguimiento'], app(Autorizacion::class)->rutasPermitidas($request));
+        // El administrador obtiene todo el catálogo; se comprueban las rutas del área base.
+        $rutas = app(Autorizacion::class)->rutasPermitidas($request);
+        $this->assertCount(count(CatalogoPermisos::funcionalidades()), $rutas);
+        $this->assertSame(['admin.usuarios', 'admin.grupos', 'admin.membresias', 'admin.permisos', 'admin.sesiones', 'admin.auditoria', 'admin.seguimiento'],
+            array_values(array_filter($rutas, fn ($r) => str_starts_with($r, 'admin.'))));
     }
 
     public function test_proteccion_del_ultimo_administrador_activo(): void
@@ -194,14 +198,20 @@ class AutorizacionTest extends TestCase
         DB::transaction(fn () => $this->assertTrue($autorizacion->quedariaSinAdministradores(DB::connection(), $administrador->id)));
     }
 
-    public function test_el_catalogo_solo_declara_funcionalidades_administrativas_validas(): void
+    public function test_el_catalogo_declara_codigos_validos_y_el_area_administrativa_base(): void
     {
         $funcionalidades = CatalogoPermisos::funcionalidades();
 
-        $this->assertNotEmpty($funcionalidades);
-        foreach ($funcionalidades as $codigo => $funcionalidad) {
-            $this->assertSame('administracion', $funcionalidad['area'], $codigo);
+        foreach (array_keys($funcionalidades) as $codigo) {
             $this->assertMatchesRegularExpression('/^[a-z][a-zA-Z0-9]*\.[a-z][a-zA-Z0-9]*\.[a-z][a-zA-Z0-9]*$/', $codigo);
         }
+        // La plantilla aporta exactamente estas funcionalidades administrativas;
+        // un proyecto derivado añade las suyas en otras áreas.
+        $base = array_keys(array_filter($funcionalidades, fn ($f) => $f['area'] === 'administracion'));
+        $this->assertSame([
+            'administracion.accesos.usuarios', 'administracion.accesos.grupos', 'administracion.accesos.membresias',
+            'administracion.accesos.permisos', 'administracion.sesiones.activas', 'administracion.auditoria.modificaciones',
+            'administracion.seguimiento.uso',
+        ], $base);
     }
 }

@@ -39,14 +39,17 @@ class NavegacionTest extends TestCase
 
     public function test_un_administrador_ve_todo_el_catalogo_agrupado_y_cada_enlace_abre(): void
     {
+        // Posición del área base: un proyecto derivado puede añadir otras áreas.
+        $i = array_search('administracion', array_keys(CatalogoPermisos::areas()), true);
+
         $this->actingAs($this->admin)->get(route('dashboard'))->assertOk()->assertInertia(fn ($p) => $p
             ->component('Dashboard')
             ->where('navegacion.verificada', true)
-            ->where('navegacion.areas.0.area', 'administracion')
-            ->where('navegacion.areas.0.nombre', 'Administración')
-            ->where('navegacion.areas.0.modulos.0.nombre', 'Accesos')
-            ->has('navegacion.areas.0.modulos', 4)
-            ->where('navegacion.areas.0.modulos.0.funcionalidades.0', [
+            ->where("navegacion.areas.$i.area", 'administracion')
+            ->where("navegacion.areas.$i.nombre", 'Administración')
+            ->where("navegacion.areas.$i.modulos.0.nombre", 'Accesos')
+            ->has("navegacion.areas.$i.modulos", 4)
+            ->where("navegacion.areas.$i.modulos.0.funcionalidades.0", [
                 'codigo' => 'administracion.accesos.usuarios', 'nombre' => 'Usuarios',
                 'descripcion' => 'Alta, edición y habilitación de cuentas.', 'icono' => 'UserCog',
                 'ruta' => 'admin.usuarios', 'href' => '/admin/usuarios',
@@ -54,7 +57,8 @@ class NavegacionTest extends TestCase
 
         $enlaces = $this->enlaces($this->admin);
         $this->assertSame(['/admin/usuarios', '/admin/grupos', '/admin/membresias', '/admin/permisos',
-            '/admin/sesiones', '/admin/auditoria', '/admin/seguimiento'], $enlaces);
+            '/admin/sesiones', '/admin/auditoria', '/admin/seguimiento'], array_values(array_filter($enlaces, fn ($e) => str_starts_with($e, '/admin/'))));
+        $this->assertCount(count(CatalogoPermisos::funcionalidades()), $enlaces);
         foreach ($enlaces as $enlace) {
             $this->get($enlace)->assertOk();
         }

@@ -1,44 +1,46 @@
 # prodigosBase-TI
 
-Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel 13, Vue 3, TypeScript, Inertia.js, Tailwind CSS y Microsoft SQL Server**. Toma como referencia la arquitectura administrativa y el lenguaje visual de PRODIGOS V2, sin sus reglas de negocio, datos ni infraestructura.
+Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel 13, Vue 3, TypeScript, Inertia.js, Tailwind CSS y Microsoft SQL Server**. Aporta autenticación, usuarios, grupos, permisos, sesiones, auditoría, seguimiento de uso, navegación dinámica y un sistema visual con paleta personalizable. No contiene reglas de negocio de ningún sistema: toma como referencia la arquitectura administrativa y el lenguaje visual de PRODIGOS V2, sin sus datos, módulos ni infraestructura.
+
+## Contenido
+
+- **Acceso:** inicio de sesión por usuario, cambio de contraseña obligatorio, política de contraseñas, límite de intentos y páginas de error en español.
+- **Administración:** Usuarios, Mi Perfil, Grupos, Usuarios y grupos (membresías), Permisos, Sesiones Activas, Auditoría de Modificaciones y Seguimiento de Uso, con exportaciones CSV y XLSX.
+- **Seguridad:** denegación por defecto con un catálogo de permisos único, auditoría transaccional sin secretos, revocación de sesiones, control centralizado del destino SQL y de la escritura (`DestinoSql`) y de las migraciones (`GuardaDdl`).
+- **Interfaz:** Dashboard y menú generados desde el catálogo, clases `adm-*`, alertas reutilizables, accesibilidad con teclado y colores solo en `tokens.css`.
 
 ## Estado
 
-**Etapa 7 completada:** control de entornos, esquema SQL Server, autenticación, autorización, auditoría y los módulos de Usuarios, Mi Perfil, Grupos, Usuarios y grupos, Permisos, Sesiones Activas, Auditoría de Modificaciones y Seguimiento de Uso, con el subconjunto correspondiente del sistema visual. Incluye el Dashboard, la navegación dinámica según los permisos de cada cuenta y el sistema visual consolidado (inicio de sesión incluido), con la paleta como único aspecto personalizable.
-
-| Etapa | Contenido                                                                                             | Estado     |
-| ----- | ----------------------------------------------------------------------------------------------------- | ---------- |
-| 1     | Proyecto base y configuración                                                                         | Completada |
-| 2     | Dependencias definitivas, limpieza del starter kit, control de entornos (`DestinoSql`, `adm:entorno`) | Completada |
-| 3     | Esquema SQL Server (migraciones `adm_*`, roles SQL, control de DDL)                                   | Completada |
-| 4     | Autenticación, catálogo de permisos y auditoría                                                       | Completada |
-| 5     | Módulos administrativos                                                                               | Completada |
-| 6     | Sistema visual `adm-` con paleta configurable                                                         | Completada |
-| 7     | Limpieza y desacoplamiento                                                                            | Completada |
-| 8     | Verificación integral en SQL Server ([preparación](docs/VALIDACION_SQL_SERVER.md))                    | En curso   |
-| 9     | Documentación final y publicación en IIS                                                              | Pendiente  |
-
-## Alcance previsto
-
-Autenticación, Usuarios, Mi Perfil, Grupos y membresías, Permisos, Sesiones Activas, Auditoría de Modificaciones, Seguimiento de Uso, Dashboard y navegación dinámica, control centralizado de entornos, exportaciones CSV/XLSX y sistema visual con alertas reutilizables.
+| Fase / etapa | Contenido                                                                                                           | Estado      |
+| ------------ | ------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 1–7          | Proyecto base, entornos, esquema SQL Server, autenticación, permisos, auditoría, módulos, sistema visual y limpieza | Completadas |
+| 8            | Validación en SQL Server real, en navegador, de sesiones, de concurrencia y de seguridad                            | Completada  |
+| 9            | Documentación definitiva e instalación limpia reproducible                                                          | Completada  |
+| Fase 4       | Publicación en IIS y versión 1.0.0                                                                                  | Pendiente   |
 
 ## Inicio rápido
 
-Requisitos: PHP 8.4.1 o superior (`^8.4.1`) con `pdo_sqlsrv`, Composer 2, Node 24 y SQL Server 2016 o superior. Ver [docs/MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md).
+Requisitos: Windows, PHP 8.4 (`^8.4.1`) con `pdo_sqlsrv`, Composer 2, Node 24, SQL Server 2016 o superior y `sqlcmd`.
 
-```bash
+```powershell
 composer install
-cp .env.example .env
-php artisan key:generate
-npm install
+npm ci
 npm run build
+Copy-Item .env.example .env
+php artisan key:generate
 composer test
 ```
 
-## Documentación y reglas
+La aplicación necesita después su base SQL Server, sus cuentas, las migraciones y el primer administrador: seguir el [manual de instalación](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md) de principio a fin.
 
-- [AGENTS.md](AGENTS.md) y [CLAUDE.md](CLAUDE.md): reglas permanentes y arquitectónicas.
-- [docs/MANUAL_TECNICO.md](docs/MANUAL_TECNICO.md): autenticación, autorización, auditoría y comandos.
-- [docs/GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md): lenguaje visual, clases `adm-*`, patrones y cambio de paleta.
-- [docs/ARQUITECTURA_SQL_SERVER.md](docs/ARQUITECTURA_SQL_SERVER.md): modelo de datos, permisos SQL y pruebas de integración.
-- [docs/HISTORIAL_CAMBIOS.md](docs/HISTORIAL_CAMBIOS.md): historial.
+## Documentación
+
+| Documento                                                                           | Para qué                                                                                        |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md) | Instalar y configurar desde cero: SQL Server, `.env`, migraciones, administrador, pruebas e IIS |
+| [MANUAL_TECNICO.md](docs/MANUAL_TECNICO.md)                                         | Arquitectura, carpetas, autorización, auditoría, módulos y cómo registrar funcionalidades       |
+| [ARQUITECTURA_SQL_SERVER.md](docs/ARQUITECTURA_SQL_SERVER.md)                       | Tablas, relaciones, roles SQL y control de migraciones                                          |
+| [GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md)                                         | Lenguaje visual, clases `adm-*`, patrones, accesibilidad y cambio de paleta                     |
+| [VALIDACION_SQL_SERVER.md](docs/VALIDACION_SQL_SERVER.md)                           | Pruebas sobre SQL Server real y con Playwright, y resultados de cada validación                 |
+| [HISTORIAL_CAMBIOS.md](docs/HISTORIAL_CAMBIOS.md)                                   | Historial por etapa                                                                             |
+| [AGENTS.md](AGENTS.md) y [CLAUDE.md](CLAUDE.md)                                     | Reglas permanentes y arquitectónicas, también para asistentes de código                         |

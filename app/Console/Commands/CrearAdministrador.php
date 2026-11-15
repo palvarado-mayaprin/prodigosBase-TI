@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Symfony\Component\Console\Input\StreamableInputInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use UnexpectedValueException;
 
@@ -16,8 +17,11 @@ use UnexpectedValueException;
  * membresía en una sola transacción auditada.
  *
  * La contraseña se pide oculta y dos veces; nunca se acepta como opción (no
- * queda en el historial de la consola) ni se muestra o registra. La cuenta
- * queda con debe_cambiar_password = 1. No crea duplicados.
+ * queda en el historial de la consola) ni se muestra o registra. Para una
+ * instalación desatendida, --leer-contrasena la lee de una sola línea de la
+ * entrada estándar (en Windows la doble lectura oculta no funciona con la
+ * entrada redirigida). La cuenta queda con debe_cambiar_password = 1. No crea
+ * duplicados.
  */
 class CrearAdministrador extends Command
 {
@@ -26,7 +30,8 @@ class CrearAdministrador extends Command
         {--nombre= : Nombre}
         {--apellidos= : Apellidos}
         {--email= : Correo electrónico (opcional)}
-        {--grupo=Administradores : Grupo administrador al que se añade}';
+        {--grupo=Administradores : Grupo administrador al que se añade}
+        {--leer-contrasena : Lee la contraseña temporal de una línea de la entrada estándar (instalación desatendida)}';
 
     protected $description = 'Crea una cuenta administradora con contraseña temporal (cambio obligatorio)';
 
@@ -40,14 +45,15 @@ class CrearAdministrador extends Command
             return self::FAILURE;
         }
 
+        $clave = $this->option('leer-contrasena') ? $this->leerLinea() : null;
         $datos = [
             'usuario' => $this->option('usuario') ?: $this->ask('Usuario'),
             'nombre' => $this->option('nombre') ?: $this->ask('Nombre'),
             'apellidos' => $this->option('apellidos') ?: $this->ask('Apellidos'),
             'email' => $this->option('email') ?: null,
             'grupo' => $this->option('grupo'),
-            'password' => $this->secret('Contraseña temporal'),
-            'password_confirmation' => $this->secret('Repita la contraseña'),
+            'password' => $clave ?? $this->secret('Contraseña temporal'),
+            'password_confirmation' => $clave ?? $this->secret('Repita la contraseña'),
         ];
 
         $validador = Validator::make($datos, [
@@ -110,5 +116,21 @@ class CrearAdministrador extends Command
         $this->info("Cuenta «{$datos['usuario']}» creada en el grupo «{$datos['grupo']}». Deberá cambiar la contraseña al iniciar sesión.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Una línea de la entrada estándar (o del flujo asignado en las pruebas),
+     * sin el salto final ni la marca BOM que antepone PowerShell 5.1 al
+     * canalizar texto a un programa.
+     */
+    private function leerLinea(): string
+    {
+        $flujo = $this->input instanceof StreamableInputInterface ? $this->input->getStream() : null;
+        $linea = fgets($flujo ?? STDIN);
+        if ($linea === false) {
+            return '';
+        }
+
+        return rtrim(str_starts_with($linea, "\u{FEFF}") ? substr($linea, 3) : $linea, "\r\n");
     }
 }

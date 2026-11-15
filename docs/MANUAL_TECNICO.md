@@ -1,6 +1,31 @@
 # Manual técnico
 
-Arquitectura de la aplicación. La instalación está en [MANUAL_INSTALACION_Y_CONFIGURACION.md](MANUAL_INSTALACION_Y_CONFIGURACION.md) y el modelo de datos en [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md).
+Arquitectura de la aplicación y guía para extenderla. La instalación está en [MANUAL_INSTALACION_Y_CONFIGURACION.md](MANUAL_INSTALACION_Y_CONFIGURACION.md) y el modelo de datos en [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md).
+
+## 0. Estructura de carpetas
+
+| Carpeta                                           | Contenido                                                                                                            |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `app/Entorno`                                     | `DestinoSql` (destino y escritura) y `GuardaDdl` (migraciones y comandos destructivos)                               |
+| `app/Autorizacion`                                | `CatalogoPermisos` (catálogo único) y `Autorizacion` (cálculo de permisos por petición)                              |
+| `app/Auditoria`                                   | `Auditor` (registro transaccional de cambios)                                                                        |
+| `app/Services/Admin`                              | Servicios de los módulos administrativos; las únicas clases que escriben en `adm_*`                                  |
+| `app/Http`                                        | Controladores delgados y los middleware de la sección 1                                                              |
+| `app/Navegacion`, `app/Support`                   | Menú y Dashboard desde el catálogo; fechas y exportaciones                                                           |
+| `app/Console/Commands`                            | `adm:entorno`, `adm:sincronizar-permisos` y `adm:crear-administrador`                                                |
+| `config/entorno.php`                              | Variables `ADM_*` del control de entornos                                                                            |
+| `database/migrations`, `database/sql`             | Esquema (fuente única) y `roles.sql`                                                                                 |
+| `routes/web.php`                                  | Todas las rutas, cada una con su permiso                                                                             |
+| `resources/js/pages`                              | Pantallas Inertia (`admin/`, `auth/`, `Dashboard`, `MiPerfil`)                                                       |
+| `resources/js/layouts`, `resources/js/components` | Distribución con menú lateral, inicio de sesión y componentes; `components/ui` son los componentes base (shadcn-vue) |
+| `resources/js/lib`                                | `alertas`, `fechas`, `iconos`, `navegacion`, `politicaContrasena`, `seguimientoUso`, `seleccion` y `textos`          |
+| `resources/css/tema`                              | `tokens.css` (únicos colores) y `componentes.css` (clases `adm-*`)                                                   |
+| `resources/views`                                 | `app.blade.php` y las páginas de error (`errors/`)                                                                   |
+| `lang/es`                                         | Mensajes de validación y autenticación                                                                               |
+| `tests`                                           | `Feature` (PHPUnit con SQLite), `Sqlsrv` (SQL Server real) y `js` (lógica del frontend)                              |
+| `docs`                                            | Manuales, `sql/preparacion` (instancia local) y `ejemplos` (paleta y `web.config`)                                   |
+
+`resources/js/actions`, `routes` y `wayfinder` los genera Wayfinder al compilar y no se versionan.
 
 ## 1. Cadena de una petición web
 
@@ -42,14 +67,48 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
     - `quedariaSinAdministradores()` protege del último administrador activo; se usa dentro de la transacción del cambio y bloquea las membresías administrativas.
 - **Middleware:** `AutorizarPermiso::para('codigo:ACCION', …)` (basta uno) y `AutorizarAdministrador`. Un fallo de SQL responde 503.
 - **Rutas sin permiso del catálogo:** solo las de acceso, la cuenta propia (Dashboard, Mi Perfil, cambio de contraseña) y el registro de uso. `AutorizacionTest` falla si otra ruta carece de `auth` y de un middleware de autorización; una ruta propia nueva se añade a su lista de forma explícita.
-- **Página 403:** `resources/views/errors/403.blade.php`, en español y con la distribución del inicio de sesión. Muestra solo el mensaje explícito de `abort()` (o uno genérico) y mantiene el código 403; las peticiones JSON siguen recibiendo `{ message }`.
+- **Páginas de error:** `resources/views/errors/` (403, 404, 419, 429, 500 y 503) sobre `plantilla.blade.php`, en español y con la distribución del inicio de sesión. La 403 muestra el mensaje explícito de `abort()` (redactado por la aplicación); las demás, un texto fijo sin rutas ni detalles de la excepción. Conservan su código HTTP; las peticiones JSON siguen recibiendo `{ message }`.
 
 ### 4.1 Registrar una funcionalidad nueva
 
-1. Declararla en `CatalogoPermisos::areas()` con su `ruta` (GET de entrada) e `icono` (un nombre de `resources/js/lib/iconos.ts`). Aparece sola en el menú y el Dashboard de quien pueda consultarla.
-2. Proteger sus rutas con `AutorizarPermiso::para()` o `AutorizarAdministrador`.
-3. Ejecutar `php artisan adm:sincronizar-permisos` en cada entorno.
-4. Asignar sus acciones a los grupos desde Administración de Permisos.
+Un proyecto derivado añade sus funcionalidades en áreas propias, sin tocar el área `administracion` de la plantilla. Ejemplo verificado en la instalación limpia (Etapa 9) con una funcionalidad ficticia, que no forma parte de la plantilla:
+
+1. **Catálogo** (`CatalogoPermisos::areas()`): área → módulo → funcionalidad, con identificadores en camelCase. El orden del arreglo es el del menú. `soloAdministrador => true` reserva la funcionalidad a los grupos administradores.
+
+    ```php
+    'operaciones' => [
+        'nombre' => 'Operaciones',
+        'modulos' => [
+            'inventario' => [
+                'nombre' => 'Inventario',
+                'funcionalidades' => [
+                    'articulos' => [
+                        'nombre' => 'Artículos',
+                        'descripcion' => 'Consulta y edición de artículos.',
+                        'activo' => true,
+                        'ruta' => 'operaciones.articulos',   // GET de entrada
+                        'icono' => 'LayoutGrid',              // nombre de resources/js/lib/iconos.ts
+                        'acciones' => ['VER' => 'Consultar artículos', 'EDITAR' => 'Editar artículos'],
+                    ],
+                ],
+            ],
+        ],
+    ],
+    ```
+
+2. **Rutas** (`routes/web.php`, dentro del grupo `auth`), cada una con su permiso. `AutorizacionTest` falla si una ruta queda sin autorización.
+
+    ```php
+    Route::inertia('operaciones/articulos', 'operaciones/Articulos')
+        ->middleware(AutorizarPermiso::para('operaciones.inventario.articulos:VER'))
+        ->name('operaciones.articulos');
+    ```
+
+3. **Pantalla** en `resources/js/pages/operaciones/Articulos.vue`, con migas desde «Inicio» y los patrones de [GUIA_DISENO_UI.md](GUIA_DISENO_UI.md#11-reglas-para-pantallas-nuevas). Un icono que no esté en `iconos.ts` se agrega allí.
+4. **Escrituras** en un servicio de `app/Services`, con `DestinoSql::exigirEscritura()`, una transacción y `Auditor` (sección 5).
+5. `npm run build`, `php artisan adm:sincronizar-permisos` en cada entorno y asignar las acciones a los grupos desde Administración de Permisos.
+
+Resultado verificado: el administrador ve la funcionalidad en el menú y el Dashboard y la abre; una cuenta sin el permiso no la ve y recibe 403; la sincronización queda auditada; Seguimiento de Uso registra sus visitas sin más cambios. Las pruebas de la plantilla localizan el área `administracion` por su nombre, así que siguen pasando con áreas añadidas.
 
 ## 5. Auditoría
 
@@ -59,6 +118,20 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 - usuario e IP salen de la sesión y la petición (vacíos desde la consola); la fecha la pone SQL Server en UTC;
 - acciones de la lista cerrada (`CREAR`, `EDITAR`, `HABILITAR`, `DESHABILITAR`, `ASIGNAR`, `RETIRAR`, `REVOCAR`);
 - enmascara (`********`) los valores de claves que contienen `password`, `contrasena`, `clave`, `token`, `secret` o `secreto`, también anidadas.
+
+Uso en un servicio nuevo (los cambios son pares `[anterior, nuevo]` de los campos modificados):
+
+```php
+$db = $this->destino->exigirEscritura();   // 403 si la escritura no está permitida
+$db->transaction(function () use ($db, $id, $antes, $despues) {
+    $db->table('mi_tabla')->where('id', $id)->update($despues);
+    $this->auditor->registrar($db, 'mi_tabla', (string) $id, 'EDITAR', [
+        'nombre' => [$antes['nombre'], $despues['nombre']],
+    ]);
+});
+```
+
+Una acción nueva exige ampliar la lista cerrada de `Auditor` y el CHECK de `adm_auditoria.accion` con una migración. Los registros se consultan y exportan en Auditoría de Modificaciones y nunca se modifican ni se borran (`roles.sql` lo deniega).
 
 ## 6. Módulos administrativos
 
@@ -174,17 +247,19 @@ ControlarAcceso (origen, destino SQL, bloqueo de mutaciones)
 
 ## 7. Comandos
 
-| Comando                    | Función                                                                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `adm:entorno`              | Diagnóstico de solo lectura del destino y la escritura                                                                                |
-| `adm:sincronizar-permisos` | Sincroniza el catálogo; idempotente y no destructivo; audita cada cambio                                                              |
-| `adm:crear-administrador`  | Cuenta administradora, grupo administrador (si falta) y membresía en una transacción; contraseña temporal oculta y cambio obligatorio |
+| Comando                    | Función                                                                                                                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `adm:entorno`              | Diagnóstico de solo lectura del destino y la escritura                                                                                                                                      |
+| `adm:sincronizar-permisos` | Sincroniza el catálogo; idempotente y no destructivo; audita cada cambio                                                                                                                    |
+| `adm:crear-administrador`  | Cuenta administradora, grupo administrador (si falta) y membresía en una transacción; contraseña temporal oculta (o `--leer-contrasena` en instalaciones desatendidas) y cambio obligatorio |
 
 Los comandos que escriben usan `DestinoSql::exigirEscritura()`: en producción requieren `ADM_PRODUCCION_ESCRITURA=true`.
 
 ## 8. Pruebas
 
-Se ejecutan con SQLite en memoria y las mismas migraciones (`RefreshDatabase`). `tests/Concerns/CreaDatosAdministrativos.php` crea usuarios, grupos y asignaciones ficticios. `tests/js` contiene pruebas de la lógica del frontend (`npm run test:js`) y `tests/Feature/Visual/PaletaTest.php` vigila que no haya colores fuera de los tokens. Las validaciones propias de SQL Server están en el grupo `sqlsrv` (ver [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#6-pruebas)).
+Se ejecutan con SQLite en memoria y las mismas migraciones (`RefreshDatabase`); los comandos están en el [manual de instalación, sección 7](MANUAL_INSTALACION_Y_CONFIGURACION.md#7-verificaciones-y-pruebas). `tests/Concerns/CreaDatosAdministrativos.php` crea usuarios, grupos y asignaciones ficticios. `tests/js` contiene pruebas de la lógica del frontend (`npm run test:js`) y `tests/Feature/Visual/PaletaTest.php` vigila que no haya colores fuera de los tokens. Las validaciones propias de SQL Server están en el grupo `sqlsrv` y la revisión en navegador se hace con Playwright MCP ([VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md)). `tests/Feature/PaginasErrorTest.php` cubre las páginas de error.
+
+Un proyecto derivado conserva estas pruebas: localizan el área `administracion` por su nombre y admiten áreas nuevas. `PaletaTest` exige que la paleta propia difiera de `docs/ejemplos/paleta-ejemplo.css`.
 
 ## 9. Dependencias
 

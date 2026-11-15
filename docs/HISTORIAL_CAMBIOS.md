@@ -1,5 +1,20 @@
 # Historial de cambios
 
+## 2026-11-14 — Etapa 9: documentación definitiva e instalación limpia reproducible
+
+- **Instalación limpia:** dos recorridos desde una copia limpia del repositorio, con una base y logins temporales en `T01003\PRODIGOSBASE` y un administrador ficticio, siguiendo solo el manual; el segundo, sin intervenciones. Después se eliminaron la base, los logins, el clon y las credenciales temporales. Resultados en la sección 9 de `docs/VALIDACION_SQL_SERVER.md`.
+- **Reutilización:** nombre, descripción, paleta y una funcionalidad ficticia en un área nueva (catálogo, ruta, permiso y pantalla) en el clon, sin incorporarla a la plantilla: menú, Dashboard, 403 sin permiso, auditoría de la sincronización y suite completa correctos.
+- **Correcciones:**
+    - `adm:crear-administrador --leer-contrasena`: lee la contraseña temporal de una línea de la entrada estándar y descarta la marca BOM de PowerShell 5.1 (la petición oculta de Windows no admite la entrada redirigida);
+    - pruebas de catálogo, navegación y permisos independientes de las áreas añadidas por un proyecto derivado;
+    - `composer setup` usa `npm ci`;
+    - el mínimo de ejemplos de `roles.sql` de `DespliegueTest` pasa a 3 al eliminar el duplicado de la documentación.
+- **Ajustes de interfaz:** páginas de error 404, 419, 429, 500 y 503 en español sobre una plantilla común con la 403 (texto fijo, sin rutas ni detalles de la excepción; `PaginasErrorTest`); tras guardar, si el formulario desaparece, el foco va a `main#contenido`.
+- **Documentación:** manual de instalación reescrito como procedimiento único (requisitos de Windows, SQL Server con contraseñas fuera de la línea de comandos, `.env`, migraciones, administrador, ejecución local, pruebas, personalización, preparación para IIS con `docs/ejemplos/web.config`, restricciones y problemas frecuentes); manual técnico con estructura de carpetas, ejemplo completo de funcionalidad nueva y uso de la auditoría; `VALIDACION_SQL_SERVER.md` sin duplicar la instalación y con la configuración real de Playwright; `ARQUITECTURA_SQL_SERVER.md` sin el ejemplo con la contraseña en la consola; README, CLAUDE.md y guía de diseño actualizados.
+- **Distribución:** Git solo contiene código, documentación y ejemplos; sin `.env`, contraseñas, archivos DPAPI, capturas, registros ni bases. Los datos ficticios viven solo en las bases locales.
+- **Sin cambios:** esquema SQL, migraciones, catálogo, tokens, dependencias, `DestinoSql`, `GuardaDdl`, SRVOPTIMUS, IIS y PRODIGOS V2.
+- **Verificación:** `composer test` (PHPUnit 172 pruebas: 171 aprobadas y 1 omitida), suite `Sqlsrv`, `test:js` 14/14, `check`, `types:check`, `build` e instalación limpia.
+
 ## 2026-11-14 — Etapa 8.3: validación final de seguridad, integridad y accesibilidad
 
 - **Interfaz y accesibilidad** (observaciones de la Etapa 8.2):

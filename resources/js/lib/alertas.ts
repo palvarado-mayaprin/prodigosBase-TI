@@ -89,7 +89,12 @@ function restaurarFoco(origen: HTMLElement | null, conError: boolean): void {
               '[aria-invalid="true"]:not(:disabled)',
           )
         : null;
-    (campo ?? (origen?.isConnected ? origen : null))?.focus();
+    // Si el control desapareció (p. ej. el formulario se cerró al guardar), el
+    // foco va al contenido principal (main#contenido) en lugar de a <body>.
+    (
+        campo ??
+        (origen?.isConnected ? origen : document.getElementById('contenido'))
+    )?.focus();
 }
 
 export async function mostrarCarga(
