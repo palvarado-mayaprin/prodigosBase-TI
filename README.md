@@ -21,7 +21,7 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 
 ## Inicio rápido
 
-Requisitos: Windows, PHP 8.4 (`^8.4.1`) con `pdo_sqlsrv`, Composer 2, Node 24, SQL Server 2016 o superior y `sqlcmd`.
+Requisitos: Windows, PHP 8.4 (`^8.4.1`) con `pdo_sqlsrv`, Composer 2, Node 24, SQL Server 2016 o superior y `sqlcmd` (la versión mínima de SQL Server está en revisión: hallazgo A11 de [estado y pendientes](docs/ESTADO_PROYECTO_Y_PENDIENTES.md)). Detalle e instalación del software en el [manual de instalación](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md#1-requisitos).
 
 ```powershell
 composer install
@@ -36,13 +36,14 @@ La aplicación necesita después su base SQL Server, sus cuentas, las migracione
 
 ## Documentación
 
-| Documento                                                                           | Para qué                                                                                        |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md) | Instalar y configurar desde cero: SQL Server, `.env`, migraciones, administrador, pruebas e IIS |
-| [MANUAL_TECNICO.md](docs/MANUAL_TECNICO.md)                                         | Arquitectura, carpetas, autorización, auditoría, módulos y cómo registrar funcionalidades       |
-| [ARQUITECTURA_SQL_SERVER.md](docs/ARQUITECTURA_SQL_SERVER.md)                       | Tablas, relaciones, roles SQL y control de migraciones                                          |
-| [GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md)                                         | Lenguaje visual, clases `adm-*`, patrones, accesibilidad y cambio de paleta                     |
-| [VALIDACION_SQL_SERVER.md](docs/VALIDACION_SQL_SERVER.md)                           | Pruebas sobre SQL Server real y con Playwright, y resultados de cada validación                 |
-| [ESTADO_PROYECTO_Y_PENDIENTES.md](docs/ESTADO_PROYECTO_Y_PENDIENTES.md)             | Estado verificado, hallazgos pendientes, riesgos y condiciones para publicar                    |
-| [HISTORIAL_CAMBIOS.md](docs/HISTORIAL_CAMBIOS.md)                                   | Historial por etapa                                                                             |
-| [AGENTS.md](AGENTS.md) y [CLAUDE.md](CLAUDE.md)                                     | Reglas permanentes y arquitectónicas, también para asistentes de código                         |
+| Para                | Documento                                                                           | Contenido                                                                                              |
+| ------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Instalar            | [MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md) | Desde cero: software, SQL Server, `.env`, migraciones, administrador, pruebas, IIS y desarrollo con IA |
+| Entender y extender | [MANUAL_TECNICO.md](docs/MANUAL_TECNICO.md)                                         | Arquitectura, carpetas, autorización, auditoría, módulos y cómo registrar funcionalidades              |
+|                     | [ARQUITECTURA_SQL_SERVER.md](docs/ARQUITECTURA_SQL_SERVER.md)                       | Tablas, relaciones, roles SQL y control de migraciones                                                 |
+| Diseño visual       | [GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md)                                         | Lenguaje visual, clases `adm-*`, patrones, accesibilidad y cambio de paleta                            |
+| Desarrollar con IA  | [docs/ia/00-INICIO.md](docs/ia/00-INICIO.md)                                        | Contexto para asistentes de IA y orden de lectura                                                      |
+|                     | [AGENTS.md](AGENTS.md) y [CLAUDE.md](CLAUDE.md)                                     | Reglas permanentes y arquitectónicas, también para asistentes de código                                |
+| Estado y pendientes | [ESTADO_PROYECTO_Y_PENDIENTES.md](docs/ESTADO_PROYECTO_Y_PENDIENTES.md)             | Estado verificado, hallazgos pendientes, riesgos y condiciones para publicar                           |
+| Evidencia           | [VALIDACION_SQL_SERVER.md](docs/VALIDACION_SQL_SERVER.md)                           | Pruebas sobre SQL Server real y con Playwright, y resultados de cada validación                        |
+|                     | [HISTORIAL_CAMBIOS.md](docs/HISTORIAL_CAMBIOS.md)                                   | Historial por etapa                                                                                    |

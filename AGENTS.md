@@ -11,3 +11,10 @@ prodigosBase-TI es una plantilla administrativa reutilizable: autenticación, us
 7. **Documentar cada cambio significativo** en `docs/HISTORIAL_CAMBIOS.md` y en el manual correspondiente, en el mismo trabajo y en español.
 8. **Explicar** los cambios realizados, las pruebas ejecutadas y sus límites.
 9. **Decisiones arquitectónicas.** Antes de cambiar la arquitectura aprobada o ampliar el alcance, pedir aprobación.
+10. **Sin acciones irreversibles sin autorización.** No hacer commits, push, etiquetas ni despliegues sin autorización expresa.
+
+## Antes de empezar
+
+1. Leer [docs/ia/00-INICIO.md](docs/ia/00-INICIO.md): contexto ampliado y qué documento de `docs/ia/` consultar según la tarea.
+2. Revisar [docs/ESTADO_PROYECTO_Y_PENDIENTES.md](docs/ESTADO_PROYECTO_Y_PENDIENTES.md): qué está verificado y qué hallazgos siguen pendientes. Los pendientes no se corrigen sin una instrucción expresa.
+3. Comprobar `git status` y los últimos commits.

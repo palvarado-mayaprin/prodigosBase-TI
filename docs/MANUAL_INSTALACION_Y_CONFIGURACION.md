@@ -1,8 +1,16 @@
 # Manual de instalación y configuración
 
-Procedimiento único para instalar prodigosBase-TI desde un repositorio limpio. Se validó el 2026-11-14 desde una copia limpia del repositorio, con una base y cuentas nuevas (resultados en la [sección 9 de VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md#9-instalación-limpia-etapa-9)).
+Procedimiento único para instalar prodigosBase-TI desde un repositorio limpio, sin ayuda del equipo que lo desarrolló. Las secciones 2 a 7 se validaron el 2026-11-14 desde una copia limpia del repositorio, con una base y cuentas nuevas (resultados en la [sección 9 de VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md#9-instalación-limpia-etapa-9)). Esa validación es anterior a las correcciones de la Fase 4, que no cambian ningún paso de instalación; el estado de lo verificado y lo pendiente está en [ESTADO_PROYECTO_Y_PENDIENTES.md](ESTADO_PROYECTO_Y_PENDIENTES.md).
 
-Los valores entre `<>` se sustituyen al ejecutar. Los nombres de base y de login son ejemplos; si se cambian, se cambian en todos los pasos. **Las contraseñas nunca se escriben en archivos versionados, documentos ni en la línea de comandos**: se piden ocultas con `Read-Host -AsSecureString` y viven solo en variables de la consola.
+**Alcance.** Secciones 1 a 8: instalación local de desarrollo. Sección 7: pruebas. Sección 9: preparación para IIS, **sin validar**. Sección 12: cómo continuar el desarrollo con inteligencia artificial.
+
+**Convenciones de este manual:**
+
+- Los valores entre `<>` se sustituyen al ejecutar. Los nombres de base y de login son ejemplos; si se cambian, se cambian en todos los pasos.
+- Bloques `powershell`: Windows PowerShell 5.1, en la **raíz del proyecto** (la carpeta que contiene `artisan`) salvo que se indique otra. Incluyen comandos de Composer (`composer`), npm (`npm`) y Artisan (`php artisan`), que se ejecutan siempre desde la raíz.
+- Bloques `sql`: se ejecutan en SQL Server con SQL Server Management Studio o con `sqlcmd -S <servidor> -E -b -f 65001 -Q "<consulta>"` (o `-i <archivo>.sql`), con una cuenta administradora y en la base indicada en cada paso (`-d <base>`; por defecto, `master`).
+- **Privilegios:** instalar software requiere una cuenta administradora de Windows; preparar SQL Server (sección 3 y 5.2) requiere un administrador de SQL Server (DBA). El resto se hace con una cuenta normal de Windows.
+- **Las contraseñas nunca se escriben en archivos versionados, documentos ni en la línea de comandos**: se piden ocultas con `Read-Host -AsSecureString` y viven solo en variables de la consola. Ningún valor de ejemplo de este manual es una credencial.
 
 Otros documentos: arquitectura de la aplicación en [MANUAL_TECNICO.md](MANUAL_TECNICO.md), modelo de datos y roles en [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md), lenguaje visual en [GUIA_DISENO_UI.md](GUIA_DISENO_UI.md) y pruebas sobre SQL Server real y en navegador en [VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md).
 
@@ -18,14 +26,33 @@ Otros documentos: arquitectura de la aplicación en [MANUAL_TECNICO.md](MANUAL_T
 | Microsoft ODBC Driver for SQL Server | 17 o 18                            | 18                           | Con el 18, revisar `DB_ENCRYPT` y `DB_TRUST_SERVER_CERTIFICATE`                                                              |
 | `sqlcmd`                             | Cualquier versión                  | 16.0                         | Para `roles.sql` y las comprobaciones                                                                                        |
 | SQL Server                           | 2016 o superior, cualquier edición | 2022 Developer (16.0.1000.6) | Compatibilidad de la base 130 o superior; detalle en [ARQUITECTURA_SQL_SERVER.md](ARQUITECTURA_SQL_SERVER.md#1-principios)   |
+| Hardware                             | No medido                          | —                            | Sin requisitos mínimos establecidos; cualquier equipo que ejecute las herramientas anteriores                                |
+
+**Versiones:** la columna «Verificado» indica lo usado en las validaciones; el resto de la columna «Requisito» no se ha probado. **Discrepancia pendiente (hallazgo A11):** Laravel 13 declara compatibilidad oficial con SQL Server 2017 o superior, no 2016; no se ha probado ninguna versión anterior a 2022. Ver [ESTADO_PROYECTO_Y_PENDIENTES.md](ESTADO_PROYECTO_Y_PENDIENTES.md#7-hallazgos-pendientes).
+
+### 1.1 Instalar el software base
+
+Con una cuenta administradora de Windows. Procedimiento general: se verificaron las versiones resultantes, pero no estos pasos en un equipo nuevo.
+
+1. **PHP 8.4 NTS x64:** descargar el ZIP «Non Thread Safe» x64 de [windows.php.net](https://windows.php.net/download/), descomprimirlo en una carpeta propia y añadirla al `PATH` del sistema. Copiar `php.ini-development` (o `-production`) a `php.ini` en la misma carpeta y, en él, fijar `extension_dir = "ext"` y activar `extension=curl`, `fileinfo`, `intl`, `mbstring`, `openssl`, `zip` y, para las pruebas, `pdo_sqlite`.
+2. **Controladores de SQL Server para PHP:** descargar «Microsoft Drivers for PHP for SQL Server» en la versión compatible con PHP 8.4, copiar a la carpeta `ext` los archivos `php_sqlsrv_84_nts_x64.dll` y `php_pdo_sqlsrv_84_nts_x64.dll` y activarlos en `php.ini` con `extension=` y su nombre de archivo.
+3. **Microsoft ODBC Driver 18 for SQL Server** y **`sqlcmd`**: instaladores de Microsoft. `sqlcmd` también se instala con las herramientas de SQL Server.
+4. **Composer 2:** instalador para Windows de [getcomposer.org](https://getcomposer.org/download/); detecta el PHP del `PATH`.
+5. **Node.js 24** (incluye npm) y **Git**: instaladores oficiales.
+
+Cerrar y abrir la consola para que tome el `PATH` y comprobar:
 
 ```powershell
-php -v
-php -m | Select-String 'sqlsrv|intl|zip|sqlite'
+php -v                                            # 8.4.x, NTS
+php -m | Select-String 'sqlsrv|intl|zip|sqlite'   # pdo_sqlite, pdo_sqlsrv, sqlsrv, intl, zip
 composer -V; node -v; npm -v; git --version; sqlcmd -?
 ```
 
+Si `php -m` no muestra `pdo_sqlsrv`, revisar que la DLL corresponda a la versión y la variante (NTS x64) de PHP y que `php --ini` indique el `php.ini` editado.
+
 ## 2. Obtener el proyecto e instalar dependencias
+
+En la carpeta donde se quiera guardar el proyecto (el resto del manual se ejecuta en `prodigosBase-TI`, la raíz):
 
 ```powershell
 git clone <url-del-repositorio> prodigosBase-TI
@@ -41,9 +68,19 @@ npm run build     # genera public/build (lo exigen las pantallas y las páginas 
 
 Lo hace quien administre el servidor (DBA), o el propio desarrollador en su instancia local, con una cuenta que pueda crear bases y logins (`sysadmin`, o `dbcreator` más `securityadmin`). Para montar una instancia local dedicada (SQL Server 2022 Developer, TCP solo en `127.0.0.1`), ver la [sección 8 de VALIDACION_SQL_SERVER.md](VALIDACION_SQL_SERVER.md#8-instancia-local-dedicada-etapa-82), que incluye los scripts de `docs/sql/preparacion`.
 
-Se usan dos cuentas separadas: la de la **aplicación** (va en `.env`, solo DML acotado) y la de **despliegue** (solo en la consola de migraciones, DDL).
+Se usan dos cuentas separadas: la de la **aplicación** (va en `.env`, solo DML acotado) y la de **despliegue** (solo en la consola de migraciones, DDL). Una tercera base y cuenta `_pruebas` solo hacen falta para la prueba de integración con SQL Server ([VALIDACION_SQL_SERVER.md, sección 3](VALIDACION_SQL_SERVER.md#3-prueba-de-integración-sql-server)).
+
+**Conectividad.** Desde el equipo de desarrollo, con la cuenta de Windows del DBA (para una instancia con nombre y puerto fijo, `-S tcp:<equipo>,<puerto>`):
+
+```powershell
+sqlcmd -S <servidor> -E -b -Q "SELECT @@VERSION"
+```
+
+Si falla, revisar que SQL Server acepte conexiones TCP, el puerto y el cortafuegos antes de seguir; con ODBC 18, un certificado no confiable produce un error de cifrado (sección 11).
 
 ### 3.1 Comprobaciones previas
+
+En `master`:
 
 ```sql
 SELECT @@SERVERNAME AS servidor,                                    -- valor para ADM_DESARROLLO_SERVIDOR
@@ -53,7 +90,7 @@ SELECT name FROM sys.databases WHERE name = N'prodigos_base_dev';               
 SELECT name FROM sys.server_principals WHERE name IN (N'adm_base_app', N'adm_base_ddl'); -- 0 filas
 ```
 
-Si alguna consulta devuelve filas, detenerse: no se reutilizan bases ni logins existentes.
+Si alguna consulta devuelve filas, detenerse: no se reutilizan bases ni logins existentes. Anotar el valor de `@@SERVERNAME`: se copia exacto en `.env` (sección 4).
 
 ### 3.2 Base, logins y usuarios
 
@@ -66,7 +103,7 @@ sqlcmd -S <servidor> -E -b -f 65001 -i base_y_logins.sql
 Remove-Item Env:CLAVE_APP, Env:CLAVE_DDL
 ```
 
-Con `base_y_logins.sql` (fuera del repositorio o en una carpeta temporal):
+Con `base_y_logins.sql` (crearlo fuera del repositorio o en una carpeta temporal y borrarlo al terminar; no contiene contraseñas, solo las variables):
 
 ```sql
 CREATE DATABASE prodigos_base_dev COLLATE Modern_Spanish_CI_AS;
@@ -95,7 +132,7 @@ Esperado: nueve avisos «Omitida (aún no existe…)» (todavía no hay tablas) 
 
 ### 3.4 Aislamiento de las cuentas
 
-Ninguna cuenta debe tener roles de servidor ni acceso a otra base:
+Ninguna cuenta debe tener roles de servidor ni acceso a otra base. En `master`:
 
 ```sql
 SELECT l.name, r.name AS rol_servidor
@@ -117,13 +154,13 @@ Copy-Item .env.example .env
 php artisan key:generate
 ```
 
-`.env` no se versiona. Editarlo con la cuenta de la aplicación:
+`key:generate` escribe `APP_KEY` en `.env`. `.env` no se versiona ni se comparte. Editarlo con un editor de texto y la cuenta de la aplicación:
 
 | Variable                                            | Valor                                                      | Uso                                                                              |
 | --------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `APP_URL`                                           | `http://127.0.0.1:8000` (o el puerto que se use)           | URL de la aplicación                                                             |
 | `DB_CONNECTION`                                     | `sqlsrv`                                                   | Motor obligatorio                                                                |
-| `DB_HOST`, `DB_PORT`                                | `<servidor>`, `1433`                                       | Servidor SQL Server                                                              |
+| `DB_HOST`, `DB_PORT`                                | `<equipo>`, `1433` (o el puerto TCP fijo de la instancia)  | Servidor SQL Server                                                              |
 | `DB_DATABASE`                                       | `prodigos_base_dev`                                        | Base de desarrollo                                                               |
 | `DB_USERNAME`, `DB_PASSWORD`                        | `adm_base_app` y su contraseña                             | Solo la cuenta de la aplicación                                                  |
 | `DB_URL`                                            | vacío                                                      | Debe permanecer vacío                                                            |
@@ -178,7 +215,7 @@ Remove-Item Env:DB_USERNAME, Env:DB_PASSWORD
 
 ### 5.2 Roles (segunda ejecución)
 
-Repetir el comando de la sección 3.3. Ahora concede los permisos de la aplicación sobre las nueve tablas `adm_*` y deniega `UPDATE` y `DELETE` en `adm_auditoria`. Esperado: «Permisos … sobre dbo.adm_…» nueve veces.
+Repetir el comando de la sección 3.3 (DBA). Ahora concede los permisos de la aplicación sobre las nueve tablas `adm_*` y deniega `UPDATE` y `DELETE` en `adm_auditoria`. Esperado: «Permisos … sobre dbo.adm_…» nueve veces. Comprobación, en `prodigos_base_dev`:
 
 ```sql
 SELECT name FROM sys.tables WHERE name LIKE N'adm[_]%' ORDER BY name;   -- 9 tablas
@@ -207,7 +244,7 @@ php artisan adm:crear-administrador --usuario=<usuario> --nombre="<Nombre>" --ap
 
 - Al iniciar sesión, la cuenta debe cambiar la contraseña antes de usar la aplicación.
 
-Comprobación:
+Comprobación, en `prodigos_base_dev`:
 
 ```sql
 SELECT codigo, activo FROM adm_funcionalidades ORDER BY codigo;
@@ -224,9 +261,11 @@ php artisan serve --host=127.0.0.1 --port=8000   # con los assets compilados (se
 composer run dev                                  # servidor de Laravel y Vite
 ```
 
-Abrir `APP_URL`, iniciar sesión con el administrador y cambiar la contraseña temporal; después se muestra el Dashboard. Solo se admiten conexiones desde el propio equipo (`127.0.0.1` o `::1`). Mientras los destinos `ADM_*` no sean coherentes, toda la aplicación responde 403 «Base de datos no permitida.»: es el comportamiento seguro por defecto.
+Abrir `APP_URL` en el navegador del mismo equipo, iniciar sesión con el administrador y cambiar la contraseña temporal. Resultado esperado: el Dashboard con siete tarjetas (los módulos administrativos) y el mismo menú lateral; la sección 7 detalla cómo comprobar cada módulo. Solo se admiten conexiones desde el propio equipo (`127.0.0.1` o `::1`). Mientras los destinos `ADM_*` no sean coherentes, toda la aplicación responde 403 «Base de datos no permitida.»: es el comportamiento seguro por defecto.
 
 ## 7. Verificaciones y pruebas
+
+Desde la raíz del proyecto. No necesitan SQL Server ni `.env` completo: PHPUnit usa SQLite en memoria (`phpunit.xml`).
 
 ```powershell
 composer test          # Pint, Larastan y PHPUnit (SQLite en memoria; nunca se conecta a SQL Server)
@@ -264,7 +303,7 @@ Resultado esperado (Fase 4, intervención 4.2): PHPUnit con 184 pruebas, 183 apr
 
 ## 9. Preparación para IIS
 
-_Pendiente de validar en un servidor IIS (Fase 4)._ Lo que la plantilla ya exige y lo previsto:
+**Sin validar:** ningún paso de esta sección se ha probado en un IIS real (riesgo B1 de [ESTADO_PROYECTO_Y_PENDIENTES.md](ESTADO_PROYECTO_Y_PENDIENTES.md#8-riesgos-de-infraestructura-sin-verificar)). Es la lista de lo que la plantilla exige y lo previsto; el primer despliegue debe tratarse como piloto:
 
 1. **Servidor:** IIS con URL Rewrite 2.1 y FastCGI con PHP 8.4 NTS x64 (mismas extensiones de la sección 1) y el controlador ODBC.
 2. **Código:** copia limpia del repositorio; `composer install --no-dev --optimize-autoloader`; `npm ci` y `npm run build` (en el equipo de compilación; al servidor solo hace falta `public/build`).
@@ -293,6 +332,8 @@ Más detalle en [ARQUITECTURA_SQL_SERVER.md, sección 5](ARQUITECTURA_SQL_SERVER
 | 403 «Origen no autorizado.»                                                                        | En local, acceso desde otro equipo; en producción, IP fuera de `ADM_REDES_CORPORATIVAS` | Acceder desde el propio equipo o ajustar las redes                                         |
 | 403 «La base productiva solo permite consultas.» al guardar                                        | `ADM_PRODUCCION_ESCRITURA=false`                                                        | Comportamiento esperado; habilitar solo con autorización                                   |
 | `adm:entorno`: «Error de conexión»                                                                 | Servidor, puerto, credenciales o certificado ODBC                                       | Revisar `DB_*`, `DB_ENCRYPT` y `DB_TRUST_SERVER_CERTIFICATE`                               |
+| `could not find driver` o `pdo_sqlsrv` ausente en `php -m`                                         | Extensión no activada o DLL de otra versión o variante de PHP                           | Sección 1.1, paso 2                                                                        |
+| Error de certificado o «SSL Provider» al conectar con ODBC 18                                      | ODBC 18 cifra por defecto y no confía en certificados autofirmados                      | En desarrollo, `DB_TRUST_SERVER_CERTIFICATE=true`; en producción, un certificado válido    |
 | Cambios en `.env` sin efecto                                                                       | Configuración en caché                                                                  | `php artisan config:clear`                                                                 |
 | `sqlcmd` muestra «aÃºn» en lugar de «aún»                                                          | Falta `-f 65001` (los scripts están en UTF-8)                                           | Añadir `-f 65001`                                                                          |
 | Escritura manual con `sqlcmd` falla con el error 1934                                              | `sqlcmd` arranca con `QUOTED_IDENTIFIER` desactivado (índices filtrados)                | Añadir `-I`                                                                                |
@@ -304,3 +345,69 @@ Más detalle en [ARQUITECTURA_SQL_SERVER.md, sección 5](ARQUITECTURA_SQL_SERVER
 | Con `php artisan serve`, una segunda pestaña deja el servidor bloqueado hasta un minuto            | El servidor integrado atiende una conexión cada vez en Windows                          | Limitación del servidor de desarrollo; no ocurre en IIS                                    |
 | Larastan: «reached configured PHP memory limit» o «Cannot redeclare class ComposerAutoloaderInit…» | Límite de memoria u OPcache de la CLI compartido entre procesos                         | Usar `composer types:check`, que ya fija `--memory-limit=512M` y `-d opcache.enable_cli=0` |
 | La primera compilación tarda cerca de un minuto                                                    | Wayfinder genera las rutas tipadas                                                      | Normal                                                                                     |
+
+## 12. Cómo continuar el desarrollo con inteligencia artificial
+
+La documentación del repositorio está preparada para que un asistente de inteligencia artificial (un programa que lee y modifica código a partir de instrucciones escritas) continúe el desarrollo sin conocer conversaciones anteriores. El asistente debe tratarse como un desarrollador nuevo: necesita leer el contexto, revisar el código real y respetar las mismas reglas.
+
+### A. Cuando el asistente tiene acceso al repositorio
+
+Pedirle que lea, en este orden:
+
+1. [`AGENTS.md`](../AGENTS.md) y [`CLAUDE.md`](../CLAUDE.md): reglas obligatorias.
+2. [`docs/ia/00-INICIO.md`](ia/00-INICIO.md): punto de entrada; indica qué documento de `docs/ia/` leer según la tarea.
+3. [`docs/ESTADO_PROYECTO_Y_PENDIENTES.md`](ESTADO_PROYECTO_Y_PENDIENTES.md): qué está verificado y qué está pendiente.
+4. Los documentos de `docs/ia/` y el código relacionados con la tarea.
+
+### B. Cuando el asistente no tiene acceso al repositorio
+
+Adjuntar o pegar como mínimo:
+
+1. `CLAUDE.md`.
+2. `AGENTS.md`.
+3. `docs/ia/00-INICIO.md`.
+4. Los documentos de `docs/ia/` que correspondan al trabajo (tabla C).
+5. Los archivos de código que se van a modificar y los que usan (por ejemplo, la ruta, el controlador, el servicio y la página).
+
+La documentación explica cómo está construido el proyecto, pero no permite comprobar el comportamiento real: sin los archivos de código, el asistente solo puede suponer. Sus propuestas deben revisarse y probarse (sección 7) antes de aplicarlas.
+
+### C. Qué proporcionar según el trabajo
+
+| Trabajo                               | Documentos                                                             | Código                                                                                                 |
+| ------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Crear un módulo nuevo                 | `docs/ia/02-ARQUITECTURA.md`, `03-CONVENCIONES.md`, `05-DESARROLLO.md` | `app/Autorizacion/CatalogoPermisos.php`, `routes/web.php` y un módulo existente parecido como modelo   |
+| Modificar permisos                    | `docs/ia/04-SEGURIDAD.md`, `05-DESARROLLO.md`                          | `CatalogoPermisos.php`, `routes/web.php`, `app/Autorizacion/Autorizacion.php`                          |
+| Trabajar en SQL Server                | `docs/ia/04-SEGURIDAD.md`, `docs/ARQUITECTURA_SQL_SERVER.md`           | `database/migrations`, `database/sql/roles.sql`, `app/Entorno`                                         |
+| Modificar autenticación o sesiones    | `docs/ia/04-SEGURIDAD.md`                                              | `app/Providers/FortifyServiceProvider.php`, `app/Services/Admin/RegistroSesiones.php`, middleware      |
+| Personalizar interfaz y colores       | `docs/ia/03-CONVENCIONES.md`, `docs/GUIA_DISENO_UI.md`                 | `resources/css/tema/tokens.css` y la página afectada                                                   |
+| Investigar un error                   | `docs/ia/02-ARQUITECTURA.md`, sección 11 de este manual                | El mensaje de error completo, `storage/logs/laravel.log` (sin datos personales) y los archivos citados |
+| Preparar un despliegue                | `docs/ia/06-ESTADO.md`, secciones 9 y 10 de este manual                | `docs/ejemplos/web.config`, `.env.example` (nunca el `.env` real)                                      |
+| Continuar una intervención inconclusa | `docs/ia/06-ESTADO.md`, `docs/HISTORIAL_CAMBIOS.md`                    | El resultado de `git status` y `git diff`, y los archivos modificados                                  |
+
+Nunca entregar al asistente el archivo `.env`, contraseñas, exportaciones con datos reales ni registros con información personal.
+
+### D. Instrucción reutilizable
+
+Copiar, completar la última línea y entregar al asistente:
+
+```text
+Vas a continuar el desarrollo de prodigosBase-TI, una plantilla administrativa
+en Laravel, Vue, Inertia y SQL Server.
+
+1. Antes de proponer cambios, lee AGENTS.md, CLAUDE.md, docs/ia/00-INICIO.md,
+   docs/ESTADO_PROYECTO_Y_PENDIENTES.md y los documentos de docs/ia/ que
+   correspondan a la tarea.
+2. Explica brevemente la arquitectura y las restricciones que afectan a la tarea.
+3. Revisa el código relacionado antes de modificarlo; no supongas que algo
+   existe sin comprobarlo.
+4. Respeta las convenciones y los controles de seguridad (DestinoSql,
+   GuardaDdl, catálogo de permisos, auditoría y servicios administrativos).
+5. Cambia solo lo que pide la tarea, con la solución más simple posible. No
+   corrijas los hallazgos pendientes salvo que te lo pida.
+6. Ejecuta las pruebas proporcionales al cambio e informa sus resultados.
+7. Documenta lo realizado y lo que quede pendiente.
+8. No hagas commits, push, despliegues, migraciones ni operaciones destructivas
+   sin mi autorización explícita. No muestres ni pidas contraseñas.
+
+Tarea: <describir aquí lo que se necesita>
+```

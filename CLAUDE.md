@@ -1,6 +1,6 @@
 # Instrucciones para Claude Code en prodigosBase-TI
 
-Lee primero [AGENTS.md](AGENTS.md); sus reglas permanentes también rigen tu trabajo. La instalación está en [docs/MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md).
+Lee primero [AGENTS.md](AGENTS.md); sus reglas permanentes también rigen tu trabajo. Después, [docs/ia/00-INICIO.md](docs/ia/00-INICIO.md) (contexto ampliado) y el estado en [docs/ESTADO_PROYECTO_Y_PENDIENTES.md](docs/ESTADO_PROYECTO_Y_PENDIENTES.md) antes de modificar nada. Según la tarea: módulos nuevos en [docs/ia/05-DESARROLLO.md](docs/ia/05-DESARROLLO.md), seguridad, SQL y entornos en [docs/ia/04-SEGURIDAD.md](docs/ia/04-SEGURIDAD.md) e interfaz en [docs/GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md). La instalación está en [docs/MANUAL_INSTALACION_Y_CONFIGURACION.md](docs/MANUAL_INSTALACION_Y_CONFIGURACION.md).
 
 ## Reglas arquitectónicas (obligatorias)
 
@@ -24,7 +24,7 @@ Lee primero [AGENTS.md](AGENTS.md); sus reglas permanentes también rigen tu tra
 
 - Antes de cada commit: `composer test` (Pint, Larastan y PHPUnit), `npm run check`, `npm run types:check`, `npm run test:js` y `npm run build`. Revisar el diff y los datos sensibles y añadir solo rutas explícitas.
 - Mensajes de commit en español con el formato `tipo(alcance): descripción`.
-- No hacer push, crear repositorios remotos ni desplegar sin autorización.
+- No hacer commits, push, etiquetas, crear repositorios remotos ni desplegar sin autorización expresa.
 - Una sola sesión de asistente trabaja en la carpeta a la vez.
 
 Cualquier excepción a estas reglas es una decisión arquitectónica y requiere aprobación previa.

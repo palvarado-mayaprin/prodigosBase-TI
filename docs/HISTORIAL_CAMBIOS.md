@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## 2026-11-15 — Etapa 2 del cierre: instalación y contexto para desarrollo con IA
+
+- **Manual de instalación:** convenciones (directorio de cada comando, tipos de bloque, privilegios), alcance (local, pruebas, IIS), instalación del software base (1.1), comprobación de conectividad, resultados esperados, tres problemas frecuentes nuevos, IIS marcado como sin validar (B1), discrepancia de versión de SQL Server como pendiente (A11) y nueva sección 12, «Cómo continuar el desarrollo con inteligencia artificial».
+- **Nuevo `docs/ia/`:** `00-INICIO.md` a `06-ESTADO.md`, contexto para asistentes de IA sintetizado del código y los manuales, con enlaces a las fuentes.
+- **`AGENTS.md` y `CLAUDE.md`:** entrada a `docs/ia/00-INICIO.md`, consulta del estado antes de modificar y regla común sobre commits, push, etiquetas y despliegues.
+- **README:** índice de documentación por propósito.
+- **Coherencia:** nombre de la instancia con barra invertida en la validación 8.6 y en la entrada de la Etapa 8.3; inconsistencias resueltas marcadas en `ESTADO_PROYECTO_Y_PENDIENTES.md`.
+- **Sin cambios:** código, pruebas, migraciones, scripts SQL, configuración, bases SQL Server, IIS, SRVOPTIMUS, PRODIGOS V2 y los hallazgos A3, A7 y A11.
+
 ## 2026-11-15 — Cierre documental previo a la publicación
 
 - **Nuevo:** `docs/ESTADO_PROYECTO_Y_PENDIENTES.md`, documento de cierre: alcance, funcionalidades con su tipo de evidencia, etapas, pruebas, hallazgos corregidos (A1, A2, A4, A5, A6, A8, A9 y A10) y pendientes (A3, A7, A11, B1–B5 y C1–C4), limitaciones, estado de Git, condiciones para publicar e inconsistencias documentales por revisar.
@@ -50,7 +59,7 @@
     - contadores con concordancia de número (`plural()` en `lib/textos.ts`) en Usuarios, Grupos, Membresías, Permisos, Sesiones, Auditoría y Seguimiento;
     - trato de usted en Membresías y Permisos («Seleccione…», «Podrá…»).
 - **Seguridad:** revisión de los controles existentes sin repetir baterías. Riesgo no cubierto: nada impedía declarar una ruta sin permiso. `AutorizacionTest` comprueba ahora que toda ruta exige `auth` y autorización salvo una lista explícita (acceso, cuenta propia, registro de uso y `/up`), y que la página 403 está en español sin detalles internos.
-- **SQL Server real** (`T01003PRODIGOSBASE`): suite `Sqlsrv` aprobada sobre `prodigos_base_pruebas`, que queda sin objetos; integridad y permisos de roles verificados en `prodigos_base_dev` (sección 8.6 de `docs/VALIDACION_SQL_SERVER.md`).
+- **SQL Server real** (`T01003\PRODIGOSBASE`): suite `Sqlsrv` aprobada sobre `prodigos_base_pruebas`, que queda sin objetos; integridad y permisos de roles verificados en `prodigos_base_dev` (sección 8.6 de `docs/VALIDACION_SQL_SERVER.md`).
 - **Playwright focalizado:** solo las cinco correcciones, en escritorio, móvil y teclado.
 - **Sin cambios:** esquema SQL, migraciones, catálogo, tokens, dependencias, `.env`, SRVOPTIMUS, IIS y PRODIGOS V2.
 - **Verificación:** `composer test` (PHPUnit 166 aprobadas, 1 omitida), suite `Sqlsrv` (1 prueba, 11 aserciones), `test:js` 14/14, `check`, `types:check` y `build`.

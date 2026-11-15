@@ -120,22 +120,25 @@ La instalación limpia y la suite de la Etapa 9 (172 pruebas) son anteriores a l
 
 ## 11. Estado de Git y condiciones para publicar
 
-**Estado:** rama `main`, sin remoto configurado ni push, sin etiquetas. Los commits de la Fase 4 (`934814f`, `21996cb`) y el de este documento son locales.
+**Estado:** rama `main`, sin remoto configurado ni push, sin etiquetas. Los commits de la Fase 4 (`934814f`, `21996cb`) y los del cierre documental son locales.
 
 **Antes de publicar el repositorio** (push autorizado):
 
 1. Decidir si A3, A7 y A11 se corrigen antes de la versión 1.0.0 (la auditoría recomendaba corregir los de severidad media).
-2. Revisar las inconsistencias documentales de la sección 12.
+2. Resolver las inconsistencias documentales pendientes de la sección 12 junto con A3 y A11.
 3. Configurar el remoto y comprobar la primera ejecución del CI (B4).
 
 **Antes de etiquetar la versión 1.0.0:** con A1 corregido, la auditoría califica la plantilla como «apto con observaciones». La observación es que IIS y producción (B1, B2) y la topología de proxy (B3) siguen sin validar: el primer despliegue real debe tratarse como piloto.
 
-## 12. Inconsistencias documentales para revisar
+## 12. Inconsistencias documentales
 
-No se corrigieron en esta etapa:
+Pendientes, ligadas a hallazgos que no se corrigen sin instrucción expresa:
 
-- **Requisito de SQL Server 2016** en `README.md`, manual de instalación (sección 1 y comprobación 3.1), `ARQUITECTURA_SQL_SERVER.md` y `VALIDACION_SQL_SERVER.md` (1.1): es el hallazgo A11.
+- **Requisito de SQL Server 2016** en `README.md`, manual de instalación (sección 1 y comprobación 3.1), `ARQUITECTURA_SQL_SERVER.md` y `VALIDACION_SQL_SERVER.md` (1.1): es el hallazgo A11. El README y el manual de instalación ya lo señalan como discrepancia pendiente.
 - **Inmutabilidad de la auditoría:** el manual técnico (sección 5) afirma que los registros nunca se modifican ni se borran porque `roles.sql` lo deniega; solo se deniega a `adm_aplicacion` (hallazgo A3).
-- **Nombre de la instancia sin barra invertida:** `T01003PRODIGOSBASE` en `VALIDACION_SQL_SERVER.md` (8.6) y en la entrada de la Etapa 8.3 del historial; el nombre real es `T01003\PRODIGOSBASE`.
-- **Nomenclatura de fases:** el README llamaba «Fase 4» a la publicación en IIS, mientras que la Fase 4 ejecutada fue la auditoría y sus correcciones; la siguiente «Etapa 2» coincide en nombre con la Etapa 2 histórica (limpieza del starter).
-- **Manual de instalación, sección 9:** «Pendiente de validar en un servidor IIS (Fase 4)» sigue pendiente (B1), ahora sin fase asignada.
+
+Resueltas en la Etapa 2 del cierre (documentación para instalación y desarrollo con IA):
+
+- Nombre de la instancia sin barra invertida en `VALIDACION_SQL_SERVER.md` (8.6) y en la entrada de la Etapa 8.3 del historial.
+- Fila «Fase 4» del README (resuelta en el cierre documental) y sección 9 del manual de instalación, que ahora indica «sin validar (B1)» sin fase asignada.
+- Nomenclatura: las etapas del cierre se identifican en el historial como «Etapa 2 del cierre», distinta de la Etapa 2 de construcción.
