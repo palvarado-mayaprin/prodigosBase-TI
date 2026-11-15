@@ -16,7 +16,8 @@ Plantilla administrativa reutilizable para aplicaciones internas sobre **Laravel
 | 1–7          | Proyecto base, entornos, esquema SQL Server, autenticación, permisos, auditoría, módulos, sistema visual y limpieza | Completadas |
 | 8            | Validación en SQL Server real, en navegador, de sesiones, de concurrencia y de seguridad                            | Completada  |
 | 9            | Documentación definitiva e instalación limpia reproducible                                                          | Completada  |
-| Fase 4       | Publicación en IIS y versión 1.0.0                                                                                  | Pendiente   |
+| Fase 4       | Auditoría independiente y corrección de A1, A2, A4, A5, A6, A8, A9 y A10                                            | Completada  |
+| Publicación  | A3, A7 y A11, IIS, producción y versión 1.0.0 ([estado y pendientes](docs/ESTADO_PROYECTO_Y_PENDIENTES.md))         | Pendiente   |
 
 ## Inicio rápido
 
@@ -42,5 +43,6 @@ La aplicación necesita después su base SQL Server, sus cuentas, las migracione
 | [ARQUITECTURA_SQL_SERVER.md](docs/ARQUITECTURA_SQL_SERVER.md)                       | Tablas, relaciones, roles SQL y control de migraciones                                          |
 | [GUIA_DISENO_UI.md](docs/GUIA_DISENO_UI.md)                                         | Lenguaje visual, clases `adm-*`, patrones, accesibilidad y cambio de paleta                     |
 | [VALIDACION_SQL_SERVER.md](docs/VALIDACION_SQL_SERVER.md)                           | Pruebas sobre SQL Server real y con Playwright, y resultados de cada validación                 |
+| [ESTADO_PROYECTO_Y_PENDIENTES.md](docs/ESTADO_PROYECTO_Y_PENDIENTES.md)             | Estado verificado, hallazgos pendientes, riesgos y condiciones para publicar                    |
 | [HISTORIAL_CAMBIOS.md](docs/HISTORIAL_CAMBIOS.md)                                   | Historial por etapa                                                                             |
 | [AGENTS.md](AGENTS.md) y [CLAUDE.md](CLAUDE.md)                                     | Reglas permanentes y arquitectónicas, también para asistentes de código                         |

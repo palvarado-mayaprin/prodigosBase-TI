@@ -1,5 +1,11 @@
 # Historial de cambios
 
+## 2026-11-15 — Cierre documental previo a la publicación
+
+- **Nuevo:** `docs/ESTADO_PROYECTO_Y_PENDIENTES.md`, documento de cierre: alcance, funcionalidades con su tipo de evidencia, etapas, pruebas, hallazgos corregidos (A1, A2, A4, A5, A6, A8, A9 y A10) y pendientes (A3, A7, A11, B1–B5 y C1–C4), limitaciones, estado de Git, condiciones para publicar e inconsistencias documentales por revisar.
+- **README:** estado de la Fase 4 y enlace al nuevo documento.
+- **Sin cambios:** código, pruebas, migraciones, permisos, configuración, bases SQL Server, IIS, SRVOPTIMUS y PRODIGOS V2.
+
 ## 2026-11-15 — Fase 4, intervención 4.2: hallazgos A2, A4, A5, A6, A8, A9 y A10
 
 - **A2, autorización DDL desde `.env`:** Laravel copia al entorno del proceso lo que lee de `.env`, así que `ADM_DESPLIEGUE_DDL` o `ADM_PRUEBAS_DESTRUCTIVAS` declaradas allí autorizaban como si fueran variables de la consola. `GuardaDdl::archivoQueDeclara()` rechaza ahora la autorización, sea cual sea su valor, si la declara `.env`, el archivo de entorno configurado o cualquier `.env.*` (como `.env.<APP_ENV>`), antes de cualquier DDL y con o sin `config:cache`. Las demás comprobaciones no cambian. Prueba: `AutorizacionDesdeArchivoTest`.
