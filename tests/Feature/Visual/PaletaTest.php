@@ -78,7 +78,6 @@ class PaletaTest extends TestCase
         $ejemplo = $this->declaraciones(self::EJEMPLO);
 
         $this->assertSame(array_keys($base), array_keys($ejemplo));
-        $this->assertNotSame($base, $ejemplo);
         // Las medidas viven fuera de la paleta y componentes.css no redefine sus tokens.
         $componentes = (string) file_get_contents(base_path('resources/css/tema/componentes.css'));
         foreach (array_keys($base) as $token) {

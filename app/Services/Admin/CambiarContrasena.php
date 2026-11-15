@@ -12,20 +12,25 @@ use Illuminate\Validation\ValidationException;
  * Cambio de la contraseña propia (cambio obligatorio y, en la Etapa 5, Mi
  * Perfil). La política de contraseñas la valida el controlador con
  * Password::defaults(); aquí se comprueban la contraseña actual y que la nueva
- * sea distinta, dentro de la transacción que escribe y audita.
+ * sea distinta, dentro de la transacción que escribe y audita. En la misma
+ * transacción se revocan las demás sesiones abiertas de la cuenta
+ * (AdministrarSesiones, con su auditoría); la sesión desde la que se cambia
+ * sigue activa. Si el cambio falla, no se revoca nada.
  */
 class CambiarContrasena
 {
     public function __construct(
         private readonly DestinoSql $destino,
         private readonly Auditor $auditor,
+        private readonly AdministrarSesiones $sesiones,
     ) {}
 
-    public function cambiar(Usuario $usuario, string $actual, string $nueva): void
+    /** @param  int|null  $sesionActual  Fila de adm_sesiones de la sesión que hace el cambio (RegistroSesiones::actual()). */
+    public function cambiar(Usuario $usuario, string $actual, string $nueva, ?int $sesionActual): void
     {
         $db = $this->destino->exigirEscritura();
 
-        $db->transaction(function () use ($db, $usuario, $actual, $nueva): void {
+        $db->transaction(function () use ($db, $usuario, $actual, $nueva, $sesionActual): void {
             $fila = $db->table('adm_usuarios')->where('id', $usuario->id)->lockForUpdate()
                 ->first(['password', 'activo', 'debe_cambiar_password']);
             abort_unless($fila !== null && $fila->activo, 403, 'La cuenta no está activa.');
@@ -46,6 +51,7 @@ class CambiarContrasena
                 'password' => [Auditor::OCULTO, Auditor::OCULTO],
                 'debe_cambiar_password' => [(bool) $fila->debe_cambiar_password, false],
             ]);
+            $this->sesiones->revocarDeUsuario($usuario->id, $usuario->id, $sesionActual);
         });
     }
 }

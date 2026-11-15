@@ -51,10 +51,17 @@ class AutorizacionTest extends TestCase
         $this->get('/_prueba/administrador')->assertForbidden();
     }
 
+    public function test_la_comprobacion_de_estado_up_esta_deshabilitada(): void
+    {
+        // Sin consumidores: no se declara (bootstrap/app.php) y responde 404.
+        $this->assertNull(collect(Route::getRoutes())->first(fn ($ruta) => $ruta->uri() === 'up'));
+        $this->get('/up')->assertNotFound();
+    }
+
     public function test_toda_ruta_de_la_aplicacion_exige_un_permiso_o_esta_en_la_lista_de_rutas_propias(): void
     {
-        // Rutas sin permiso del catálogo: acceso, cuenta propia, registro de uso
-        // y la comprobación de estado de Laravel (/up, sin datos).
+        // Rutas sin permiso del catálogo: acceso, cuenta propia y registro de uso.
+        // /up está deshabilitada (bootstrap/app.php): no figura en la lista.
         $propias = [
             'home', 'login', 'login.store', 'logout', 'dashboard', 'contrasena.editar', 'contrasena.actualizar',
             'mi-perfil', 'mi-perfil.actualizar', 'mi-perfil.contrasena', 'seguimiento.visita', 'seguimiento.actividad',
@@ -62,7 +69,7 @@ class AutorizacionTest extends TestCase
         $sinPermiso = [];
         foreach (Route::getRoutes() as $ruta) {
             $nombre = (string) $ruta->getName();
-            if (str_starts_with($ruta->uri(), '_prueba/') || $ruta->uri() === 'up' || in_array($nombre, $propias, true)) {
+            if (str_starts_with($ruta->uri(), '_prueba/') || in_array($nombre, $propias, true)) {
                 continue;
             }
             $middleware = implode(' ', $ruta->gatherMiddleware());

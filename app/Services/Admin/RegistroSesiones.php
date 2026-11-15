@@ -33,8 +33,13 @@ class RegistroSesiones
 
     public function __construct(private readonly DestinoSql $destino) {}
 
-    /** Inicio de sesión: crea la fila si la escritura está permitida. */
-    public function registrar(Request $request, Usuario $usuario): void
+    /**
+     * Crea la fila si la escritura está permitida. Con $acceso (evento Login,
+     * solo tras credenciales válidas) registra también el último acceso de la
+     * cuenta en la misma transacción; una sesión que se registra tarde
+     * (vigente()) no es un acceso nuevo.
+     */
+    public function registrar(Request $request, Usuario $usuario, bool $acceso = false): void
     {
         if (! $this->destino->escrituraPermitida()) {
             $request->session()->forget(self::CLAVE);
@@ -43,13 +48,22 @@ class RegistroSesiones
         }
 
         $ahora = CarbonImmutable::now('UTC');
-        $id = (int) $this->destino->exigirEscritura()->table('adm_sesiones')->insertGetId([
-            'usuario_id' => $usuario->id,
-            'ip' => $request->ip(),
-            'agente' => mb_substr((string) $request->userAgent(), 0, 255) ?: null,
-            'inicio_utc' => $ahora,
-            'ultima_actividad_utc' => $ahora,
-        ]);
+        $db = $this->destino->exigirEscritura();
+        $id = (int) $db->transaction(function () use ($db, $request, $usuario, $ahora, $acceso): int {
+            $id = (int) $db->table('adm_sesiones')->insertGetId([
+                'usuario_id' => $usuario->id,
+                'ip' => $request->ip(),
+                'agente' => mb_substr((string) $request->userAgent(), 0, 255) ?: null,
+                'inicio_utc' => $ahora,
+                'ultima_actividad_utc' => $ahora,
+            ]);
+            if ($acceso) {
+                // Dato técnico: sin auditoría y sin tocar updated_at.
+                $db->table('adm_usuarios')->where('id', $usuario->id)->update(['ultimo_acceso_utc' => $ahora]);
+            }
+
+            return $id;
+        });
         $request->session()->put(self::CLAVE, $id);
     }
 

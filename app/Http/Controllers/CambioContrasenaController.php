@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Usuario;
 use App\Services\Admin\CambiarContrasena;
+use App\Services\Admin\RegistroSesiones;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
@@ -21,14 +22,15 @@ class CambioContrasenaController extends Controller
         ]);
     }
 
-    public function update(Request $request, CambiarContrasena $servicio): RedirectResponse
+    public function update(Request $request, CambiarContrasena $servicio, RegistroSesiones $registro): RedirectResponse
     {
         $datos = $request->validate([
             'contrasena_actual' => ['required', 'string'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ]);
 
-        $servicio->cambiar($this->usuario($request), $datos['contrasena_actual'], $datos['password']);
+        // Revoca las demás sesiones de la cuenta; esta sigue abierta.
+        $servicio->cambiar($this->usuario($request), $datos['contrasena_actual'], $datos['password'], $registro->actual($request));
         // Nueva credencial: nuevo identificador de sesión.
         $request->session()->regenerate();
 

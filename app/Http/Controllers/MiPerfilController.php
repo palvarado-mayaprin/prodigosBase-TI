@@ -6,6 +6,7 @@ use App\Autorizacion\Autorizacion;
 use App\Models\Usuario;
 use App\Services\Admin\AdministrarUsuarios;
 use App\Services\Admin\CambiarContrasena;
+use App\Services\Admin\RegistroSesiones;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
@@ -48,7 +49,7 @@ class MiPerfilController extends Controller
         return back()->with('status', $cambiado ? 'Datos actualizados.' : 'Sin cambios.');
     }
 
-    public function cambiarContrasena(Request $request, CambiarContrasena $servicio): RedirectResponse
+    public function cambiarContrasena(Request $request, CambiarContrasena $servicio, RegistroSesiones $registro): RedirectResponse
     {
         $usuario = $this->usuarioActivo($request);
         $datos = $request->validate([
@@ -56,7 +57,8 @@ class MiPerfilController extends Controller
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ]);
 
-        $servicio->cambiar($usuario, $datos['contrasena_actual'], $datos['password']);
+        // Revoca las demás sesiones de la cuenta; esta sigue abierta.
+        $servicio->cambiar($usuario, $datos['contrasena_actual'], $datos['password'], $registro->actual($request));
         $request->session()->regenerate();
 
         return back()->with('status', 'Contraseña actualizada.');

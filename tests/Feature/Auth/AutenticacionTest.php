@@ -62,6 +62,43 @@ class AutenticacionTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_registra_el_ultimo_acceso_solo_tras_un_inicio_de_sesion_correcto(): void
+    {
+        $this->travelTo(now('UTC')->startOfSecond());
+        $usuario = $this->crearUsuario();
+        $antes = DB::table('adm_usuarios')->find($usuario->id);
+
+        // Los intentos fallidos no escriben.
+        $this->login('usuario.prueba', 'Otra-Clave-2026')->assertSessionHasErrors('usuario');
+        $this->assertNull(DB::table('adm_usuarios')->where('id', $usuario->id)->value('ultimo_acceso_utc'));
+
+        $this->travel(5)->minutes();
+        $this->login('usuario.prueba', self::CLAVE)->assertRedirect('/dashboard');
+        $fila = DB::table('adm_usuarios')->find($usuario->id);
+        $sesion = DB::table('adm_sesiones')->sole();
+        // UTC, el mismo instante que el inicio de la sesión y sin tocar updated_at.
+        $this->assertSame(now('UTC')->format('Y-m-d H:i:s'), substr((string) $fila->ultimo_acceso_utc, 0, 19));
+        $this->assertSame($sesion->inicio_utc, $fila->ultimo_acceso_utc);
+        $this->assertSame($antes->updated_at, $fila->updated_at);
+        $this->assertSame(0, DB::table('adm_auditoria')->count());
+
+        // Las peticiones siguientes no lo vuelven a escribir.
+        $this->travel(2)->minutes();
+        $this->get(route('dashboard'))->assertOk();
+        $this->assertSame($fila->ultimo_acceso_utc, DB::table('adm_usuarios')->where('id', $usuario->id)->value('ultimo_acceso_utc'));
+    }
+
+    public function test_una_sesion_registrada_sin_inicio_de_sesion_no_es_un_acceso(): void
+    {
+        // ValidarSesion registra tarde la sesión que no tenía fila (p. ej. tras
+        // volver a permitirse la escritura): no hubo credenciales nuevas.
+        $this->actingAs($this->crearUsuario());
+        $this->get(route('dashboard'))->assertOk();
+
+        $this->assertSame(1, DB::table('adm_sesiones')->count());
+        $this->assertNull(DB::table('adm_usuarios')->value('ultimo_acceso_utc'));
+    }
+
     public function test_no_admite_recordarme(): void
     {
         $this->crearUsuario();

@@ -39,10 +39,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(CommandStarting::class, fn (CommandStarting $evento) => app(GuardaDdl::class)->verificarComando($evento->command, $evento->input));
         Event::listen(MigrationsStarted::class, fn (MigrationsStarted $evento) => app(GuardaDdl::class)->verificar(app('migrator')->getConnection(), $evento->method === 'down'));
 
-        // Registro de sesiones (adm_sesiones): inicio y cierre normales.
+        // Registro de sesiones (adm_sesiones): inicio y cierre normales. Login
+        // solo se emite tras credenciales válidas; registra el último acceso.
         Event::listen(Login::class, function (Login $evento): void {
             if ($evento->guard === 'web' && $evento->user instanceof Usuario) {
-                app(RegistroSesiones::class)->registrar(request(), $evento->user);
+                app(RegistroSesiones::class)->registrar(request(), $evento->user, acceso: true);
             }
         });
         Event::listen(Logout::class, function (Logout $evento): void {

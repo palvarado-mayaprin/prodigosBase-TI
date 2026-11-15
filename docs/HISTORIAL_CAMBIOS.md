@@ -1,5 +1,17 @@
 # Historial de cambios
 
+## 2026-11-15 — Fase 4, intervención 4.2: hallazgos A2, A4, A5, A6, A8, A9 y A10
+
+- **A2, autorización DDL desde `.env`:** Laravel copia al entorno del proceso lo que lee de `.env`, así que `ADM_DESPLIEGUE_DDL` o `ADM_PRUEBAS_DESTRUCTIVAS` declaradas allí autorizaban como si fueran variables de la consola. `GuardaDdl::archivoQueDeclara()` rechaza ahora la autorización, sea cual sea su valor, si la declara `.env`, el archivo de entorno configurado o cualquier `.env.*` (como `.env.<APP_ENV>`), antes de cualquier DDL y con o sin `config:cache`. Las demás comprobaciones no cambian. Prueba: `AutorizacionDesdeArchivoTest`.
+- **A4, sesiones tras cambiar la contraseña:** `CambiarContrasena` revoca, en su misma transacción, las demás sesiones abiertas de la cuenta (`AdministrarSesiones::revocarDeUsuario()`, auditadas como `REVOCAR`) y conserva la actual (`RegistroSesiones::actual()`), en el cambio obligatorio y en Mi Perfil. Si el cambio falla no se revoca nada. Prueba: `SesionesTrasCambioContrasenaTest`.
+- **A5, permisos SQL de módulos nuevos:** procedimiento y script de ejemplo parametrizable en `docs/MANUAL_TECNICO.md`, sección 4.2. `roles.sql` no cambia.
+- **A6, paleta de ejemplo:** `PaletaTest` ya no exige que la paleta propia difiera de la de ejemplo; conserva las comprobaciones de tokens, colores y estructura.
+- **A8, `/up`:** sin consumidores en el proyecto (ni IIS, ni CI, ni documentación); se retiró de `bootstrap/app.php` y responde 404. `AutorizacionTest` ya no la exceptúa.
+- **A9, último acceso:** el inicio de sesión correcto (evento `Login`) registra `adm_usuarios.ultimo_acceso_utc` en UTC, en la misma transacción que la fila de `adm_sesiones` y solo si `DestinoSql` permite escribir. No se audita, no cambia `updated_at`, no se escribe tras intentos fallidos ni en peticiones posteriores. Prueba en `AutenticacionTest`.
+- **A10, retención:** política operativa propuesta y configurable para `adm_auditoria`, `adm_sesiones` y `adm_actividad`, con responsables, frecuencia y depuración manual autorizada (`docs/MANUAL_TECNICO.md`, sección 10). No se borró ningún registro ni se añadieron tareas.
+- **Validación en SQL Server (`T01003\PRODIGOSBASE`):** en una base temporal, eliminada al terminar, se ejecutaron el grupo `sqlsrv`, A2 con y sin `config:cache`, A4, A8 y A9 por HTTP con dos sesiones independientes, y el script de A5 copiado del manual con una tabla ficticia. `prodigos_base_dev` y `prodigos_base_pruebas` no se modificaron.
+- **Sin cambios:** esquema de las nueve tablas, `roles.sql`, `DestinoSql`, sistema visual, hallazgos A3, A7 y A11, IIS, SRVOPTIMUS y PRODIGOS V2.
+
 ## 2026-11-15 — Fase 4, intervención 4.1: Inertia DevTools deshabilitado (hallazgo A1)
 
 - **Causa:** `inertiajs/inertia-laravel` incluye Inertia DevTools, que el paquete activa con `APP_ENV=local`. Grababa cada petición en `storage/inertia-devtools` y la servía sin autenticación en `/_inertia/devtools/entries`. Como solo oculta campos con nombres exactos en inglés, `contrasena_actual` quedaba en texto plano.

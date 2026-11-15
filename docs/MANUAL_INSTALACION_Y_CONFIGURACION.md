@@ -236,7 +236,7 @@ npm run types:check    # TypeScript (vue-tsc)
 npm run build          # compilación de producción
 ```
 
-Resultado esperado (Fase 4, intervención 4.1): PHPUnit con 175 pruebas, 174 aprobadas y 1 omitida (la integración con SQL Server), `test:js` 14/14 y el resto sin errores. Las mismas comprobaciones se ejecutan en GitHub Actions (`.github/workflows/tests.yml`).
+Resultado esperado (Fase 4, intervención 4.2): PHPUnit con 184 pruebas, 183 aprobadas y 1 omitida (la integración con SQL Server), `test:js` 14/14 y el resto sin errores. Las mismas comprobaciones se ejecutan en GitHub Actions (`.github/workflows/tests.yml`).
 
 - **SQL Server real:** la suite `Sqlsrv` se ejecuta aparte, sobre una base dedicada `_pruebas`: [VALIDACION_SQL_SERVER.md, sección 3](VALIDACION_SQL_SERVER.md#3-prueba-de-integración-sql-server).
 - **Navegador:** revisión con Playwright MCP: [VALIDACION_SQL_SERVER.md, sección 5](VALIDACION_SQL_SERVER.md#5-revisión-en-navegador-con-playwright-mcp).
@@ -245,7 +245,7 @@ Resultado esperado (Fase 4, intervención 4.1): PHPUnit con 175 pruebas, 174 apr
 | Módulo                      | Ruta                           | Comprobación                                                                                                                                                                                                                                                                                           |
 | --------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Administración de Usuarios  | `/admin/usuarios`              | Crear una cuenta de prueba; editarla; restablecerle la contraseña (queda «Cambio de contraseña pendiente»); deshabilitarla y comprobar que no puede iniciar sesión; habilitarla. El botón de deshabilitar la propia cuenta está desactivado. Cada operación aparece en `adm_auditoria` sin contraseñas |
-| Mi Perfil                   | `/mi-perfil` (menú de usuario) | Cambiar correo y teléfono; cambiar la contraseña con la actual. Nombre y usuario son de solo lectura                                                                                                                                                                                                   |
+| Mi Perfil                   | `/mi-perfil` (menú de usuario) | Cambiar correo y teléfono; cambiar la contraseña con la actual y comprobar que otra sesión abierta de la misma cuenta vuelve al inicio de sesión y la actual sigue. Nombre y usuario son de solo lectura                                                                                               |
 | Administración de Grupos    | `/admin/grupos`                | Crear un grupo de prueba; editar su nombre y descripción; consultar su detalle; desactivarlo y activarlo. Desactivar el único grupo administrador propio se rechaza                                                                                                                                    |
 | Usuarios y grupos           | `/admin/membresias`            | En Usuarios → Grupos, asignar y retirar el grupo de prueba a una cuenta (confirmación con el detalle). Retirarse a sí mismo el grupo administrador se rechaza. En Grupos → Usuarios, consultar los integrantes                                                                                         |
 | Administración de Permisos  | `/admin/permisos`              | Asignar a un grupo no administrador `Usuarios y grupos · Consultar membresías` y comprobar que sus integrantes abren `/admin/membresias` en modo consulta; retirarlo. Las funcionalidades «Solo administrador» no se pueden marcar                                                                     |
@@ -279,6 +279,7 @@ Las migraciones tienen una autorización propia (`App\Entorno\GuardaDdl`), indep
 
 - siempre exigen que el destino real coincida con `ADM_ENTORNO`; se comprueban al iniciar el comando, antes de cualquier escritura (también con `--pretend`);
 - en producción exigen además la variable de proceso `ADM_DESPLIEGUE_DDL` con el nombre exacto de la base de producción, solo en la consola de despliegue y nunca en `.env`;
+- `ADM_DESPLIEGUE_DDL` y `ADM_PRUEBAS_DESTRUCTIVAS` declaradas en `.env` o en cualquier `.env.*` (como `.env.<APP_ENV>`) invalidan la autorización, aunque la variable del proceso sea correcta: se definen solo con `$env:` en la consola y se retiran al terminar;
 - `ADM_PRODUCCION_ESCRITURA` nunca habilita DDL;
 - `db:wipe`, `migrate:fresh`, `migrate:refresh`, `migrate:reset` y `migrate:rollback` solo se permiten en una base de desarrollo cuyo nombre termine en `_pruebas` y con la variable de proceso `ADM_PRUEBAS_DESTRUCTIVAS` igual a esa base; nunca en producción ni en la base normal de desarrollo. Una base que deba eliminarse por completo la elimina el DBA con `DROP DATABASE`, después de comprobar servidor, nombre y contenido.
 
